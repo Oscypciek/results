@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contest Results Database Pro</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0d17;
+            --nav-bg: #1a1e36;
+            --primary-color: #ff2a5f;
+            --secondary-color: #4a5596;
+            --text-main: #ffffff;
+            --text-muted: #a0a5bc;
+            --table-header: #24294a;
+            --table-row-odd: #15182b;
+            --table-row-even: #1a1e36;
+            --table-hover: #2a2f55;
+            
+            /* Placement Colors */
+            --color-1st: rgba(255, 215, 0, 0.25);
+            --color-2nd: rgba(192, 192, 192, 0.25);
+            --color-3rd: rgba(205, 127, 50, 0.25);
+            --color-last: rgba(255, 60, 60, 0.3);
+            --color-wooden: #8b5a2b;
+            
+            --text-1st: #ffd700;
+            --text-2nd: #e0e0e0;
+            --text-3rd: #cd7f32;
+
+            /* Participation Colors */
+            --part-debut: #a855f7;
+            --part-return: #f59e0b;
+            --part-active: #10b981;
+            --part-withdraw: #ef4444;
+            --part-absent: #4b5563; 
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+
+        /* Navbar */
+        .navbar { background-color: var(--nav-bg); display: flex; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
+        .nav-btn { background: none; border: none; color: var(--text-muted); padding: 15px 15px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; }
+        .nav-btn:hover { color: var(--text-main); background-color: rgba(255, 255, 255, 0.05); }
+        .nav-btn.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; padding-bottom: 50px; }
+        .tab-content { display: none; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Pickers */
+        .picker-container { margin-bottom: 25px; background-color: var(--table-row-odd); padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .picker-title { font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .picker-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .picker-btn { background-color: var(--table-header); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 12px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s ease; user-select: none; display: flex; align-items: center; }
+        .picker-btn:hover { background-color: var(--table-hover); color: var(--text-main); border-color: var(--primary-color); }
+        .picker-btn.active { background-color: var(--primary-color); color: var(--text-main); border-color: var(--primary-color); font-weight: bold; }
+        .stage-selector { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+
+        .flag-icon { width: 24px; height: 16px; object-fit: cover; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.5); margin-right: 8px; display: inline-block; vertical-align: middle; }
+
+        /* Participation Tracker */
+        .participation-tracker { background-color: var(--table-row-odd); border-radius: 8px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .part-group { margin-bottom: 15px; }
+        .part-group:last-child { margin-bottom: 0; }
+        .part-label { font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; color: var(--text-muted);}
+        .part-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .part-list { display: flex; flex-wrap: wrap; gap: 5px; }
+        .part-badge { background-color: var(--table-header); color: var(--text-main); font-size: 12px; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.05);}
+
+        /* Tables */
+        .table-wrapper { overflow-x: auto; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; background-color: var(--table-row-even); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); min-width: 600px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        th { background-color: var(--table-header); color: var(--text-muted); text-transform: uppercase; font-size: 11px; cursor: pointer; user-select: none; white-space: nowrap; }
+        th:hover { color: var(--text-main); }
+        th::after { content: ' \21D5'; opacity: 0.5; }
+        tr:nth-child(odd) { background-color: var(--table-row-odd); }
+        tr:hover { background-color: var(--table-hover) !important; }
+
+        tr.row-1st { background-color: var(--color-1st) !important; }
+        tr.row-2nd { background-color: var(--color-2nd) !important; }
+        tr.row-3rd { background-color: var(--color-3rd) !important; }
+        tr.row-last { background-color: var(--color-last) !important; }
+        .bg-1st { background-color: var(--color-1st) !important; }
+        .bg-2nd { background-color: var(--color-2nd) !important; }
+        .bg-3rd { background-color: var(--color-3rd) !important; }
+        .bg-last { background-color: var(--color-last) !important; }
+
+        .country-cell { text-align: left; font-weight: bold; white-space: nowrap; display: flex; align-items: center; }
+        .points-total { font-weight: bold; color: var(--text-main); }
+        .did-not-participate { color: var(--text-muted); font-style: italic; letter-spacing: 1px; }
+        .no-semi-final { color: var(--text-muted); font-style: italic; font-size: 12px; letter-spacing: 0.5px; }
+        .edition-cell { display: inline-flex; align-items: center; justify-content: center; }
+
+        /* Chart Container */
+        .chart-container { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; height: 300px; width: 100%; box-sizing: border-box; }
+
+        /* Overall Section Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .stat-card { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; text-align: center; border-top: 4px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        .border-jury { border-top-color: #3b82f6; }
+        .border-tele { border-top-color: #a855f7; }
+        .border-wood { border-top-color: var(--color-wooden); }
+        .border-gold { border-top-color: var(--text-1st); }
+
+        .stat-card h3 { margin-top: 0; color: var(--text-muted); font-size: 13px; text-transform: uppercase; }
+        .stat-card .number { font-size: 42px; font-weight: bold; margin: 10px 0; }
+
+        .ranking-list { list-style: none; padding: 0; margin: 0; text-align: left; max-height: 250px; overflow-y: auto; }
+        .ranking-list li { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .list-country-info { display: flex; align-items: center; gap: 5px;}
+        .ranking-list li:hover { background-color: var(--table-hover); }
+        .ranking-list::-webkit-scrollbar { width: 6px; }
+        .ranking-list::-webkit-scrollbar-track { background: var(--table-row-odd); }
+        .ranking-list::-webkit-scrollbar-thumb { background: var(--table-header); border-radius: 3px; }
+
+        .txt-1st { color: var(--text-1st); font-weight: bold; }
+        .txt-2nd { color: var(--text-2nd); font-weight: bold; }
+        .txt-3rd { color: var(--text-3rd); font-weight: bold; }
+        .txt-highlight { color: var(--primary-color); font-weight: bold; }
+
+        /* Head to Head */
+        .h2h-selector { display: flex; justify-content: space-around; background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; gap: 15px; flex-wrap: wrap; }
+        .h2h-country-box { text-align: center; flex: 1; min-width: 150px; }
+        .h2h-country-box select { background-color: var(--table-header); color: var(--text-main); border: 1px solid var(--primary-color); padding: 10px; border-radius: 5px; width: 100%; margin-top: 10px; cursor: pointer; outline: none; }
+        .vs-badge { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--text-muted); font-style: italic; }
+        .h2h-results { display: flex; flex-direction: column; gap: 10px; }
+        .h2h-row { display: flex; background-color: var(--table-row-odd); border-radius: 8px; overflow: hidden; text-align: center; }
+        .h2h-stat-a, .h2h-stat-b { flex: 1; padding: 15px; font-size: 24px; font-weight: bold; display: flex; flex-direction: column; justify-content: center; }
+        .h2h-label { flex: 1; padding: 15px; background-color: var(--table-header); color: var(--text-muted); text-transform: uppercase; font-size: 12px; display: flex; align-items: center; justify-content: center;}
+        .h2h-subtext { font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 5px; font-style: italic; }
+        .winner-stat { color: var(--text-1st); }
+        .loser-stat { color: var(--text-muted); }
+        .tie-stat { color: var(--text-main); }
+
+        /* Matrix Cross Table */
+        .matrix-table { min-width: max-content; border-collapse: separate; border-spacing: 0; background-color: var(--table-row-even); }
+        .matrix-table th, .matrix-table td { border: 1px solid rgba(255,255,255,0.05); color: var(--text-main); }
+        .matrix-table th { background-color: var(--table-header); color: var(--text-muted); }
+        .matrix-table th::after { content: none; }
+        .matrix-country { background-color: var(--table-row-odd) !important; color: var(--text-main) !important; font-weight: bold; text-align: right; padding-right: 15px; border-right: 2px solid var(--primary-color) !important; position: sticky; left: 0; z-index: 2; }
+        .matrix-table tr:hover .matrix-country { background-color: var(--table-hover) !important; }
+        .cell-1st { background-color: var(--color-1st) !important; color: var(--text-1st) !important; font-weight: bold; }
+        .cell-2nd { background-color: var(--color-2nd) !important; color: var(--text-2nd) !important; font-weight: bold; }
+        .cell-3rd { background-color: var(--color-3rd) !important; color: var(--text-3rd) !important; font-weight: bold; }
+        .cell-last { background-color: var(--color-last) !important; font-weight: bold; }
+        .cell-dnp { background-color: rgba(0,0,0,0.4) !important; color: transparent !important; }
+        .cell-nq { background-color: rgba(255,255,255,0.1) !important; color: var(--text-muted) !important; font-style: italic; }
+        .cell-normal { background-color: transparent !important; }
+        .matrix-table tr:hover td:not(.matrix-country):not(.cell-dnp) { filter: brightness(1.2); }
+
+        .ro-flag-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+        .ro-flag-item { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 11px;}
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <button class="nav-btn active" onclick="openTab('editions', this)">Editions</button>
+        <button class="nav-btn" onclick="openTab('countries', this)">Countries</button>
+        <button class="nav-btn" onclick="openTab('ro-stats', this)">RO Stats</button>
+        <button class="nav-btn" onclick="openTab('matrix', this)">Matrix</button>
+        <button class="nav-btn" onclick="openTab('h2h', this)">Head-to-Head</button>
+        <button class="nav-btn" onclick="openTab('overall', this)">Overall</button>
+    </div>
+
+    <div class="container">
+        
+        <div id="editions" class="tab-content" style="display: block;">
+            <div class="picker-container">
+                <h3 class="picker-title">Select Edition</h3>
+                <div class="picker-grid" id="edition-picker-grid"></div>
+                
+                <div class="stage-selector" id="stage-selector">
+                    <button class="picker-btn active" id="btn-gf" onclick="setStage('GF', this)">Grand Final</button>
+                    <button class="picker-btn" id="btn-sf1" onclick="setStage('SF1', this)">Semi-Final 1</button>
+                    <button class="picker-btn" id="btn-sf2" onclick="setStage('SF2', this)">Semi-Final 2</button>
+                </div>
+            </div>
+
+            <div class="participation-tracker" id="participation-tracker"></div>
+
+            <div class="table-wrapper">
+                <table id="edition-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('edition-table', 0, true)">Place</th>
+                            <th onclick="sortTable('edition-table', 1, true)">RO</th>
+                            <th onclick="sortTable('edition-table', 2, false)">Country</th>
+                            <th onclick="sortTable('edition-table', 3, true)">Total Points</th>
+                            <th onclick="sortTable('edition-table', 4, true)">Jury</th>
+                            <th onclick="sortTable('edition-table', 5, true)">Televote</th>
+                        </tr>
+                    </thead>
+                    <tbody id="edition-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="countries" class="tab-content">
+            <div class="picker-container">
+                <h3 class="picker-title">Select Country</h3>
+                <div class="picker-grid" id="country-picker-grid"></div>
+            </div>
+
+            <div class="chart-container"><canvas id="trendChart"></canvas></div>
+            
+            <div class="table-wrapper">
+                <table id="country-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('country-table', 0, true)">Edition</th>
+                            <th onclick="sortTable('country-table', 1, true)">Final Place</th>
+                            <th onclick="sortTable('country-table', 2, true)">Final Points</th>
+                            <th onclick="sortTable('country-table', 3, true)">Semi Place</th>
+                            <th onclick="sortTable('country-table', 4, true)">Semi Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="country-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="ro-stats" class="tab-content">
+            <div class="picker-container">
+                <h3 class="picker-title">Select Stage</h3>
+                <div class="stage-selector" style="margin-top:0; border-top:none; padding-top:0;" id="ro-stage-selector">
+                    <button class="picker-btn active" id="ro-btn-gf" onclick="setRoStage('GF', this)">Grand Final</button>
+                    <button class="picker-btn" id="ro-btn-sf1" onclick="setRoStage('SF1', this)">Semi-Final 1</button>
+                    <button class="picker-btn" id="ro-btn-sf2" onclick="setRoStage('SF2', this)">Semi-Final 2</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="ro-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('ro-table', 0, true)">RO</th>
+                            <th onclick="sortTable('ro-table', 1, true)">Uses</th>
+                            <th onclick="sortTable('ro-table', 2, true)">Wins</th>
+                            <th onclick="sortTable('ro-table', 3, true)">Lasts</th>
+                            <th onclick="sortTable('ro-table', 4, true)">Avg Place</th>
+                            <th onclick="sortTable('ro-table', 5, true)">Avg Pts</th>
+                            <th>Countries (Count)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ro-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="matrix" class="tab-content">
+            <div class="table-wrapper">
+                <table id="matrix-table" class="matrix-table">
+                    <thead id="matrix-head"></thead>
+                    <tbody id="matrix-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="h2h" class="tab-content">
+            <div class="h2h-selector">
+                <div class="h2h-country-box"><div id="h2h-flag-a"></div><select id="h2h-select-a" onchange="renderH2H()"></select></div>
+                <div class="vs-badge">VS</div>
+                <div class="h2h-country-box"><div id="h2h-flag-b"></div><select id="h2h-select-b" onchange="renderH2H()"></select></div>
+            </div>
+            <div class="h2h-results" id="h2h-stats-container"></div>
+        </div>
+
+        <div id="overall" class="tab-content">
+            <div class="stats-grid">
+                
+                <div class="stat-card border-gold">
+                    <h3>Longest Qualification Streak</h3>
+                    <ul class="ranking-list" id="stat-streak-q"></ul>
+                </div>
+                <div class="stat-card border-wood">
+                    <h3>Longest Non-Qual. Streak</h3>
+                    <ul class="ranking-list" id="stat-streak-nq"></ul>
+                </div>
+                <div class="stat-card border-gold">
+                    <h3>Winners Wall (Total Wins)</h3>
+                    <ul class="ranking-list" id="stat-winners"></ul>
+                </div>
+                <div class="stat-card">
+                    <h3>Qualification Rate</h3>
+                    <ul class="ranking-list" id="stat-qual-rate"></ul>
+                </div>
+                <div class="stat-card">
+                    <h3>Non-Qualification Rate</h3>
+                    <ul class="ranking-list" id="stat-nq-rate"></ul>
+                </div>
+                <div class="stat-card border-gold">
+                    <h3>Semi-Final Wins</h3>
+                    <ul class="ranking-list" id="stat-semi-wins"></ul>
+                </div>
+                <div class="stat-card border-wood">
+                    <h3>Wooden Spoons (Last Places)</h3>
+                    <ul class="ranking-list" id="stat-last-place"></ul>
+                </div>
+                <div class="stat-card">
+                    <h3>Highest Final Score</h3>
+                    <ul class="ranking-list" id="stat-highest-score"></ul>
+                </div>
+                <div class="stat-card">
+                    <h3>Biggest Margin of Victory</h3>
+                    <ul class="ranking-list" id="stat-margin"></ul>
+                </div>
+                <div class="stat-card border-jury">
+                    <h3>Highest Jury Score</h3>
+                    <ul class="ranking-list" id="stat-high-jury"></ul>
+                </div>
+                <div class="stat-card border-tele">
+                    <h3>Highest Televote Score</h3>
+                    <ul class="ranking-list" id="stat-high-tele"></ul>
+                </div>
+                <div class="stat-card border-jury">
+                    <h3>Best Avg. Jury Score</h3>
+                    <ul class="ranking-list" id="stat-avg-jury"></ul>
+                </div>
+                <div class="stat-card border-tele">
+                    <h3>Best Avg. Televote Score</h3>
+                    <ul class="ranking-list" id="stat-avg-tele"></ul>
+                </div>
+                <div class="stat-card">
+                    <h3>Countries Best Placement</h3>
+                    <ul class="ranking-list" id="stat-best-place"></ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // DATABASE STRUCTURE
+        // ==========================================
+        const db = {
+            editions: [1, 2, 3, 4, 5, 6, 7],
+            hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA" },
+            countries: {
+                "AD": { name: "Andorra", code: "ad" },
+                "AT": { name: "Austria", code: "at" },
+                "BE": { name: "Belgium", code: "be" },
+                "CH": { name: "Switzerland", code: "ch" },
+                "DE": { name: "Germany", code: "de" },
+                "ES": { name: "Spain", code: "es" },
+                "FR": { name: "France", code: "fr" },
+                "GB": { name: "United Kingdom", code: "gb" },
+                "IE": { name: "Ireland", code: "ie" },
+                "IT": { name: "Italy", code: "it" },
+                "LU": { name: "Luxembourg", code: "lu" },
+                "MC": { name: "Monaco", code: "mc" },
+                "NL": { name: "Netherlands", code: "nl" },
+                "PL": { name: "Poland", code: "pl" },
+                "PT": { name: "Portugal", code: "pt" },
+                "SM": { name: "San Marino", code: "sm" },
+                "MT": { name: "Malta", code: "mt" }, 
+                "GR": { name: "Greece", code: "gr" },
+                "UA": { name: "Ukraine", code: "ua" },
+                "RU": { name: "Russia", code: "ru" }
+            },
+            results: [
+                // EDITION 1 
+                { edition: 1, countryId: "CH", ro: "02", place: 1, points: 157, jury: 82, tele: 75 },
+                { edition: 1, countryId: "AT", ro: "14", place: 2, points: 141, jury: 74, tele: 67 },
+                { edition: 1, countryId: "IT", ro: "09", place: 3, points: 132, jury: 59, tele: 73 },
+                { edition: 1, countryId: "IE", ro: "10", place: 4, points: 123, jury: 52, tele: 71 },
+                { edition: 1, countryId: "FR", ro: "12", place: 5, points: 92, jury: 50, tele: 42 },
+                { edition: 1, countryId: "SM", ro: "04", place: 6, points: 82, jury: 49, tele: 33 },
+                { edition: 1, countryId: "MC", ro: "07", place: 7, points: 80, jury: 50, tele: 30 },
+                { edition: 1, countryId: "DE", ro: "11", place: 8, points: 66, jury: 45, tele: 21 },
+                { edition: 1, countryId: "BE", ro: "13", place: 9, points: 64, jury: 36, tele: 28 }, 
+                { edition: 1, countryId: "NL", ro: "06", place: 10, points: 43, jury: 34, tele: 9 },
+                { edition: 1, countryId: "ES", ro: "03", place: 11, points: 42, jury: 0, tele: 42 },
+                { edition: 1, countryId: "LU", ro: "08", place: 12, points: 41, jury: 0, tele: 41 },
+                { edition: 1, countryId: "PL", ro: "05", place: 13, points: 17, jury: 7, tele: 10 },
+                { edition: 1, countryId: "GB", ro: "01", place: 14, points: 12, jury: 8, tele: 4 }, 
+
+                // EDITION 2 
+                { edition: 2, countryId: "FR", ro: "02", place: 1, points: 151, jury: 89, tele: 62 },
+                { edition: 2, countryId: "SM", ro: "03", place: 2, points: 129, jury: 49, tele: 80 },
+                { edition: 2, countryId: "AD", ro: "11", place: 3, points: 122, jury: 39, tele: 83 },
+                { edition: 2, countryId: "ES", ro: "01", place: 4, points: 113, jury: 85, tele: 28 },
+                { edition: 2, countryId: "LU", ro: "09", place: 5, points: 112, jury: 30, tele: 82 },
+                { edition: 2, countryId: "IT", ro: "07", place: 6, points: 109, jury: 98, tele: 11 },
+                { edition: 2, countryId: "IE", ro: "13", place: 7, points: 85, jury: 50, tele: 35 },
+                { edition: 2, countryId: "PL", ro: "10", place: 8, points: 69, jury: 28, tele: 41 },
+                { edition: 2, countryId: "PT", ro: "05", place: 9, points: 68, jury: 0, tele: 68 },
+                { edition: 2, countryId: "GB", ro: "04", place: 10, points: 57, jury: 11, tele: 46 },
+                { edition: 2, countryId: "NL", ro: "15", place: 11, points: 54, jury: 42, tele: 12 },
+                { edition: 2, countryId: "DE", ro: "06", place: 12, points: 51, jury: 14, tele: 37 },
+                { edition: 2, countryId: "AT", ro: "08", place: 13, points: 42, jury: 42, tele: 0 },
+                { edition: 2, countryId: "BE", ro: "14", place: 14, points: 7, jury: 7, tele: 0 },
+                { edition: 2, countryId: "CH", ro: "12", place: 15, points: 1, jury: 1, tele: 0 },
+
+                // EDITION 3 
+                { edition: 3, countryId: "SM", ro: "14", place: 1, points: 145, jury: 58, tele: 87 },
+                { edition: 3, countryId: "PL", ro: "11", place: 2, points: 131, jury: 65, tele: 66 },
+                { edition: 3, countryId: "LU", ro: "15", place: 3, points: 128, jury: 50, tele: 78 },
+                { edition: 3, countryId: "DE", ro: "03", place: 4, points: 125, jury: 61, tele: 64 },
+                { edition: 3, countryId: "NL", ro: "02", place: 5, points: 115, jury: 110, tele: 5 },
+                { edition: 3, countryId: "IT", ro: "09", place: 6, points: 102, jury: 80, tele: 22 },
+                { edition: 3, countryId: "IE", ro: "05", place: 7, points: 100, jury: 53, tele: 47 },
+                { edition: 3, countryId: "CH", ro: "06", place: 8, points: 78, jury: 0, tele: 78 },
+                { edition: 3, countryId: "PT", ro: "07", place: 9, points: 69, jury: 12, tele: 57 },
+                { edition: 3, countryId: "AT", ro: "10", place: 10, points: 44, jury: 16, tele: 28 },
+                { edition: 3, countryId: "BE", ro: "04", place: 11, points: 33, jury: 7, tele: 26 },
+                { edition: 3, countryId: "GB", ro: "12", place: 12, points: 33, jury: 33, tele: 0 },
+                { edition: 3, countryId: "AD", ro: "08", place: 13, points: 31, jury: 5, tele: 26 },
+                { edition: 3, countryId: "ES", ro: "01", place: 14, points: 24, jury: 24, tele: 0 },
+                { edition: 3, countryId: "FR", ro: "13", place: 15, points: 12, jury: 11, tele: 1 },
+
+                // EDITION 4
+                { edition: 4, countryId: "PT", ro: "06", place: 1, points: 163, jury: 83, tele: 80 },
+                { edition: 4, countryId: "IT", ro: "02", place: 2, points: 128, jury: 55, tele: 73 },
+                { edition: 4, countryId: "PL", ro: "12", place: 3, points: 110, jury: 84, tele: 26 },
+                { edition: 4, countryId: "SM", ro: "09", place: 4, points: 102, jury: 16, tele: 86 },
+                { edition: 4, countryId: "FR", ro: "05", place: 5, points: 98, jury: 62, tele: 36 },
+                { edition: 4, countryId: "NL", ro: "07", place: 6, points: 95, jury: 30, tele: 65 },
+                { edition: 4, countryId: "DE", ro: "13", place: 7, points: 80, jury: 17, tele: 63 },
+                { edition: 4, countryId: "AT", ro: "03", place: 8, points: 78, jury: 62, tele: 16 },
+                { edition: 4, countryId: "CH", ro: "04", place: 9, points: 76, jury: 28, tele: 48 },
+                { edition: 4, countryId: "MT", ro: "01", place: 10, points: 43, jury: 20, tele: 23 },
+                { edition: 4, countryId: "GR", ro: "10", place: 11, points: 34, jury: 14, tele: 20 },
+                { edition: 4, countryId: "ES", ro: "11", place: 12, points: 33, jury: 26, tele: 7 },
+                { edition: 4, countryId: "LU", ro: "08", place: 13, points: 26, jury: 23, tele: 3 },
+                { edition: 4, countryId: "IE", ro: "14", place: 14, points: 26, jury: 26, tele: 0 },
+
+                // EDITION 5
+                { edition: 5, countryId: "PL", ro: "09", place: 1, points: 165, jury: 57, tele: 108 },
+                { edition: 5, countryId: "IT", ro: "04", place: 2, points: 153, jury: 76, tele: 77 },
+                { edition: 5, countryId: "LU", ro: "14", place: 3, points: 152, jury: 84, tele: 68 },
+                { edition: 5, countryId: "BE", ro: "08", place: 4, points: 90, jury: 29, tele: 61 },
+                { edition: 5, countryId: "GR", ro: "12", place: 5, points: 90, jury: 75, tele: 15 },
+                { edition: 5, countryId: "IE", ro: "02", place: 6, points: 87, jury: 77, tele: 10 },
+                { edition: 5, countryId: "FR", ro: "10", place: 7, points: 70, jury: 25, tele: 45 },
+                { edition: 5, countryId: "DE", ro: "01", place: 8, points: 58, jury: 3, tele: 55 },
+                { edition: 5, countryId: "CH", ro: "11", place: 9, points: 58, jury: 45, tele: 13 },
+                { edition: 5, countryId: "ES", ro: "13", place: 10, points: 49, jury: 2, tele: 47 },
+                { edition: 5, countryId: "NL", ro: "05", place: 11, points: 43, jury: 27, tele: 16 },
+                { edition: 5, countryId: "PT", ro: "03", place: 12, points: 32, jury: 29, tele: 3 },
+                { edition: 5, countryId: "AT", ro: "06", place: 13, points: 28, jury: 0, tele: 28 },
+                { edition: 5, countryId: "SM", ro: "07", place: 14, points: 17, jury: 17, tele: 0 },
+
+                // EDITION 6
+                { edition: 6, countryId: "UA", ro: "05", place: 1, points: 191, jury: 90, tele: 101 },
+                { edition: 6, countryId: "RU", ro: "16", place: 2, points: 149, jury: 104, tele: 45 },
+                { edition: 6, countryId: "PL", ro: "13", place: 3, points: 119, jury: 98, tele: 21 },
+                { edition: 6, countryId: "FR", ro: "04", place: 4, points: 108, jury: 12, tele: 96 },
+                { edition: 6, countryId: "NL", ro: "10", place: 5, points: 102, jury: 62, tele: 40 },
+                { edition: 6, countryId: "DE", ro: "12", place: 6, points: 100, jury: 56, tele: 44 },
+                { edition: 6, countryId: "AT", ro: "07", place: 7, points: 97, jury: 24, tele: 73 },
+                { edition: 6, countryId: "LU", ro: "01", place: 8, points: 93, jury: 53, tele: 40 },
+                { edition: 6, countryId: "BE", ro: "14", place: 9, points: 79, jury: 66, tele: 13 },
+                { edition: 6, countryId: "PT", ro: "15", place: 10, points: 65, jury: 28, tele: 37 },
+                { edition: 6, countryId: "MC", ro: "11", place: 11, points: 49, jury: 12, tele: 37 },
+                { edition: 6, countryId: "GB", ro: "09", place: 12, points: 40, jury: 7, tele: 33 },
+                { edition: 6, countryId: "CH", ro: "03", place: 13, points: 36, jury: 0, tele: 36 },
+                { edition: 6, countryId: "IE", ro: "06", place: 14, points: 12, jury: 12, tele: 0 },
+                { edition: 6, countryId: "IT", ro: "02", place: 15, points: 8, jury: 0, tele: 8 },
+                { edition: 6, countryId: "GR", ro: "08", place: 16, points: 0, jury: 0, tele: 0 },
+
+		// EDITION 7
+                { edition: 7, countryId: "PL", ro: "03", place: 1, points: 139, jury: 63, tele: 76 },
+                { edition: 7, countryId: "IE", ro: "02", place: 2, points: 127, jury: 85, tele: 42 },
+                { edition: 7, countryId: "UA", ro: "14", place: 3, points: 104, jury: 96, tele: 8 },
+                { edition: 7, countryId: "AT", ro: "04", place: 4, points: 103, jury: 30, tele: 73 },
+                { edition: 7, countryId: "SM", ro: "09", place: 5, points: 100, jury: 68, tele: 32 },
+                { edition: 7, countryId: "MC", ro: "05", place: 6, points: 98, jury: 48, tele: 50 },
+                { edition: 7, countryId: "PT", ro: "13", place: 7, points: 91, jury: 34, tele: 57 },
+                { edition: 7, countryId: "GB", ro: "11", place: 8, points: 80, jury: 42, tele: 38 },
+                { edition: 7, countryId: "FR", ro: "12", place: 9, points: 76, jury: 10, tele: 66 },
+                { edition: 7, countryId: "DE", ro: "06", place: 10, points: 68, jury: 17, tele: 51 },
+                { edition: 7, countryId: "IT", ro: "08", place: 11, points: 42, jury: 29, tele: 13 },
+                { edition: 7, countryId: "LU", ro: "01", place: 12, points: 29, jury: 12, tele: 17 },
+                { edition: 7, countryId: "NL", ro: "07", place: 13, points: 23, jury: 12, tele: 11 },
+                { edition: 7, countryId: "BE", ro: "10", place: 14, points: 12, jury: 0, tele: 12 }
+            ]
+        };
+
+        let activeEdition = 1;
+        let activeStage = 'GF'; 
+        let activeCountryId = "DE"; 
+        let activeRoStage = 'GF'; 
+        
+        let trendChartInstance = null; 
+
+        function getFlag(code, lg = false) {
+            if (!code) return "";
+            return `<img src="https://flagcdn.com/${code}.svg" class="flag-icon ${lg ? 'flag-icon-lg' : ''}" alt="${code}" loading="lazy">`;
+        }
+
+        function isQualifier(result) { return result && result.place !== undefined; }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        function init() {
+            renderPickers();
+            populateH2HDropdowns();
+            renderEditionTable();
+            renderCountryTable();
+            renderROStats();
+            renderMatrix();
+            renderH2H();
+            renderOverallStats();
+        }
+
+        function updateStageSelectors() {
+            const hasSF1 = db.results.some(r => r.edition === activeEdition && r.semi === 1);
+            const hasSF2 = db.results.some(r => r.edition === activeEdition && r.semi === 2);
+            
+            const btnSf1 = document.getElementById('btn-sf1');
+            const btnSf2 = document.getElementById('btn-sf2');
+            
+            btnSf1.style.display = hasSF1 ? "block" : "none";
+            btnSf2.style.display = hasSF2 ? "block" : "none";
+            
+            if (!hasSF1 && !hasSF2 && activeStage !== 'GF') setStage('GF', document.getElementById('btn-gf'));
+            else if (!hasSF1 && activeStage === 'SF1') setStage('GF', document.getElementById('btn-gf'));
+            else if (!hasSF2 && activeStage === 'SF2') setStage('GF', document.getElementById('btn-gf'));
+
+            const globalHasSF1 = db.results.some(r => r.semi === 1);
+            const globalHasSF2 = db.results.some(r => r.semi === 2);
+            document.getElementById('ro-btn-sf1').style.display = globalHasSF1 ? "block" : "none";
+            document.getElementById('ro-btn-sf2').style.display = globalHasSF2 ? "block" : "none";
+        }
+
+        function renderPickers() {
+            const edGrid = document.getElementById("edition-picker-grid");
+            edGrid.innerHTML = "";
+            db.editions.forEach(ed => {
+                const btn = document.createElement("div");
+                btn.className = `picker-btn ${ed === activeEdition ? "active" : ""}`;
+                btn.innerText = `Edition ${ed}`;
+                btn.onclick = () => {
+                    activeEdition = ed;
+                    renderPickers();
+                    renderEditionTable();
+                };
+                edGrid.appendChild(btn);
+            });
+
+            updateStageSelectors();
+
+            const countryGrid = document.getElementById("country-picker-grid");
+            countryGrid.innerHTML = "";
+            const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+
+            sortedCountryIds.forEach(cId => {
+                const cData = db.countries[cId];
+                const btn = document.createElement("div");
+                btn.className = `picker-btn ${cId === activeCountryId ? "active" : ""}`;
+                btn.innerHTML = `${getFlag(cData.code)} ${cData.name}`; 
+                btn.onclick = () => {
+                    activeCountryId = cId;
+                    renderPickers();
+                    renderCountryTable();
+                };
+                countryGrid.appendChild(btn);
+            });
+        }
+
+        function setStage(stage, btn) {
+            activeStage = stage;
+            document.querySelectorAll('#stage-selector .picker-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderEditionTable();
+        }
+
+        function setRoStage(stage, btn) {
+            activeRoStage = stage;
+            document.querySelectorAll('#ro-stage-selector .picker-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderROStats();
+        }
+
+        // ==========================================
+        // PRE-DEBUT & PARTICIPATION TRACKER
+        // ==========================================
+        function getParticipationStatus(cId, targetEdition) {
+            const countryResults = db.results.filter(r => r.countryId === cId);
+            if (countryResults.length === 0) return 'pre-debut'; 
+            
+            const firstEdition = Math.min(...countryResults.map(r => r.edition));
+            if (targetEdition < firstEdition) return 'pre-debut';
+
+            const thisEd = countryResults.some(r => r.edition === targetEdition);
+            const prevEd = countryResults.some(r => r.edition === targetEdition - 1);
+
+            if (thisEd) {
+                if (targetEdition === firstEdition) return 'debut';
+                if (!prevEd) return 'return';
+                return 'active';
+            } else {
+                if (prevEd) return 'withdraw';
+                return 'absent';
+            }
+        }
+
+        function renderParticipationTracker() {
+            const container = document.getElementById("participation-tracker");
+            let groups = { debut: [], return: [], active: [], withdraw: [], absent: [] };
+
+            Object.keys(db.countries).forEach(cId => {
+                const status = getParticipationStatus(cId, activeEdition);
+                if (status !== 'pre-debut') { 
+                    groups[status].push(cId);
+                }
+            });
+
+            function buildGroup(title, color, arr) {
+                if(arr.length === 0) return "";
+                arr.sort((a,b) => db.countries[a].name.localeCompare(db.countries[b].name));
+                let badges = arr.map(id => `<div class="part-badge">${getFlag(db.countries[id].code)} ${db.countries[id].name}</div>`).join('');
+                return `
+                    <div class="part-group">
+                        <div class="part-label"><div class="part-dot" style="background-color: ${color}"></div> ${title} (${arr.length})</div>
+                        <div class="part-list">${badges}</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = 
+                buildGroup("Debuts", "var(--part-debut)", groups.debut) +
+                buildGroup("Returning", "var(--part-return)", groups.return) +
+                buildGroup("Participating", "var(--part-active)", groups.active) +
+                buildGroup("Withdrawing", "var(--part-withdraw)", groups.withdraw) +
+                buildGroup("Absent", "var(--part-absent)", groups.absent);
+        }
+
+        // ==========================================
+        // TAB 1: EDITIONS
+        // ==========================================
+        function renderEditionTable() {
+            const tbody = document.getElementById("edition-body");
+            tbody.innerHTML = "";
+            
+            renderParticipationTracker(); 
+
+            const editionData = db.results.filter(r => {
+                if (r.edition !== activeEdition) return false;
+                if (activeStage === 'GF') return isQualifier(r);
+                if (activeStage === 'SF1') return r.semi === 1;
+                if (activeStage === 'SF2') return r.semi === 2;
+                return false;
+            });
+
+            if(editionData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="color:var(--text-muted); font-style:italic;">No data available for this stage.</td></tr>`;
+                return;
+            }
+
+            let keyPlace = activeStage === 'GF' ? 'place' : 'semiPlace';
+            let keyRo = activeStage === 'GF' ? 'ro' : 'semiRo';
+            let keyPoints = activeStage === 'GF' ? 'points' : 'semiPoints';
+            let keyJury = activeStage === 'GF' ? 'jury' : 'semiJury';
+            let keyTele = activeStage === 'GF' ? 'tele' : 'semiTele';
+            
+            const maxPlace = Math.max(...editionData.map(r => r[keyPlace] || 999).filter(p => p !== 999));
+            editionData.sort((a, b) => (a[keyPlace] || 999) - (b[keyPlace] || 999));
+
+            editionData.forEach(row => {
+                const cData = db.countries[row.countryId];
+                let rowClass = "";
+                let placeVal = row[keyPlace];
+                
+                if (placeVal === 1) rowClass = "row-1st";
+                else if (placeVal === 2) rowClass = "row-2nd";
+                else if (placeVal === 3) rowClass = "row-3rd";
+                else if (placeVal === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) rowClass = "row-last";
+
+                let pts = row[keyPoints] !== undefined ? row[keyPoints] : "-";
+                let jury = row[keyJury] !== undefined ? row[keyJury] : "-";
+                let tele = row[keyTele] !== undefined ? row[keyTele] : "-";
+                let ro = row[keyRo] || "-";
+
+                let pointsStr = pts === 0 ? `<span style="color:#fca5a5">0</span>` : pts;
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>${placeVal || "-"}</td>
+                        <td>${ro}</td>
+                        <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
+                        <td class="points-total">${pointsStr}</td>
+                        <td>${jury}</td>
+                        <td>${tele}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ==========================================
+        // TAB 2: COUNTRIES
+        // ==========================================
+        function renderCountryTable() {
+            const tbody = document.getElementById("country-body");
+            tbody.innerHTML = "";
+            
+            let chartLabels = [];
+            let chartData = [];
+
+            db.editions.forEach(ed => {
+                const status = getParticipationStatus(activeCountryId, ed);
+                if (status === 'pre-debut') return; // Skip charting/listing editions before they debuted
+
+                chartLabels.push("Ed " + ed);
+                const result = db.results.find(r => r.edition === ed && r.countryId === activeCountryId);
+                const hostCountryId = db.hosts[ed]; 
+                const isHost = (hostCountryId === activeCountryId);
+                let hostFlagCode = db.countries[hostCountryId].code;
+                
+                if (result) {
+                    let gfClass = "";
+                    if (isQualifier(result)) {
+                        const gfResults = db.results.filter(r => r.edition === ed && isQualifier(r));
+                        const maxPlace = Math.max(...gfResults.map(r => r.place));
+                        
+                        if (result.place === 1) gfClass = "bg-1st";
+                        else if (result.place === 2) gfClass = "bg-2nd";
+                        else if (result.place === 3) gfClass = "bg-3rd";
+                        else if (result.place === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) gfClass = "bg-last";
+                    }
+
+                    let sfClass = "";
+                    let semiHtml = `<td colspan="2" class="no-semi-final">No semi-final</td>`;
+                    
+                    if (isHost) {
+                        semiHtml = `<td colspan="2" style="color: var(--text-1st); font-weight: bold; font-style: italic;">Host Qualifier</td>`;
+                    } else if (result.semiPlace !== undefined && result.semiPoints !== undefined) {
+                        const sfResults = db.results.filter(r => r.edition === ed && r.semi === result.semi);
+                        const maxSfPlace = Math.max(...sfResults.map(r => r.semiPlace).filter(p => p !== undefined));
+                        
+                        if (result.semiPlace === 1) sfClass = "bg-1st";
+                        else if (result.semiPlace === 2) sfClass = "bg-2nd";
+                        else if (result.semiPlace === 3) sfClass = "bg-3rd";
+                        else if (result.semiPlace === maxSfPlace && maxSfPlace !== 999 && maxSfPlace !== -Infinity) sfClass = "bg-last";
+
+                        semiHtml = `<td class="${sfClass}">${result.semiPlace}</td><td class="${sfClass}">${result.semiPoints}</td>`;
+                    }
+
+                    if (isQualifier(result)) {
+                        chartData.push(result.place);
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
+                                <td class="${gfClass}">${result.place}</td>
+                                <td class="${gfClass} points-total">${result.points}</td>
+                                ${semiHtml}
+                            </tr>
+                        `;
+                    } else {
+                        chartData.push(null); 
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
+                                <td colspan="2" style="color: var(--text-muted); font-style: italic;">NQ</td>
+                                ${semiHtml}
+                            </tr>
+                        `;
+                    }
+
+                } else {
+                    chartData.push(null);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
+                            <td colspan="4" class="did-not-participate">Did not participate</td>
+                        </tr>
+                    `;
+                }
+            });
+            drawTrendChart(chartLabels, chartData);
+        }
+
+        function drawTrendChart(labels, data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (trendChartInstance) trendChartInstance.destroy();
+
+            trendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Final Placement',
+                        data: data,
+                        borderColor: '#ff2a5f',
+                        backgroundColor: '#ff2a5f',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#ffffff',
+                        tension: 0.3,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { reverse: true, min: 1, ticks: { stepSize: 1, color: '#a0a5bc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: '#a0a5bc' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // ==========================================
+        // TAB 3: RO STATS 
+        // ==========================================
+        function renderROStats() {
+            const tbody = document.getElementById("ro-body");
+            tbody.innerHTML = "";
+            let roData = {};
+
+            db.results.forEach(r => {
+                let ro, place, points, isApplicable = false;
+
+                if (activeRoStage === 'GF' && isQualifier(r) && r.ro) {
+                    ro = r.ro; place = r.place; points = r.points; isApplicable = true;
+                } else if (activeRoStage === 'SF1' && r.semi === 1 && r.semiRo) {
+                    ro = r.semiRo; place = r.semiPlace; points = r.semiPoints; isApplicable = true;
+                } else if (activeRoStage === 'SF2' && r.semi === 2 && r.semiRo) {
+                    ro = r.semiRo; place = r.semiPlace; points = r.semiPoints; isApplicable = true;
+                }
+
+                if (!isApplicable) return;
+
+                if(!roData[ro]) {
+                    roData[ro] = { uses: 0, wins: 0, lasts: 0, sumPlace: 0, sumPts: 0, countries: {} };
+                }
+                roData[ro].uses++;
+                if(place === 1) roData[ro].wins++;
+                
+                let lastPlaceForThisStage;
+                if (activeRoStage === 'GF') {
+                    const edRes = db.results.filter(x => x.edition === r.edition && isQualifier(x));
+                    lastPlaceForThisStage = Math.max(...edRes.map(x => x.place));
+                } else {
+                    const edRes = db.results.filter(x => x.edition === r.edition && x.semi === r.semi);
+                    lastPlaceForThisStage = Math.max(...edRes.map(x => x.semiPlace).filter(x => x !== undefined));
+                }
+                
+                if(place === lastPlaceForThisStage && lastPlaceForThisStage !== -Infinity) roData[ro].lasts++;
+
+                roData[ro].sumPlace += place;
+                roData[ro].sumPts += points;
+                
+                if(!roData[ro].countries[r.countryId]) roData[ro].countries[r.countryId] = 0;
+                roData[ro].countries[r.countryId]++;
+            });
+
+            let sortedROs = Object.keys(roData).sort((a,b) => parseInt(a) - parseInt(b));
+            
+            if(sortedROs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted); font-style:italic;">No Running Order data available for this stage.</td></tr>`;
+                return;
+            }
+
+            sortedROs.forEach(ro => {
+                let d = roData[ro];
+                let avgPlace = (d.sumPlace / d.uses).toFixed(1);
+                let avgPts = (d.sumPts / d.uses).toFixed(1);
+                
+                let cStrArr = [];
+                for(let cId in d.countries) {
+                    let count = d.countries[cId];
+                    let flag = getFlag(db.countries[cId].code);
+                    cStrArr.push(`<div class="ro-flag-item">${flag} ${count > 1 ? 'x'+count : ''}</div>`);
+                }
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold; color:var(--primary-color);">${ro}</td>
+                        <td>${d.uses}</td>
+                        <td class="${d.wins > 0 ? 'txt-1st' : ''}">${d.wins}</td>
+                        <td class="${d.lasts > 0 ? 'txt-highlight' : ''}">${d.lasts}</td>
+                        <td>${avgPlace}</td>
+                        <td>${avgPts}</td>
+                        <td><div class="ro-flag-list">${cStrArr.join('')}</div></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ==========================================
+        // TAB 4: MATRIX 
+        // ==========================================
+        function renderMatrix() {
+            const thead = document.getElementById("matrix-head");
+            const tbody = document.getElementById("matrix-body");
+            
+            let lastPlaces = {};
+            db.editions.forEach(ed => {
+                const edResults = db.results.filter(r => r.edition === ed && isQualifier(r));
+                if(edResults.length > 0) lastPlaces[ed] = Math.max(...edResults.map(r => r.place));
+            });
+
+            let headHtml = `<tr><th rowspan="2" style="background-color: var(--table-header);">Country / Ed</th>`;
+            db.editions.forEach(ed => { headHtml += `<th>#${ed}</th>`; });
+            headHtml += `</tr><tr>`;
+            
+            db.editions.forEach(ed => {
+                let hostCountryId = db.hosts[ed];
+                let hostCode = db.countries[hostCountryId].code;
+                headHtml += `<th>${getFlag(hostCode)}</th>`;
+            });
+            headHtml += `</tr>`;
+            thead.innerHTML = headHtml;
+
+            const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+            let bodyHtml = "";
+
+            sortedCountryIds.forEach(cId => {
+                let cData = db.countries[cId];
+                bodyHtml += `<tr><td class="matrix-country">${getFlag(cData.code)} ${cData.name}</td>`;
+                
+                db.editions.forEach(ed => {
+                    const result = db.results.find(r => r.edition === ed && r.countryId === cId);
+                    const status = getParticipationStatus(cId, ed);
+
+                    if(result) {
+                        if (isQualifier(result)) {
+                            let cellClass = "cell-normal";
+                            if(result.place === 1) cellClass = "cell-1st";
+                            else if(result.place === 2) cellClass = "cell-2nd";
+                            else if(result.place === 3) cellClass = "cell-3rd";
+                            else if(result.place === lastPlaces[ed]) cellClass = "cell-last";
+                            
+                            bodyHtml += `<td class="${cellClass}">${result.place}</td>`;
+                        } else {
+                            bodyHtml += `<td class="cell-nq">NQ</td>`;
+                        }
+                    } else {
+                        if (status === 'pre-debut') {
+                            bodyHtml += `<td class="cell-normal" style="border-color: transparent;"></td>`;
+                        } else {
+                            bodyHtml += `<td class="cell-dnp"></td>`;
+                        }
+                    }
+                });
+                bodyHtml += `</tr>`;
+            });
+            tbody.innerHTML = bodyHtml;
+        }
+
+        // ==========================================
+        // TAB 5: HEAD TO HEAD 
+        // ==========================================
+        function populateH2HDropdowns() {
+            const selA = document.getElementById('h2h-select-a');
+            const selB = document.getElementById('h2h-select-b');
+            const sortedIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+            
+            sortedIds.forEach((id) => {
+                selA.innerHTML += `<option value="${id}">${db.countries[id].name}</option>`;
+                selB.innerHTML += `<option value="${id}">${db.countries[id].name}</option>`;
+            });
+            if(sortedIds.length > 1) {
+                selA.value = sortedIds[0];
+                selB.value = sortedIds[1];
+            }
+        }
+
+        function renderH2H() {
+            const idA = document.getElementById('h2h-select-a').value;
+            const idB = document.getElementById('h2h-select-b').value;
+            
+            document.getElementById('h2h-flag-a').innerHTML = getFlag(db.countries[idA].code, true);
+            document.getElementById('h2h-flag-b').innerHTML = getFlag(db.countries[idB].code, true);
+
+            let statsA = { wins: 0, headToHead: 0, sumPlace: 0, count: 0, bestPlace: 999 };
+            let statsB = { wins: 0, headToHead: 0, sumPlace: 0, count: 0, bestPlace: 999 };
+            
+            let aBeatsB = [];
+            let bBeatsA = [];
+
+            db.editions.forEach(ed => {
+                const rA = db.results.find(r => r.edition === ed && r.countryId === idA);
+                const rB = db.results.find(r => r.edition === ed && r.countryId === idB);
+
+                if(isQualifier(rA)) {
+                    if(rA.place === 1) statsA.wins++;
+                    if(rA.place < statsA.bestPlace) statsA.bestPlace = rA.place;
+                    statsA.sumPlace += rA.place;
+                    statsA.count++;
+                }
+                if(isQualifier(rB)) {
+                    if(rB.place === 1) statsB.wins++;
+                    if(rB.place < statsB.bestPlace) statsB.bestPlace = rB.place;
+                    statsB.sumPlace += rB.place;
+                    statsB.count++;
+                }
+                
+                if(isQualifier(rA) && isQualifier(rB)) {
+                    if(rA.place < rB.place) {
+                        statsA.headToHead++;
+                        aBeatsB.push(ed);
+                    } else if(rB.place < rA.place) {
+                        statsB.headToHead++;
+                        bBeatsA.push(ed);
+                    }
+                }
+            });
+
+            const avgA = statsA.count ? (statsA.sumPlace / statsA.count).toFixed(1) : "-";
+            const avgB = statsB.count ? (statsB.sumPlace / statsB.count).toFixed(1) : "-";
+            const bestA = statsA.bestPlace !== 999 ? statsA.bestPlace : "-";
+            const bestB = statsB.bestPlace !== 999 ? statsB.bestPlace : "-";
+
+            const container = document.getElementById('h2h-stats-container');
+            container.innerHTML = "";
+
+            function createRow(label, valA, valB, lowerIsBetter, subA = "", subB = "") {
+                let classA = "tie-stat"; let classB = "tie-stat";
+                
+                if(valA !== "-" && valB !== "-") {
+                    let numA = parseFloat(valA); let numB = parseFloat(valB);
+                    if(numA !== numB) {
+                        if(lowerIsBetter) {
+                            if(numA < numB) { classA = "winner-stat"; classB = "loser-stat"; }
+                            else { classB = "winner-stat"; classA = "loser-stat"; }
+                        } else {
+                            if(numA > numB) { classA = "winner-stat"; classB = "loser-stat"; }
+                            else { classB = "winner-stat"; classA = "loser-stat"; }
+                        }
+                    }
+                }
+
+                let subHtmlA = subA ? `<div class="h2h-subtext">${subA}</div>` : "";
+                let subHtmlB = subB ? `<div class="h2h-subtext">${subB}</div>` : "";
+
+                return `
+                    <div class="h2h-row">
+                        <div class="h2h-stat-a ${classA}">${valA}${subHtmlA}</div>
+                        <div class="h2h-label">${label}</div>
+                        <div class="h2h-stat-b ${classB}">${valB}${subHtmlB}</div>
+                    </div>
+                `;
+            }
+
+            let edStrA = aBeatsB.length > 0 ? `(Ed: ${aBeatsB.join(', ')})` : "";
+            let edStrB = bBeatsA.length > 0 ? `(Ed: ${bBeatsA.join(', ')})` : "";
+
+            container.innerHTML += createRow("GF Matchups Won", statsA.headToHead, statsB.headToHead, false, edStrA, edStrB);
+            container.innerHTML += createRow("Total GF Wins", statsA.wins, statsB.wins, false);
+            container.innerHTML += createRow("Best GF Placement", bestA, bestB, true);
+            container.innerHTML += createRow("Avg. GF Placement", avgA, avgB, true);
+        }
+
+        // ==========================================
+        // TAB 6: OVERALL STATS
+        // ==========================================
+        function renderOverallStats() {
+            let records = { 
+                wins: {}, lastPlaces: {}, avgJury: {}, avgTele: {}, bestPlace: {},
+                semiWins: {}, sfApps: {}, sfQuals: {}, sfNQs: {},
+                qStreaks: {}, nqStreaks: {}
+            };
+
+            Object.keys(db.countries).forEach(cId => {
+                records.wins[cId] = 0; records.lastPlaces[cId] = 0; records.bestPlace[cId] = 999;
+                records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 };
+                records.semiWins[cId] = 0; records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
+                records.qStreaks[cId] = { curr: 0, max: 0 }; records.nqStreaks[cId] = { curr: 0, max: 0 };
+            });
+
+            let margins = [];
+
+            // Streaks
+            db.editions.forEach(ed => {
+                const editionHasSemis = db.results.some(r => r.edition === ed && r.semi !== undefined);
+
+                Object.keys(db.countries).forEach(cId => {
+                    const status = getParticipationStatus(cId, ed);
+                    if (status === 'pre-debut') return;
+
+                    const res = db.results.find(r => r.edition === ed && r.countryId === cId);
+                    if (res) {
+                        if (isQualifier(res)) {
+                            if (editionHasSemis) {
+                                records.qStreaks[cId].curr++;
+                                if (records.qStreaks[cId].curr > records.qStreaks[cId].max) records.qStreaks[cId].max = records.qStreaks[cId].curr;
+                            }
+                            records.nqStreaks[cId].curr = 0; 
+                        } else {
+                            records.nqStreaks[cId].curr++;
+                            if (records.nqStreaks[cId].curr > records.nqStreaks[cId].max) records.nqStreaks[cId].max = records.nqStreaks[cId].curr;
+                            records.qStreaks[cId].curr = 0; 
+                        }
+                    } else {
+                        records.qStreaks[cId].curr = 0;
+                        records.nqStreaks[cId].curr = 0;
+                    }
+                });
+            });
+
+            db.editions.forEach(ed => {
+                const allEdResults = db.results.filter(r => r.edition === ed);
+                const gfResults = allEdResults.filter(r => isQualifier(r)).sort((a,b) => a.place - b.place);
+
+                if(gfResults.length >= 2) {
+                    margins.push({ edition: ed, winnerId: gfResults[0].countryId, margin: gfResults[0].points - gfResults[1].points });
+                }
+
+                const lastPlace = gfResults.length > 0 ? gfResults[gfResults.length - 1].place : null;
+
+                allEdResults.forEach(r => {
+                    if (isQualifier(r)) {
+                        if (r.place === 1) records.wins[r.countryId]++;
+                        if (r.place === lastPlace) records.lastPlaces[r.countryId]++;
+                        if (r.place < records.bestPlace[r.countryId]) records.bestPlace[r.countryId] = r.place;
+                        
+                        records.avgJury[r.countryId].sum += r.jury; records.avgJury[r.countryId].count++;
+                        records.avgTele[r.countryId].sum += r.tele; records.avgTele[r.countryId].count++;
+                    }
+
+                    if (r.semiPlace === 1) records.semiWins[r.countryId]++;
+                    if (r.semi !== undefined) {
+                        records.sfApps[r.countryId]++;
+                        if (isQualifier(r)) records.sfQuals[r.countryId]++;
+                        else records.sfNQs[r.countryId]++;
+                    }
+                });
+            });
+
+            function buildList(arr, valKey, suffix="", topN=0, highlightFirst=false) {
+                let html = "";
+                let slice = topN > 0 ? arr.slice(0, topN) : arr;
+                if(slice.length === 0) return "<li>None</li>";
+
+                slice.forEach((item, index) => {
+                    const c = db.countries[item.id];
+                    let valDisplay = item[valKey] + suffix;
+                    let valClass = (highlightFirst && index === 0) ? "txt-1st" : "txt-highlight";
+                    let prefixText = item.prefix ? `<span style="color:#a0a5bc; margin-right:8px; font-size:11px;">${item.prefix}</span>` : "";
+
+                    html += `<li><div class="list-country-info">${prefixText} ${getFlag(c.code)} ${c.name}</div><span class="${valClass}">${valDisplay}</span></li>`;
+                });
+                return html;
+            }
+
+            let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => ({id: id, val: records.qStreaks[id].max})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', ' in a row', 5, true);
+
+            let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => ({id: id, val: records.nqStreaks[id].max})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', ' in a row', 5, false);
+
+            let semiWinArr = Object.keys(records.semiWins).filter(id => records.semiWins[id] > 0).map(id => ({id: id, val: records.semiWins[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-semi-wins").innerHTML = buildList(semiWinArr, 'val', ' Win(s)', 0, true);
+
+            let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] > 0).map(id => {
+                return { id: id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) };
+            }).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', 0, true);
+
+            let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] > 0).map(id => {
+                return { id: id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) };
+            }).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', 0, false);
+
+            let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id: id, val: records.wins[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', ' Win(s)', 0, true);
+
+            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id: id, val: records.lastPlaces[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' Last Place(s)', 0, false);
+
+            let allGFRes = db.results.filter(r => isQualifier(r));
+            
+            let highPoints = allGFRes.sort((a,b) => b.points - a.points).map(r => ({id: r.countryId, val: r.points, prefix: "Ed "+r.edition}));
+            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', 5, true);
+
+            let highJury = allGFRes.sort((a,b) => b.jury - a.jury).map(r => ({id: r.countryId, val: r.jury, prefix: "Ed "+r.edition}));
+            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', 5, true);
+
+            let highTele = allGFRes.sort((a,b) => b.tele - a.tele).map(r => ({id: r.countryId, val: r.tele, prefix: "Ed "+r.edition}));
+            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', 5, true);
+
+            let marginArr = margins.sort((a,b) => b.margin - a.margin).map(m => ({id: m.winnerId, val: m.margin, prefix: "Ed "+m.edition}));
+            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts diff', 5, true);
+
+            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count > 0).map(id => ({ id: id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', ' avg', 5, true);
+
+            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count > 0).map(id => ({ id: id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', ' avg', 5, true);
+
+            let bestArr = Object.keys(records.bestPlace).filter(id => records.bestPlace[id] !== 999).map(id => ({id: id, val: records.bestPlace[id]})).sort((a,b) => {
+                if (a.val !== b.val) return a.val - b.val;
+                return db.countries[a.id].name.localeCompare(db.countries[b.id].name);
+            });
+            let bestHtml = "";
+            bestArr.forEach(item => {
+                const c = db.countries[item.id];
+                let suffix = "th"; let placeClass = "";
+                if (item.val === 1) { placeClass = "txt-1st"; suffix = "st"; }
+                else if (item.val === 2) { placeClass = "txt-2nd"; suffix = "nd"; }
+                else if (item.val === 3) { placeClass = "txt-3rd"; suffix = "rd"; }
+                bestHtml += `<li><div class="list-country-info">${getFlag(c.code)} ${c.name}</div><span class="${placeClass}">${item.val}${suffix}</span></li>`;
+            });
+            document.getElementById("stat-best-place").innerHTML = bestHtml;
+        }
+
+        // ==========================================
+        // UI HELPERS
+        // ==========================================
+        function openTab(tabName, btn) {
+            document.querySelectorAll(".tab-content").forEach(tab => tab.style.display = "none");
+            document.querySelectorAll(".nav-btn").forEach(nav => nav.classList.remove("active"));
+            document.getElementById(tabName).style.display = "block";
+            btn.classList.add("active");
+            if(tabName === 'countries' && trendChartInstance) trendChartInstance.resize();
+        }
+
+        let sortDirections = {};
+        function sortTable(tableId, colIndex, isNumeric) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const key = `${tableId}-${colIndex}`;
+            sortDirections[key] = !sortDirections[key];
+            const isAscending = sortDirections[key];
+
+            rows.sort((a, b) => {
+                if (a.children.length < 3) return 1; 
+                if (b.children.length < 3) return -1;
+
+                function getVal(row) {
+                    if (row.children.length === 5) return row.children[colIndex].innerText.trim();
+                    if (row.children.length === 4) return colIndex < 3 ? row.children[colIndex].innerText.trim() : "-";
+                    if (row.children.length === 6) return row.children[colIndex].innerText.trim();
+                    if (row.children[colIndex]) return row.children[colIndex].innerText.trim();
+                    return "-";
+                }
+
+                let valA = getVal(a); let valB = getVal(b);
+                if (isNumeric) {
+                    let numA = valA === "-" || valA === "No semi-final" || valA === "NQ" || valA === "Host Qualifier" ? Infinity : parseFloat(valA);
+                    let numB = valB === "-" || valB === "No semi-final" || valB === "NQ" || valB === "Host Qualifier" ? Infinity : parseFloat(valB);
+                    return isAscending ? numA - numB : numB - numA;
+                } else {
+                    return isAscending ? valA.toLowerCase().localeCompare(valB.toLowerCase()) : valB.toLowerCase().localeCompare(valA.toLowerCase());
+                }
+            });
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        setTimeout(init, 200);
+    </script>
+</body>
+</html>
