@@ -71,6 +71,17 @@
         .part-list { display: flex; flex-wrap: wrap; gap: 5px; }
         .part-badge { background-color: var(--table-header); color: var(--text-main); font-size: 12px; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.05);}
 
+        /* Happiness UI */
+        .happiness-wrapper { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .happiness-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .happiness-title { margin: 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; font-weight: bold;}
+        .happiness-label { font-size: 24px; font-weight: bold; }
+        .happiness-bar-bg { width: 100%; height: 20px; background-color: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 20px;}
+        .happiness-bar-fill { height: 100%; width: 0%; transition: width 1s ease-in-out, background-color 1s ease-in-out; }
+        .happiness-breakdown { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; gap: 10px;}
+        .happiness-metric { text-align: center; flex: 1; min-width: 60px; background-color: var(--table-header); padding: 10px; border-radius: 6px; }
+        .happiness-metric span { display: block; font-weight: bold; color: var(--text-main); font-size: 16px; margin-top: 5px;}
+
         /* Tables */
         .table-wrapper { overflow-x: auto; margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; background-color: var(--table-row-even); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); min-width: 600px; }
@@ -107,6 +118,8 @@
         .border-tele { border-top-color: #a855f7; }
         .border-wood { border-top-color: var(--color-wooden); }
         .border-gold { border-top-color: var(--text-1st); }
+        .border-happy { border-top-color: #10b981; }
+        .border-sad { border-top-color: #ef4444; }
 
         .stat-card h3 { margin-top: 0; color: var(--text-muted); font-size: 13px; text-transform: uppercase; }
         .stat-card .number { font-size: 42px; font-weight: bold; margin: 10px 0; }
@@ -208,6 +221,22 @@
                 <div class="picker-grid" id="country-picker-grid"></div>
             </div>
 
+            <div class="happiness-wrapper" id="happiness-wrapper" style="display: none;">
+                <div class="happiness-header">
+                    <h3 class="happiness-title">National Happiness Index</h3>
+                    <div class="happiness-label" id="hap-label">--</div>
+                </div>
+                <div class="happiness-bar-bg">
+                    <div class="happiness-bar-fill" id="hap-fill"></div>
+                </div>
+                <div class="happiness-breakdown">
+                    <div class="happiness-metric">Base Perf. <span id="hap-base">0/40</span></div>
+                    <div class="happiness-metric">Momentum <span id="hap-mom">0/20</span></div>
+                    <div class="happiness-metric">Tele Bias <span id="hap-tele">0/20</span></div>
+                    <div class="happiness-metric">Expectation <span id="hap-exp">0/20</span></div>
+                </div>
+            </div>
+
             <div class="chart-container"><canvas id="trendChart"></canvas></div>
             
             <div class="table-wrapper">
@@ -275,6 +304,14 @@
         <div id="overall" class="tab-content">
             <div class="stats-grid">
                 
+                <div class="stat-card border-happy">
+                    <h3>Happiest Nations (Index)</h3>
+                    <ul class="ranking-list" id="stat-happy"></ul>
+                </div>
+                <div class="stat-card border-sad">
+                    <h3>Saddest Nations (Index)</h3>
+                    <ul class="ranking-list" id="stat-sad"></ul>
+                </div>
                 <div class="stat-card border-gold">
                     <h3>Longest Qualification Streak</h3>
                     <ul class="ranking-list" id="stat-streak-q"></ul>
@@ -338,37 +375,36 @@
 
     <script>
         // ==========================================
-        // DATABASE STRUCTURE
+        // DATABASE STRUCTURE (With Country Tiers Added)
         // ==========================================
         const db = {
-            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // <-- Added 11
-            hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA", 8: "PL", 9: "LU", 10: "BE", 11: "NL" },
+            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 
+            hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA", 8: "PL", 9: "LU", 10: "BE", 11: "NL" }, 
             countries: {
-                "AD": { name: "Andorra", code: "ad" },
-                "AT": { name: "Austria", code: "at" },
-                "BE": { name: "Belgium", code: "be" },
-                "CH": { name: "Switzerland", code: "ch" },
-                "DE": { name: "Germany", code: "de" },
-                "ES": { name: "Spain", code: "es" },
-                "FR": { name: "France", code: "fr" },
-                "GB": { name: "United Kingdom", code: "gb" },
-                "IE": { name: "Ireland", code: "ie" },
-                "IT": { name: "Italy", code: "it" },
-                "LU": { name: "Luxembourg", code: "lu" },
-                "MC": { name: "Monaco", code: "mc" },
-                "NL": { name: "Netherlands", code: "nl" },
-                "PL": { name: "Poland", code: "pl" },
-                "PT": { name: "Portugal", code: "pt" },
-                "SM": { name: "San Marino", code: "sm" },
-                "SE": { name: "Sweden", code: "se" }, 
-                "NO": { name: "Norway", code: "no" },
-                "MT": { name: "Malta", code: "mt" }, 
-                "GR": { name: "Greece", code: "gr" },
-                "UA": { name: "Ukraine", code: "ua" },
-                "RU": { name: "Russia", code: "ru" },
-                "DK": { name: "Denmark", code: "dk" } // <-- Added Denmark
+                "AD": { name: "Andorra", code: "ad", tier: "small" },
+                "AT": { name: "Austria", code: "at", tier: "medium" },
+                "BE": { name: "Belgium", code: "be", tier: "medium" },
+                "CH": { name: "Switzerland", code: "ch", tier: "medium" },
+                "DE": { name: "Germany", code: "de", tier: "big" },
+                "ES": { name: "Spain", code: "es", tier: "big" },
+                "FR": { name: "France", code: "fr", tier: "big" },
+                "GB": { name: "United Kingdom", code: "gb", tier: "big" },
+                "IE": { name: "Ireland", code: "ie", tier: "medium" },
+                "IT": { name: "Italy", code: "it", tier: "big" },
+                "LU": { name: "Luxembourg", code: "lu", tier: "medium" }, // Historic powerhouse
+                "MC": { name: "Monaco", code: "mc", tier: "small" },
+                "NL": { name: "Netherlands", code: "nl", tier: "medium" },
+                "PL": { name: "Poland", code: "pl", tier: "medium" },
+                "PT": { name: "Portugal", code: "pt", tier: "medium" },
+                "SM": { name: "San Marino", code: "sm", tier: "small" },
+                "SE": { name: "Sweden", code: "se", tier: "big" }, 
+                "NO": { name: "Norway", code: "no", tier: "medium" },
+                "MT": { name: "Malta", code: "mt", tier: "small" }, 
+                "GR": { name: "Greece", code: "gr", tier: "medium" },
+                "UA": { name: "Ukraine", code: "ua", tier: "big" }, // Highly successful
+                "RU": { name: "Russia", code: "ru", tier: "big" },
+                "DK": { name: "Denmark", code: "dk", tier: "medium" } 
             },
-			
             results: [
                 // EDITION 1 
                 { edition: 1, countryId: "CH", ro: "02", place: 1, points: 157, jury: 82, tele: 75 },
@@ -470,7 +506,7 @@
                 { edition: 6, countryId: "IT", ro: "02", place: 15, points: 8, jury: 0, tele: 8 },
                 { edition: 6, countryId: "GR", ro: "08", place: 16, points: 0, jury: 0, tele: 0 },
 
-		// EDITION 7
+                // EDITION 7
                 { edition: 7, countryId: "PL", ro: "03", place: 1, points: 139, jury: 63, tele: 76 },
                 { edition: 7, countryId: "IE", ro: "02", place: 2, points: 127, jury: 85, tele: 42 },
                 { edition: 7, countryId: "UA", ro: "14", place: 3, points: 104, jury: 96, tele: 8 },
@@ -485,8 +521,8 @@
                 { edition: 7, countryId: "LU", ro: "01", place: 12, points: 29, jury: 12, tele: 17 },
                 { edition: 7, countryId: "NL", ro: "07", place: 13, points: 23, jury: 12, tele: 11 },
                 { edition: 7, countryId: "BE", ro: "10", place: 14, points: 12, jury: 0, tele: 12 },
-				                 
-				// EDITION 8
+
+                // EDITION 8
                 { edition: 8, countryId: "LU", ro: "12", place: 1, points: 151, jury: 109, tele: 42 },
                 { edition: 8, countryId: "FR", ro: "09", place: 2, points: 131, jury: 52, tele: 79 },
                 { edition: 8, countryId: "PL", ro: "08", place: 3, points: 115, jury: 56, tele: 59 },
@@ -522,7 +558,7 @@
                 { edition: 9, countryId: "PL", ro: "15", place: 16, points: 27, jury: 27, tele: 0 },
                 { edition: 9, countryId: "UA", ro: "10", place: 17, points: 22, jury: 13, tele: 9 },
 
-				 // EDITION 10
+                // EDITION 10
                 { edition: 10, countryId: "NL", ro: "02", place: 1, points: 193, jury: 99, tele: 94 },
                 { edition: 10, countryId: "RU", ro: "16", place: 2, points: 120, jury: 71, tele: 49 },
                 { edition: 10, countryId: "UA", ro: "14", place: 3, points: 113, jury: 24, tele: 89 },
@@ -540,6 +576,7 @@
                 { edition: 10, countryId: "MT", ro: "04", place: 15, points: 12, jury: 2, tele: 10 },
                 { edition: 10, countryId: "DK", ro: "09", place: 16, points: 6, jury: 0, tele: 6 },
 
+                // EDITION 11
                 { edition: 11, countryId: "MC", ro: "11", place: 1, points: 154, jury: 85, tele: 69 },
                 { edition: 11, countryId: "RU", ro: "10", place: 2, points: 122, jury: 45, tele: 77 },
                 { edition: 11, countryId: "NL", ro: "12", place: 3, points: 117, jury: 48, tele: 69 },
@@ -553,7 +590,6 @@
                 { edition: 11, countryId: "DE", ro: "08", place: 11, points: 32, jury: 13, tele: 19 },
                 { edition: 11, countryId: "PL", ro: "04", place: 12, points: 27, jury: 1, tele: 26 },
                 { edition: 11, countryId: "ES", ro: "13", place: 13, points: 16, jury: 13, tele: 3 }
-				
             ]
         };
 
@@ -561,7 +597,6 @@
         let activeStage = 'GF'; 
         let activeCountryId = "DE"; 
         let activeRoStage = 'GF'; 
-        
         let trendChartInstance = null; 
 
         function getFlag(code, lg = false) {
@@ -570,6 +605,88 @@
         }
 
         function isQualifier(result) { return result && result.place !== undefined; }
+
+        // ==========================================
+        // HAPPINESS ALGORITHM
+        // ==========================================
+        function calculateHappiness(cId) {
+            const cData = db.countries[cId];
+            const allRes = db.results.filter(r => r.countryId === cId).sort((a,b) => b.edition - a.edition); 
+            
+            if (allRes.length === 0) return { score: 0, label: "N/A", color: "var(--text-muted)", baseScore: 0, momentumScore: 0, teleScore: 0, expScore: 0 };
+
+            const gfRes = allRes.filter(r => isQualifier(r));
+            let baseScore = 0, momentumScore = 0, teleScore = 0, expScore = 0;
+
+            // 1. Base Performance (40 pts)
+            let avgPlace = 0;
+            if (gfRes.length > 0) {
+                avgPlace = gfRes.reduce((sum, r) => sum + r.place, 0) / gfRes.length;
+                // Assuming roughly 20-26 countries max. Scale: 1st = 40pts, 20th+ = 0pts
+                baseScore = Math.max(0, 40 * (20 - avgPlace) / 19);
+            }
+
+            // 2. Momentum (20 pts)
+            if (gfRes.length >= 2) {
+                const recent = gfRes.slice(0, Math.min(3, gfRes.length)); 
+                const recentAvg = recent.reduce((sum, r) => sum + r.place, 0) / recent.length;
+                const diff = avgPlace - recentAvg; // positive = improving
+                if (diff >= 2) momentumScore = 20;
+                else if (diff > -2) momentumScore = 10;
+                else momentumScore = 0;
+            } else if (allRes.length >= 2 && gfRes.length === 0) {
+                momentumScore = 0; // consistent NQs
+            } else {
+                momentumScore = 10; // neutral for newbies
+            }
+
+            // 3. People's Champion (20 pts)
+            let totalTele = 0, totalJury = 0;
+            gfRes.forEach(r => { totalTele += (r.tele||0); totalJury += (r.jury||0); });
+            if (totalTele + totalJury > 0) {
+                const teleRatio = totalTele / (totalTele + totalJury);
+                teleScore = teleRatio * 20;
+            } else {
+                teleScore = 10; // No data yet
+            }
+
+            // 4. Expectations (20 pts)
+            const lastResult = allRes[0];
+            const tier = cData.tier || "medium";
+            const isGF = isQualifier(lastResult);
+            const p = isGF ? lastResult.place : 999;
+
+            if (tier === "small") {
+                if (isGF) expScore = 20; 
+                else expScore = 5; 
+            } else if (tier === "medium") {
+                if (isGF && p <= 10) expScore = 20;
+                else if (isGF) expScore = 10;
+                else expScore = 0;
+            } else if (tier === "big") {
+                if (isGF && p <= 5) expScore = 20;
+                else if (isGF && p <= 10) expScore = 10;
+                else expScore = 0;
+            }
+
+            let total = Math.round(baseScore + momentumScore + teleScore + expScore);
+            total = Math.max(0, Math.min(100, total));
+
+            let label, color;
+            if (total >= 80) { label = "🤩 Euphoric"; color = "#10b981"; } 
+            else if (total >= 60) { label = "😊 Content"; color = "#84cc16"; } 
+            else if (total >= 40) { label = "😐 Indifferent"; color = "#facc15"; } 
+            else if (total >= 20) { label = "😩 Frustrated"; color = "#f97316"; } 
+            else { label = "😡 Devastated"; color = "#ef4444"; } 
+
+            return { 
+                score: total, label, color, 
+                baseScore: Math.round(baseScore), 
+                momentumScore: Math.round(momentumScore), 
+                teleScore: Math.round(teleScore), 
+                expScore: Math.round(expScore) 
+            };
+        }
 
         // ==========================================
         // INITIALIZATION
@@ -779,9 +896,31 @@
             let chartLabels = [];
             let chartData = [];
 
+            // Happiness Index Rendering
+            const hapStatus = getParticipationStatus(activeCountryId, db.editions[db.editions.length-1]); // check if currently participating at all
+            const hapWrapper = document.getElementById("happiness-wrapper");
+            
+            if(hapStatus === 'pre-debut' || db.results.filter(r => r.countryId === activeCountryId).length === 0) {
+                hapWrapper.style.display = "none";
+            } else {
+                hapWrapper.style.display = "block";
+                const hapData = calculateHappiness(activeCountryId);
+                
+                document.getElementById("hap-label").innerText = `${hapData.score}% ${hapData.label}`;
+                document.getElementById("hap-label").style.color = hapData.color;
+                
+                document.getElementById("hap-fill").style.width = `${hapData.score}%`;
+                document.getElementById("hap-fill").style.backgroundColor = hapData.color;
+                
+                document.getElementById("hap-base").innerText = `${hapData.baseScore}/40`;
+                document.getElementById("hap-mom").innerText = `${hapData.momentumScore}/20`;
+                document.getElementById("hap-tele").innerText = `${hapData.teleScore}/20`;
+                document.getElementById("hap-exp").innerText = `${hapData.expScore}/20`;
+            }
+
             db.editions.forEach(ed => {
                 const status = getParticipationStatus(activeCountryId, ed);
-                if (status === 'pre-debut') return; // Skip charting/listing editions before they debuted
+                if (status === 'pre-debut') return;
 
                 chartLabels.push("Ed " + ed);
                 const result = db.results.find(r => r.edition === ed && r.countryId === activeCountryId);
@@ -1133,7 +1272,7 @@
             let records = { 
                 wins: {}, lastPlaces: {}, avgJury: {}, avgTele: {}, bestPlace: {},
                 semiWins: {}, sfApps: {}, sfQuals: {}, sfNQs: {},
-                qStreaks: {}, nqStreaks: {}
+                qStreaks: {}, nqStreaks: {}, happiness: {}
             };
 
             Object.keys(db.countries).forEach(cId => {
@@ -1141,6 +1280,12 @@
                 records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 };
                 records.semiWins[cId] = 0; records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
                 records.qStreaks[cId] = { curr: 0, max: 0 }; records.nqStreaks[cId] = { curr: 0, max: 0 };
+                
+                // Fetch happiness score
+                let hData = calculateHappiness(cId);
+                if(hData.score > 0 || hData.label !== "N/A") {
+                    records.happiness[cId] = hData.score;
+                }
             });
 
             let margins = [];
@@ -1172,6 +1317,7 @@
                     }
                 });
             });
+
 
             db.editions.forEach(ed => {
                 const allEdResults = db.results.filter(r => r.edition === ed);
@@ -1217,6 +1363,12 @@
                 });
                 return html;
             }
+
+            // Happiness Arrays
+            let happyArr = Object.keys(records.happiness).map(id => ({id: id, val: records.happiness[id]})).sort((a,b) => b.val - a.val);
+            let sadArr = [...happyArr].reverse();
+            document.getElementById("stat-happy").innerHTML = buildList(happyArr, 'val', '%', 5, true);
+            document.getElementById("stat-sad").innerHTML = buildList(sadArr, 'val', '%', 5, false);
 
             let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => ({id: id, val: records.qStreaks[id].max})).sort((a,b) => b.val - a.val);
             document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', ' in a row', 5, true);
