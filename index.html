@@ -232,7 +232,8 @@
                 <div class="happiness-breakdown">
                     <div class="happiness-metric">Base Perf. <span id="hap-base">0/40</span></div>
                     <div class="happiness-metric">Momentum <span id="hap-mom">0/20</span></div>
-                    <div class="happiness-metric">Tele Bias <span id="hap-tele">0/20</span></div>
+                    <div class="happiness-metric">Top 10 Rate <span id="hap-top10">0/10</span></div>
+                    <div class="happiness-metric">Near PB <span id="hap-pb">0/10</span></div>
                     <div class="happiness-metric">Expectation <span id="hap-exp">0/20</span></div>
                 </div>
             </div>
@@ -375,7 +376,7 @@
 
     <script>
         // ==========================================
-        // DATABASE STRUCTURE (With Country Tiers Added)
+        // DATABASE STRUCTURE
         // ==========================================
         const db = {
             editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 
@@ -391,7 +392,7 @@
                 "GB": { name: "United Kingdom", code: "gb", tier: "big" },
                 "IE": { name: "Ireland", code: "ie", tier: "medium" },
                 "IT": { name: "Italy", code: "it", tier: "big" },
-                "LU": { name: "Luxembourg", code: "lu", tier: "medium" }, // Historic powerhouse
+                "LU": { name: "Luxembourg", code: "lu", tier: "medium" },
                 "MC": { name: "Monaco", code: "mc", tier: "small" },
                 "NL": { name: "Netherlands", code: "nl", tier: "medium" },
                 "PL": { name: "Poland", code: "pl", tier: "medium" },
@@ -401,7 +402,7 @@
                 "NO": { name: "Norway", code: "no", tier: "medium" },
                 "MT": { name: "Malta", code: "mt", tier: "small" }, 
                 "GR": { name: "Greece", code: "gr", tier: "medium" },
-                "UA": { name: "Ukraine", code: "ua", tier: "big" }, // Highly successful
+                "UA": { name: "Ukraine", code: "ua", tier: "big" },
                 "RU": { name: "Russia", code: "ru", tier: "big" },
                 "DK": { name: "Denmark", code: "dk", tier: "medium" } 
             },
@@ -613,16 +614,15 @@
             const cData = db.countries[cId];
             const allRes = db.results.filter(r => r.countryId === cId).sort((a,b) => b.edition - a.edition); 
             
-            if (allRes.length === 0) return { score: 0, label: "N/A", color: "var(--text-muted)", baseScore: 0, momentumScore: 0, teleScore: 0, expScore: 0 };
+            if (allRes.length === 0) return { score: 0, label: "N/A", color: "var(--text-muted)", baseScore: 0, momentumScore: 0, top10Score: 0, pbScore: 0, expScore: 0 };
 
             const gfRes = allRes.filter(r => isQualifier(r));
-            let baseScore = 0, momentumScore = 0, teleScore = 0, expScore = 0;
+            let baseScore = 0, momentumScore = 0, top10Score = 0, pbScore = 0, expScore = 0;
 
             // 1. Base Performance (40 pts)
             let avgPlace = 0;
             if (gfRes.length > 0) {
                 avgPlace = gfRes.reduce((sum, r) => sum + r.place, 0) / gfRes.length;
-                // Assuming roughly 20-26 countries max. Scale: 1st = 40pts, 20th+ = 0pts
                 baseScore = Math.max(0, 40 * (20 - avgPlace) / 19);
             }
 
@@ -640,17 +640,31 @@
                 momentumScore = 10; // neutral for newbies
             }
 
-            // 3. People's Champion (20 pts)
-            let totalTele = 0, totalJury = 0;
-            gfRes.forEach(r => { totalTele += (r.tele||0); totalJury += (r.jury||0); });
-            if (totalTele + totalJury > 0) {
-                const teleRatio = totalTele / (totalTele + totalJury);
-                teleScore = teleRatio * 20;
+            // 3. Top 10 Rate (10 pts)
+            if (gfRes.length > 0) {
+                let top10Count = gfRes.filter(r => r.place <= 10).length;
+                top10Score = (top10Count / gfRes.length) * 10;
             } else {
-                teleScore = 10; // No data yet
+                top10Score = 0; // No GF appearances
             }
 
-            // 4. Expectations (20 pts)
+            // 4. Proximity to Personal Best (10 pts)
+            if (gfRes.length > 0) {
+                const allPlaces = gfRes.map(r => r.place);
+                const personalBest = Math.min(...allPlaces);
+                const mostRecentPlace = gfRes[0].place;
+                const diffPB = mostRecentPlace - personalBest;
+
+                if (diffPB === 0) pbScore = 10;
+                else if (diffPB <= 3) pbScore = 8;
+                else if (diffPB <= 7) pbScore = 5;
+                else if (diffPB <= 12) pbScore = 2;
+                else pbScore = 0;
+            } else {
+                pbScore = 0; // No GF appearances
+            }
+
+            // 5. Expectations (20 pts)
             const lastResult = allRes[0];
             const tier = cData.tier || "medium";
             const isGF = isQualifier(lastResult);
@@ -669,7 +683,7 @@
                 else expScore = 0;
             }
 
-            let total = Math.round(baseScore + momentumScore + teleScore + expScore);
+            let total = Math.round(baseScore + momentumScore + top10Score + pbScore + expScore);
             total = Math.max(0, Math.min(100, total));
 
             let label, color;
@@ -683,7 +697,8 @@
                 score: total, label, color, 
                 baseScore: Math.round(baseScore), 
                 momentumScore: Math.round(momentumScore), 
-                teleScore: Math.round(teleScore), 
+                top10Score: Math.round(top10Score), 
+                pbScore: Math.round(pbScore),
                 expScore: Math.round(expScore) 
             };
         }
@@ -897,7 +912,7 @@
             let chartData = [];
 
             // Happiness Index Rendering
-            const hapStatus = getParticipationStatus(activeCountryId, db.editions[db.editions.length-1]); // check if currently participating at all
+            const hapStatus = getParticipationStatus(activeCountryId, db.editions[db.editions.length-1]); 
             const hapWrapper = document.getElementById("happiness-wrapper");
             
             if(hapStatus === 'pre-debut' || db.results.filter(r => r.countryId === activeCountryId).length === 0) {
@@ -914,13 +929,14 @@
                 
                 document.getElementById("hap-base").innerText = `${hapData.baseScore}/40`;
                 document.getElementById("hap-mom").innerText = `${hapData.momentumScore}/20`;
-                document.getElementById("hap-tele").innerText = `${hapData.teleScore}/20`;
+                document.getElementById("hap-top10").innerText = `${hapData.top10Score}/10`;
+                document.getElementById("hap-pb").innerText = `${hapData.pbScore}/10`;
                 document.getElementById("hap-exp").innerText = `${hapData.expScore}/20`;
             }
 
             db.editions.forEach(ed => {
                 const status = getParticipationStatus(activeCountryId, ed);
-                if (status === 'pre-debut') return;
+                if (status === 'pre-debut') return; 
 
                 chartLabels.push("Ed " + ed);
                 const result = db.results.find(r => r.edition === ed && r.countryId === activeCountryId);
@@ -1281,7 +1297,6 @@
                 records.semiWins[cId] = 0; records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
                 records.qStreaks[cId] = { curr: 0, max: 0 }; records.nqStreaks[cId] = { curr: 0, max: 0 };
                 
-                // Fetch happiness score
                 let hData = calculateHappiness(cId);
                 if(hData.score > 0 || hData.label !== "N/A") {
                     records.happiness[cId] = hData.score;
@@ -1290,7 +1305,6 @@
 
             let margins = [];
 
-            // Streaks
             db.editions.forEach(ed => {
                 const editionHasSemis = db.results.some(r => r.edition === ed && r.semi !== undefined);
 
@@ -1364,7 +1378,6 @@
                 return html;
             }
 
-            // Happiness Arrays
             let happyArr = Object.keys(records.happiness).map(id => ({id: id, val: records.happiness[id]})).sort((a,b) => b.val - a.val);
             let sadArr = [...happyArr].reverse();
             document.getElementById("stat-happy").innerHTML = buildList(happyArr, 'val', '%', 5, true);
