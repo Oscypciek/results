@@ -51,6 +51,9 @@
         .tab-content { display: none; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* General UI Elements */
+        .info-banner { background-color: rgba(255, 42, 95, 0.1); border-left: 4px solid var(--primary-color); padding: 12px 15px; margin-bottom: 20px; font-size: 13px; color: var(--text-main); border-radius: 0 4px 4px 0; }
+        
         /* Pickers */
         .picker-container { margin-bottom: 25px; background-color: var(--table-row-odd); padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .picker-title { font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
@@ -70,17 +73,6 @@
         .part-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
         .part-list { display: flex; flex-wrap: wrap; gap: 5px; }
         .part-badge { background-color: var(--table-header); color: var(--text-main); font-size: 12px; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.05);}
-
-        /* Happiness UI */
-        .happiness-wrapper { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .happiness-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .happiness-title { margin: 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; font-weight: bold;}
-        .happiness-label { font-size: 24px; font-weight: bold; }
-        .happiness-bar-bg { width: 100%; height: 20px; background-color: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 20px;}
-        .happiness-bar-fill { height: 100%; width: 0%; transition: width 1s ease-in-out, background-color 1s ease-in-out; }
-        .happiness-breakdown { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; gap: 10px;}
-        .happiness-metric { text-align: center; flex: 1; min-width: 60px; background-color: var(--table-header); padding: 10px; border-radius: 6px; }
-        .happiness-metric span { display: block; font-weight: bold; color: var(--text-main); font-size: 16px; margin-top: 5px;}
 
         /* Tables */
         .table-wrapper { overflow-x: auto; margin-bottom: 25px; }
@@ -110,16 +102,15 @@
         /* Chart Container */
         .chart-container { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; height: 300px; width: 100%; box-sizing: border-box; }
 
-        /* Overall Section Grid */
+        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .stats-grid-mini { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
         .stat-card { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; text-align: center; border-top: 4px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         
         .border-jury { border-top-color: #3b82f6; }
         .border-tele { border-top-color: #a855f7; }
         .border-wood { border-top-color: var(--color-wooden); }
         .border-gold { border-top-color: var(--text-1st); }
-        .border-happy { border-top-color: #10b981; }
-        .border-sad { border-top-color: #ef4444; }
 
         .stat-card h3 { margin-top: 0; color: var(--text-muted); font-size: 13px; text-transform: uppercase; }
         .stat-card .number { font-size: 42px; font-weight: bold; margin: 10px 0; }
@@ -169,6 +160,31 @@
 
         .ro-flag-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
         .ro-flag-item { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 11px;}
+
+        /* Breakdown Elements */
+        .expand-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; margin-left: 8px; padding: 4px; transition: color 0.2s; vertical-align: middle; }
+        .expand-btn:hover { color: var(--text-main); }
+        .breakdown-row { background-color: var(--table-hover) !important; }
+        .breakdown-row td { padding: 15px; text-align: left; border-bottom: 2px solid var(--bg-color); }
+        .bd-item { display: inline-block; background-color: var(--table-header); border: 1px solid rgba(255,255,255,0.05); padding: 4px 8px; margin: 4px 8px 4px 0; border-radius: 4px; font-size: 11px; font-family: monospace; }
+        .bd-place { color: var(--text-main); font-weight: bold; }
+        .bd-pts { color: var(--primary-color); font-weight: bold; }
+.breakdown-table { 
+    width: auto; 
+    min-width: 300px; 
+    margin: 10px 0; 
+    background-color: var(--bg-color); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+.breakdown-table th, .breakdown-table td { 
+    padding: 8px 15px; 
+    text-align: center; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    font-size: 12px;
+}
+.breakdown-table th { background-color: var(--table-header); color: var(--text-muted); text-transform: uppercase; }
+.breakdown-table tr:hover td { background-color: var(--table-hover) !important; }
     </style>
 </head>
 <body>
@@ -190,7 +206,10 @@
                 <div class="picker-grid" id="edition-picker-grid"></div>
                 
                 <div class="stage-selector" id="stage-selector">
-                    <button class="picker-btn active" id="btn-gf" onclick="setStage('GF', this)">Grand Final</button>
+                    <button class="picker-btn active" id="btn-gf" onclick="setStage('GF', this)" style="flex-direction: column; align-items: center; padding: 6px 12px; line-height: 1.2;">
+                        <span>Grand Final</span>
+                        <span style="font-size: 9px; font-weight: normal; margin-top: 3px; color: var(--text-muted);">1, 2, 3, 4, 5, 6, 8, 10 pts.</span>
+                    </button>
                     <button class="picker-btn" id="btn-sf1" onclick="setStage('SF1', this)">Semi-Final 1</button>
                     <button class="picker-btn" id="btn-sf2" onclick="setStage('SF2', this)">Semi-Final 2</button>
                 </div>
@@ -221,23 +240,8 @@
                 <div class="picker-grid" id="country-picker-grid"></div>
             </div>
 
-            <div class="happiness-wrapper" id="happiness-wrapper" style="display: none;">
-                <div class="happiness-header">
-                    <h3 class="happiness-title">National Happiness Index</h3>
-                    <div class="happiness-label" id="hap-label">--</div>
-                </div>
-                <div class="happiness-bar-bg">
-                    <div class="happiness-bar-fill" id="hap-fill"></div>
-                </div>
-                <div class="happiness-breakdown">
-                    <div class="happiness-metric">Base Perf. <span id="hap-base">0/40</span></div>
-                    <div class="happiness-metric">Momentum <span id="hap-mom">0/20</span></div>
-                    <div class="happiness-metric">Top 10 Rate <span id="hap-top10">0/10</span></div>
-                    <div class="happiness-metric">Near PB <span id="hap-pb">0/10</span></div>
-                    <div class="happiness-metric">Expectation <span id="hap-exp">0/20</span></div>
-                </div>
-            </div>
-
+            <div class="stats-grid stats-grid-mini" id="country-stats-top" style="margin-bottom:25px;"></div>
+            
             <div class="chart-container"><canvas id="trendChart"></canvas></div>
             
             <div class="table-wrapper">
@@ -285,10 +289,41 @@
         </div>
 
         <div id="matrix" class="tab-content">
+            <h3 class="picker-title">Editions Grid Matrix</h3>
             <div class="table-wrapper">
                 <table id="matrix-table" class="matrix-table">
                     <thead id="matrix-head"></thead>
                     <tbody id="matrix-body"></tbody>
+                </table>
+            </div>
+
+            <h3 class="picker-title" style="margin-top: 30px;">Placement Counts (Medal Table)</h3>
+            <div class="table-wrapper">
+                <table id="matrix-counts-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('matrix-counts-table', 0, false)">Country</th>
+                            <th onclick="sortTable('matrix-counts-table', 1, true)">1st Place</th>
+                            <th onclick="sortTable('matrix-counts-table', 2, true)">2nd Place</th>
+                            <th onclick="sortTable('matrix-counts-table', 3, true)">3rd Place</th>
+                            <th onclick="sortTable('matrix-counts-table', 4, true)">Last Place</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-counts-body"></tbody>
+                </table>
+            </div>
+
+            <h3 class="picker-title" style="margin-top: 30px;">All-Time Top 10 Ranking (Point System)</h3>
+            <div class="table-wrapper">
+                <table id="matrix-top10-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Country</th>
+                            <th>Top 10 Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-top10-body"></tbody>
                 </table>
             </div>
         </div>
@@ -304,15 +339,6 @@
 
         <div id="overall" class="tab-content">
             <div class="stats-grid">
-                
-                <div class="stat-card border-happy">
-                    <h3>Happiest Nations (Index)</h3>
-                    <ul class="ranking-list" id="stat-happy"></ul>
-                </div>
-                <div class="stat-card border-sad">
-                    <h3>Saddest Nations (Index)</h3>
-                    <ul class="ranking-list" id="stat-sad"></ul>
-                </div>
                 <div class="stat-card border-gold">
                     <h3>Longest Qualification Streak</h3>
                     <ul class="ranking-list" id="stat-streak-q"></ul>
@@ -369,6 +395,10 @@
                     <h3>Countries Best Placement</h3>
                     <ul class="ranking-list" id="stat-best-place"></ul>
                 </div>
+                <div class="stat-card border-wood">
+                    <h3>Countries Worst Placement</h3>
+                    <ul class="ranking-list" id="stat-worst-place"></ul>
+                </div>
             </div>
         </div>
 
@@ -379,8 +409,8 @@
         // DATABASE STRUCTURE
         // ==========================================
         const db = {
-            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], // <-- Added 13
-            hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA", 8: "PL", 9: "LU", 10: "BE", 11: "NL", 12: "MC", 13: "MC" }, // <-- Added 13: "MC"
+            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 
+            hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA", 8: "PL", 9: "LU", 10: "BE", 11: "NL", 12: "MC", 13: "MC" }, 
             countries: {
                 "AD": { name: "Andorra", code: "ad", tier: "small" },
                 "AT": { name: "Austria", code: "at", tier: "medium" },
@@ -405,7 +435,7 @@
                 "UA": { name: "Ukraine", code: "ua", tier: "big" },
                 "RU": { name: "Russia", code: "ru", tier: "big" },
                 "DK": { name: "Denmark", code: "dk", tier: "medium" },
-                "LI": { name: "Liechtenstein", code: "li", tier: "small" } // <-- Added Liechtenstein
+                "LI": { name: "Liechtenstein", code: "li", tier: "small" } 
             },
             results: [
                 // EDITION 1 
@@ -593,7 +623,7 @@
                 { edition: 11, countryId: "PL", ro: "04", place: 12, points: 27, jury: 1, tele: 26 },
                 { edition: 11, countryId: "ES", ro: "13", place: 13, points: 16, jury: 13, tele: 3 },
 
-                                // EDITION 12
+                // EDITION 12
                 { edition: 12, countryId: "MC", ro: "04", place: 1, points: 175, jury: 88, tele: 87 },
                 { edition: 12, countryId: "FR", ro: "12", place: 2, points: 120, jury: 91, tele: 29 },
                 { edition: 12, countryId: "DE", ro: "08", place: 3, points: 117, jury: 41, tele: 76 },
@@ -611,7 +641,7 @@
                 { edition: 12, countryId: "IT", ro: "09", place: 15, points: 27, jury: 18, tele: 9 },
                 { edition: 12, countryId: "SM", ro: "16", place: 16, points: 11, jury: 0, tele: 11 },
 
-                                // EDITION 13
+                // EDITION 13
                 { edition: 13, countryId: "PL", ro: "06", place: 1, points: 167, jury: 78, tele: 89 },
                 { edition: 13, countryId: "DK", ro: "09", place: 2, points: 130, jury: 37, tele: 93 },
                 { edition: 13, countryId: "NL", ro: "02", place: 3, points: 130, jury: 61, tele: 69 },
@@ -639,107 +669,42 @@
         let activeRoStage = 'GF'; 
         let trendChartInstance = null; 
 
-        function getFlag(code, lg = false) {
+        function getFlag(code, lg = false, extraStyle = "") {
             if (!code) return "";
-            return `<img src="https://flagcdn.com/${code}.svg" class="flag-icon ${lg ? 'flag-icon-lg' : ''}" alt="${code}" loading="lazy">`;
+            return `<img src="https://flagcdn.com/${code}.svg" class="flag-icon ${lg ? 'flag-icon-lg' : ''}" style="${extraStyle}" alt="${code}" loading="lazy">`;
         }
 
         function isQualifier(result) { return result && result.place !== undefined; }
 
-        // ==========================================
-        // HAPPINESS ALGORITHM
-        // ==========================================
-        function calculateHappiness(cId) {
-            const cData = db.countries[cId];
-            const allRes = db.results.filter(r => r.countryId === cId).sort((a,b) => b.edition - a.edition); 
+        function getTop10Rankings() {
+            let scores = {};
+            let breakdowns = {};
+            Object.keys(db.countries).forEach(cId => { 
+                scores[cId] = 0; 
+                breakdowns[cId] = {}; 
+            });
+            const ptsMap = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
             
-            if (allRes.length === 0) return { score: 0, label: "N/A", color: "var(--text-muted)", baseScore: 0, momentumScore: 0, top10Score: 0, pbScore: 0, expScore: 0 };
+            db.results.forEach(r => {
+                if (isQualifier(r) && ptsMap[r.place]) {
+                    scores[r.countryId] += ptsMap[r.place];
+                    if (!breakdowns[r.countryId][r.place]) breakdowns[r.countryId][r.place] = 0;
+                    breakdowns[r.countryId][r.place]++;
+                }
+            });
 
-            const gfRes = allRes.filter(r => isQualifier(r));
-            let baseScore = 0, momentumScore = 0, top10Score = 0, pbScore = 0, expScore = 0;
-
-            // 1. Base Performance (40 pts)
-            let avgPlace = 0;
-            if (gfRes.length > 0) {
-                avgPlace = gfRes.reduce((sum, r) => sum + r.place, 0) / gfRes.length;
-                baseScore = Math.max(0, 40 * (20 - avgPlace) / 19);
-            }
-
-            // 2. Momentum (20 pts)
-            if (gfRes.length >= 2) {
-                const recent = gfRes.slice(0, Math.min(3, gfRes.length)); 
-                const recentAvg = recent.reduce((sum, r) => sum + r.place, 0) / recent.length;
-                const diff = avgPlace - recentAvg; // positive = improving
-                if (diff >= 2) momentumScore = 20;
-                else if (diff > -2) momentumScore = 10;
-                else momentumScore = 0;
-            } else if (allRes.length >= 2 && gfRes.length === 0) {
-                momentumScore = 0; // consistent NQs
-            } else {
-                momentumScore = 10; // neutral for newbies
-            }
-
-            // 3. Top 10 Rate (10 pts)
-            if (gfRes.length > 0) {
-                let top10Count = gfRes.filter(r => r.place <= 10).length;
-                top10Score = (top10Count / gfRes.length) * 10;
-            } else {
-                top10Score = 0; // No GF appearances
-            }
-
-            // 4. Proximity to Personal Best (10 pts)
-            if (gfRes.length > 0) {
-                const allPlaces = gfRes.map(r => r.place);
-                const personalBest = Math.min(...allPlaces);
-                const mostRecentPlace = gfRes[0].place;
-                const diffPB = mostRecentPlace - personalBest;
-
-                if (diffPB === 0) pbScore = 10;
-                else if (diffPB <= 3) pbScore = 8;
-                else if (diffPB <= 7) pbScore = 5;
-                else if (diffPB <= 12) pbScore = 2;
-                else pbScore = 0;
-            } else {
-                pbScore = 0; // No GF appearances
-            }
-
-            // 5. Expectations (20 pts)
-            const lastResult = allRes[0];
-            const tier = cData.tier || "medium";
-            const isGF = isQualifier(lastResult);
-            const p = isGF ? lastResult.place : 999;
-
-            if (tier === "small") {
-                if (isGF) expScore = 20; 
-                else expScore = 5; 
-            } else if (tier === "medium") {
-                if (isGF && p <= 10) expScore = 20;
-                else if (isGF) expScore = 10;
-                else expScore = 0;
-            } else if (tier === "big") {
-                if (isGF && p <= 5) expScore = 20;
-                else if (isGF && p <= 10) expScore = 10;
-                else expScore = 0;
-            }
-
-            let total = Math.round(baseScore + momentumScore + top10Score + pbScore + expScore);
-            total = Math.max(0, Math.min(100, total));
-
-            let label, color;
-            if (total >= 80) { label = "🤩 Euphoric"; color = "#10b981"; } 
-            else if (total >= 60) { label = "😊 Content"; color = "#84cc16"; } 
-            else if (total >= 40) { label = "😐 Indifferent"; color = "#facc15"; } 
-            else if (total >= 20) { label = "😩 Frustrated"; color = "#f97316"; } 
-            else { label = "😡 Devastated"; color = "#ef4444"; } 
-
-            return { 
-                score: total, label, color, 
-                baseScore: Math.round(baseScore), 
-                momentumScore: Math.round(momentumScore), 
-                top10Score: Math.round(top10Score), 
-                pbScore: Math.round(pbScore),
-                expScore: Math.round(expScore) 
-            };
+            let arr = Object.keys(scores).map(cId => ({ cId, score: scores[cId], breakdown: breakdowns[cId] }));
+            arr.sort((a,b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return db.countries[a.cId].name.localeCompare(db.countries[b.cId].name);
+            });
+            
+            let rank = 1;
+            arr.forEach((item, index) => {
+                if (index > 0 && item.score < arr[index-1].score) rank = index + 1;
+                item.rank = rank;
+            });
+            return arr;
         }
 
         // ==========================================
@@ -755,6 +720,18 @@
             renderH2H();
             renderOverallStats();
         }
+
+        window.toggleBreakdown = function(cId) {
+            const row = document.getElementById(`breakdown-${cId}`);
+            const icon = document.getElementById(`chevron-${cId}`);
+            if (row.style.display === "none" || row.style.display === "") {
+                row.style.display = "table-row";
+                icon.innerHTML = "▲";
+            } else {
+                row.style.display = "none";
+                icon.innerHTML = "▼";
+            }
+        };
 
         function updateStageSelectors() {
             const hasSF1 = db.results.some(r => r.edition === activeEdition && r.semi === 1);
@@ -782,7 +759,8 @@
             db.editions.forEach(ed => {
                 const btn = document.createElement("div");
                 btn.className = `picker-btn ${ed === activeEdition ? "active" : ""}`;
-                btn.innerText = `Edition ${ed}`;
+                const hostFlag = getFlag(db.countries[db.hosts[ed]].code, false, "margin-left: 6px; margin-right: 0;");
+                btn.innerHTML = `Edition ${ed} ${hostFlag}`;
                 btn.onclick = () => {
                     activeEdition = ed;
                     renderPickers();
@@ -950,27 +928,23 @@
             let chartLabels = [];
             let chartData = [];
 
-            // Happiness Index Rendering
-            const hapStatus = getParticipationStatus(activeCountryId, db.editions[db.editions.length-1]); 
-            const hapWrapper = document.getElementById("happiness-wrapper");
+            // Display Top 10 Ranking Point Info
+            let top10Data = getTop10Rankings();
+            let myTop10 = top10Data.find(x => x.cId === activeCountryId);
             
-            if(hapStatus === 'pre-debut' || db.results.filter(r => r.countryId === activeCountryId).length === 0) {
-                hapWrapper.style.display = "none";
+            if (myTop10) {
+                document.getElementById("country-stats-top").innerHTML = `
+                    <div class="stat-card">
+                        <h3>All-Time Top 10 Points</h3>
+                        <div class="number">${myTop10.score}</div>
+                    </div>
+                    <div class="stat-card border-gold">
+                        <h3>Top 10 Points Ranking</h3>
+                        <div class="number">#${myTop10.rank}</div>
+                    </div>
+                `;
             } else {
-                hapWrapper.style.display = "block";
-                const hapData = calculateHappiness(activeCountryId);
-                
-                document.getElementById("hap-label").innerText = `${hapData.score}% ${hapData.label}`;
-                document.getElementById("hap-label").style.color = hapData.color;
-                
-                document.getElementById("hap-fill").style.width = `${hapData.score}%`;
-                document.getElementById("hap-fill").style.backgroundColor = hapData.color;
-                
-                document.getElementById("hap-base").innerText = `${hapData.baseScore}/40`;
-                document.getElementById("hap-mom").innerText = `${hapData.momentumScore}/20`;
-                document.getElementById("hap-top10").innerText = `${hapData.top10Score}/10`;
-                document.getElementById("hap-pb").innerText = `${hapData.pbScore}/10`;
-                document.getElementById("hap-exp").innerText = `${hapData.expScore}/20`;
+                document.getElementById("country-stats-top").innerHTML = "";
             }
 
             db.editions.forEach(ed => {
@@ -1214,6 +1188,97 @@
                 bodyHtml += `</tr>`;
             });
             tbody.innerHTML = bodyHtml;
+
+            // Generate Placement Counts (Medal Table)
+            let counts = {};
+            Object.keys(db.countries).forEach(cId => counts[cId] = { first: 0, second: 0, third: 0, last: 0 });
+            db.results.forEach(r => {
+                if (isQualifier(r)) {
+                    if (r.place === 1) counts[r.countryId].first++;
+                    if (r.place === 2) counts[r.countryId].second++;
+                    if (r.place === 3) counts[r.countryId].third++;
+                    if (r.place === lastPlaces[r.edition]) counts[r.countryId].last++;
+                }
+            });
+
+            let countArr = Object.keys(counts).map(cId => ({ cId, ...counts[cId] }));
+            countArr.sort((a, b) => {
+                if (b.first !== a.first) return b.first - a.first;
+                if (b.second !== a.second) return b.second - a.second;
+                if (b.third !== a.third) return b.third - a.third;
+                return db.countries[a.cId].name.localeCompare(db.countries[b.cId].name);
+            });
+
+            let countBodyHtml = "";
+            countArr.forEach(item => {
+                if (item.first === 0 && item.second === 0 && item.third === 0 && item.last === 0) return; // Skip entirely empty
+                const cData = db.countries[item.cId];
+                countBodyHtml += `<tr>
+                    <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
+                    <td class="${item.first > 0 ? 'txt-1st' : ''}">${item.first}</td>
+                    <td class="${item.second > 0 ? 'txt-2nd' : ''}">${item.second}</td>
+                    <td class="${item.third > 0 ? 'txt-3rd' : ''}">${item.third}</td>
+                    <td style="${item.last > 0 ? 'color:var(--primary-color)' : ''}">${item.last}</td>
+                </tr>`;
+            });
+            document.getElementById("matrix-counts-body").innerHTML = countBodyHtml;
+
+            // Generate All-Time Top 10 Ranking Table
+            let top10Data = getTop10Rankings();
+            let top10BodyHtml = "";
+            const ptsMap = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
+
+            top10Data.forEach(item => {
+                const cData = db.countries[item.cId];
+let bdHtml = "";
+                let places = Object.keys(item.breakdown).sort((a,b) => a - b);
+                if(places.length > 0) {
+                    // Start building an actual HTML table
+                    bdHtml = `<table class="breakdown-table">
+                                <thead>
+                                    <tr>
+                                        <th>Placement</th>
+                                        <th>Count</th>
+                                        <th>Points Earned</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                                
+                    places.forEach(p => {
+                        let times = item.breakdown[p];
+                        let pts = ptsMap[p] * times;
+                        let suffix = "th";
+                        if(p == 1) suffix = "st"; else if(p == 2) suffix = "nd"; else if(p == 3) suffix = "rd";
+                        
+                        // Add table rows instead of divs
+                        bdHtml += `<tr>
+                                     <td class="bd-place">${p}${suffix} Place</td>
+                                     <td>${times} time${times>1?'s':''}</td>
+                                     <td class="bd-pts">+${pts} pts</td>
+                                   </tr>`;
+                    });
+                    
+                    bdHtml += `</tbody></table>`; // Close the table
+                } else {
+                    bdHtml = `<span style="font-style:italic; color: var(--text-muted);">No Top 10 placements.</span>`;
+                }
+
+                let chevron = `<button class="expand-btn" id="chevron-${item.cId}" onclick="toggleBreakdown('${item.cId}')">▼</button>`;
+
+                top10BodyHtml += `<tr>
+                    <td>#${item.rank}</td>
+                    <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
+                    <td class="points-total">
+                        <div style="display: flex; align-items: center; justify-content: center;">
+                            ${item.score} pts ${chevron}
+                        </div>
+                    </td>
+                </tr>
+                <tr class="breakdown-row" id="breakdown-${item.cId}" style="display:none;">
+                    <td colspan="3">${bdHtml}</td>
+                </tr>`;
+            });
+            document.getElementById("matrix-top10-body").innerHTML = top10BodyHtml;
         }
 
         // ==========================================
@@ -1241,8 +1306,8 @@
             document.getElementById('h2h-flag-a').innerHTML = getFlag(db.countries[idA].code, true);
             document.getElementById('h2h-flag-b').innerHTML = getFlag(db.countries[idB].code, true);
 
-            let statsA = { wins: 0, headToHead: 0, sumPlace: 0, count: 0, bestPlace: 999 };
-            let statsB = { wins: 0, headToHead: 0, sumPlace: 0, count: 0, bestPlace: 999 };
+            let statsA = { wins: 0, headToHead: 0, sumPlace: 0, appearances: 0, bestPlace: 999, totalPts: 0, maxPts: 0 };
+            let statsB = { wins: 0, headToHead: 0, sumPlace: 0, appearances: 0, bestPlace: 999, totalPts: 0, maxPts: 0 };
             
             let aBeatsB = [];
             let bBeatsA = [];
@@ -1255,13 +1320,17 @@
                     if(rA.place === 1) statsA.wins++;
                     if(rA.place < statsA.bestPlace) statsA.bestPlace = rA.place;
                     statsA.sumPlace += rA.place;
-                    statsA.count++;
+                    statsA.appearances++;
+                    statsA.totalPts += rA.points;
+                    if(rA.points > statsA.maxPts) statsA.maxPts = rA.points;
                 }
                 if(isQualifier(rB)) {
                     if(rB.place === 1) statsB.wins++;
                     if(rB.place < statsB.bestPlace) statsB.bestPlace = rB.place;
                     statsB.sumPlace += rB.place;
-                    statsB.count++;
+                    statsB.appearances++;
+                    statsB.totalPts += rB.points;
+                    if(rB.points > statsB.maxPts) statsB.maxPts = rB.points;
                 }
                 
                 if(isQualifier(rA) && isQualifier(rB)) {
@@ -1275,10 +1344,17 @@
                 }
             });
 
-            const avgA = statsA.count ? (statsA.sumPlace / statsA.count).toFixed(1) : "-";
-            const avgB = statsB.count ? (statsB.sumPlace / statsB.count).toFixed(1) : "-";
+            const avgA = statsA.appearances ? (statsA.sumPlace / statsA.appearances).toFixed(1) : "-";
+            const avgB = statsB.appearances ? (statsB.sumPlace / statsB.appearances).toFixed(1) : "-";
+            
+            const avgPtsA = statsA.appearances ? (statsA.totalPts / statsA.appearances).toFixed(1) : "-";
+            const avgPtsB = statsB.appearances ? (statsB.totalPts / statsB.appearances).toFixed(1) : "-";
+
             const bestA = statsA.bestPlace !== 999 ? statsA.bestPlace : "-";
             const bestB = statsB.bestPlace !== 999 ? statsB.bestPlace : "-";
+
+            const maxPtsA = statsA.maxPts || "-";
+            const maxPtsB = statsB.maxPts || "-";
 
             const container = document.getElementById('h2h-stats-container');
             container.innerHTML = "";
@@ -1315,9 +1391,13 @@
             let edStrB = bBeatsA.length > 0 ? `(Ed: ${bBeatsA.join(', ')})` : "";
 
             container.innerHTML += createRow("GF Matchups Won", statsA.headToHead, statsB.headToHead, false, edStrA, edStrB);
+            container.innerHTML += createRow("GF Appearances", statsA.appearances, statsB.appearances, false);
+            container.innerHTML += createRow("Total GF Points", statsA.totalPts || "-", statsB.totalPts || "-", false);
+            container.innerHTML += createRow("Highest GF Score", maxPtsA, maxPtsB, false);
             container.innerHTML += createRow("Total GF Wins", statsA.wins, statsB.wins, false);
             container.innerHTML += createRow("Best GF Placement", bestA, bestB, true);
             container.innerHTML += createRow("Avg. GF Placement", avgA, avgB, true);
+            container.innerHTML += createRow("Avg. GF Points", avgPtsA, avgPtsB, false);
         }
 
         // ==========================================
@@ -1325,21 +1405,17 @@
         // ==========================================
         function renderOverallStats() {
             let records = { 
-                wins: {}, lastPlaces: {}, avgJury: {}, avgTele: {}, bestPlace: {},
+                wins: {}, lastPlaces: {}, avgJury: {}, avgTele: {}, bestPlace: {}, worstPlace: {},
                 semiWins: {}, sfApps: {}, sfQuals: {}, sfNQs: {},
-                qStreaks: {}, nqStreaks: {}, happiness: {}
+                qStreaks: {}, nqStreaks: {}
             };
 
             Object.keys(db.countries).forEach(cId => {
-                records.wins[cId] = 0; records.lastPlaces[cId] = 0; records.bestPlace[cId] = 999;
+                records.wins[cId] = 0; records.lastPlaces[cId] = 0; 
+                records.bestPlace[cId] = 999; records.worstPlace[cId] = -1;
                 records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 };
                 records.semiWins[cId] = 0; records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
                 records.qStreaks[cId] = { curr: 0, max: 0 }; records.nqStreaks[cId] = { curr: 0, max: 0 };
-                
-                let hData = calculateHappiness(cId);
-                if(hData.score > 0 || hData.label !== "N/A") {
-                    records.happiness[cId] = hData.score;
-                }
             });
 
             let margins = [];
@@ -1387,6 +1463,7 @@
                         if (r.place === 1) records.wins[r.countryId]++;
                         if (r.place === lastPlace) records.lastPlaces[r.countryId]++;
                         if (r.place < records.bestPlace[r.countryId]) records.bestPlace[r.countryId] = r.place;
+                        if (r.place > records.worstPlace[r.countryId]) records.worstPlace[r.countryId] = r.place;
                         
                         records.avgJury[r.countryId].sum += r.jury; records.avgJury[r.countryId].count++;
                         records.avgTele[r.countryId].sum += r.tele; records.avgTele[r.countryId].count++;
@@ -1416,11 +1493,6 @@
                 });
                 return html;
             }
-
-            let happyArr = Object.keys(records.happiness).map(id => ({id: id, val: records.happiness[id]})).sort((a,b) => b.val - a.val);
-            let sadArr = [...happyArr].reverse();
-            document.getElementById("stat-happy").innerHTML = buildList(happyArr, 'val', '%', 5, true);
-            document.getElementById("stat-sad").innerHTML = buildList(sadArr, 'val', '%', 5, false);
 
             let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => ({id: id, val: records.qStreaks[id].max})).sort((a,b) => b.val - a.val);
             document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', ' in a row', 5, true);
@@ -1467,6 +1539,7 @@
             let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count > 0).map(id => ({ id: id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
             document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', ' avg', 5, true);
 
+            // Best Placement Generation
             let bestArr = Object.keys(records.bestPlace).filter(id => records.bestPlace[id] !== 999).map(id => ({id: id, val: records.bestPlace[id]})).sort((a,b) => {
                 if (a.val !== b.val) return a.val - b.val;
                 return db.countries[a.id].name.localeCompare(db.countries[b.id].name);
@@ -1481,6 +1554,22 @@
                 bestHtml += `<li><div class="list-country-info">${getFlag(c.code)} ${c.name}</div><span class="${placeClass}">${item.val}${suffix}</span></li>`;
             });
             document.getElementById("stat-best-place").innerHTML = bestHtml;
+
+            // Worst Placement Generation
+            let worstArr = Object.keys(records.worstPlace).filter(id => records.worstPlace[id] !== -1).map(id => ({id: id, val: records.worstPlace[id]})).sort((a,b) => {
+                if (a.val !== b.val) return b.val - a.val; // Sort descending
+                return db.countries[a.id].name.localeCompare(db.countries[b.id].name);
+            });
+            let worstHtml = "";
+            worstArr.forEach(item => {
+                const c = db.countries[item.id];
+                let suffix = "th";
+                if (item.val % 10 === 1 && item.val !== 11) suffix = "st";
+                else if (item.val % 10 === 2 && item.val !== 12) suffix = "nd";
+                else if (item.val % 10 === 3 && item.val !== 13) suffix = "rd";
+                worstHtml += `<li><div class="list-country-info">${getFlag(c.code)} ${c.name}</div><span class="txt-highlight">${item.val}${suffix}</span></li>`;
+            });
+            document.getElementById("stat-worst-place").innerHTML = worstHtml;
         }
 
         // ==========================================
@@ -1504,21 +1593,20 @@
             const isAscending = sortDirections[key];
 
             rows.sort((a, b) => {
-                if (a.children.length < 3) return 1; 
-                if (b.children.length < 3) return -1;
+                if (a.children.length < 2) return 1; 
+                if (b.children.length < 2) return -1;
 
                 function getVal(row) {
-                    if (row.children.length === 5) return row.children[colIndex].innerText.trim();
-                    if (row.children.length === 4) return colIndex < 3 ? row.children[colIndex].innerText.trim() : "-";
-                    if (row.children.length === 6) return row.children[colIndex].innerText.trim();
                     if (row.children[colIndex]) return row.children[colIndex].innerText.trim();
                     return "-";
                 }
 
                 let valA = getVal(a); let valB = getVal(b);
                 if (isNumeric) {
-                    let numA = valA === "-" || valA === "No semi-final" || valA === "NQ" || valA === "Host Qualifier" ? Infinity : parseFloat(valA);
-                    let numB = valB === "-" || valB === "No semi-final" || valB === "NQ" || valB === "Host Qualifier" ? Infinity : parseFloat(valB);
+                    let numA = valA === "-" || valA === "No semi-final" || valA === "NQ" || valA === "Host Qualifier" ? Infinity : parseFloat(valA.replace(/[^\d.-]/g, ''));
+                    let numB = valB === "-" || valB === "No semi-final" || valB === "NQ" || valB === "Host Qualifier" ? Infinity : parseFloat(valB.replace(/[^\d.-]/g, ''));
+                    if (isNaN(numA)) numA = Infinity;
+                    if (isNaN(numB)) numB = Infinity;
                     return isAscending ? numA - numB : numB - numA;
                 } else {
                     return isAscending ? valA.toLowerCase().localeCompare(valB.toLowerCase()) : valB.toLowerCase().localeCompare(valA.toLowerCase());
