@@ -207,9 +207,9 @@
                 
                 <div class="stage-selector" id="stage-selector">
                     <button class="picker-btn active" id="btn-gf" onclick="setStage('GF', this)" style="flex-direction: column; align-items: center; padding: 6px 12px; line-height: 1.2;">
-                        <span>Grand Final</span>
-                        <span style="font-size: 9px; font-weight: normal; margin-top: 3px; color: var(--text-muted);">1, 2, 3, 4, 5, 6, 8, 10 pts.</span>
-                    </button>
+    <span>Grand Final</span>
+    <span id="gf-pts-desc" style="font-size: 9px; font-weight: normal; margin-top: 3px; color: var(--text-muted);">1, 2, 3, 4, 5, 6, 8, 10 pts.</span>
+</button>
                     <button class="picker-btn" id="btn-sf1" onclick="setStage('SF1', this)">Semi-Final 1</button>
                     <button class="picker-btn" id="btn-sf2" onclick="setStage('SF2', this)">Semi-Final 2</button>
                 </div>
@@ -1128,6 +1128,15 @@
         // TAB 1: EDITIONS
         // ==========================================
         function renderEditionTable() {
+    const gfPtsDesc = document.getElementById("gf-pts-desc");
+    if (gfPtsDesc) {
+        // Sets the new point system for 16 and above
+        if (activeEdition >= 16) {
+            gfPtsDesc.innerText = "1, 2, 3, 4, 5, 6, 7, 8, 10, 12 pts.";
+        } else {
+            gfPtsDesc.innerText = "1, 2, 3, 4, 5, 6, 8, 10 pts.";
+        }
+    }
             const tbody = document.getElementById("edition-body");
             tbody.innerHTML = "";
             
