@@ -409,9 +409,9 @@
         // DATABASE STRUCTURE
         // ==========================================
         const db = {
-            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27], 
+            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28], 
             hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA", 8: "PL", 9: "LU", 10: "BE", 11: "NL", 12: "MC", 13: "MC", 14: "PL", 15: "IE",
-                   16: "DK", 17: "MC", 18: "DK", 19: "CH", 20: "RU", 21: "BE", 22: "DE", 23: "IT", 24: "DE", 25: "UA", 26: "BE", 27: "PT" },
+                   16: "DK", 17: "MC", 18: "DK", 19: "CH", 20: "RU", 21: "BE", 22: "DE", 23: "IT", 24: "DE", 25: "UA", 26: "BE", 27: "PT", 28: "SE"},
             countries: {
                 "AD": { name: "Andorra", code: "ad", tier: "small" },
                 "AT": { name: "Austria", code: "at", tier: "medium" },
@@ -441,6 +441,7 @@
                 "CZ": { name: "Czechia", code: "cz", tier: "medium" },
                 "MD": { name: "Moldova", code: "md", tier: "medium" },
                 "RO": { name: "Romania", code: "ro", tier: "medium" },
+                "IS": { name: "Iceland", code: "is", tier: "small" },
                 
             },
             results: [
@@ -972,9 +973,34 @@
 { edition: 27, countryId: "IT", ro: "07", place: 18, points: 22, jury: 0, tele: 22 },
 { edition: 27, countryId: "MC", ro: "02", place: 19, points: 17, jury: 15, tele: 2 },
 { edition: 27, countryId: "NO", ro: "17", place: 20, points: 15, jury: 10, tele: 5 },
-{ edition: 27, countryId: "MD", ro: "16", place: 21, points: 9, jury: 5, tele: 4 }
+{ edition: 27, countryId: "MD", ro: "16", place: 21, points: 9, jury: 5, tele: 4 },
  
- 
+ // EDITION 28
+{ edition: 28, countryId: "FR", ro: "13", place: 1, points: 243, jury: 113, tele: 130 },
+{ edition: 28, countryId: "PT", ro: "02", place: 2, points: 234, jury: 183, tele: 51 },
+{ edition: 28, countryId: "DK", ro: "10", place: 3, points: 227, jury: 120, tele: 107 },
+{ edition: 28, countryId: "MT", ro: "01", place: 4, points: 208, jury: 70, tele: 138 },
+{ edition: 28, countryId: "CH", ro: "17", place: 5, points: 186, jury: 92, tele: 94 },
+{ edition: 28, countryId: "UA", ro: "18", place: 6, points: 182, jury: 106, tele: 76 },
+{ edition: 28, countryId: "IS", ro: "11", place: 7, points: 158, jury: 79, tele: 79 },
+{ edition: 28, countryId: "ES", ro: "07", place: 8, points: 155, jury: 70, tele: 85 },
+{ edition: 28, countryId: "IE", ro: "12", place: 9, points: 150, jury: 28, tele: 122 },
+{ edition: 28, countryId: "SE", ro: "19", place: 10, points: 125, jury: 11, tele: 114 },
+{ edition: 28, countryId: "LU", ro: "21", place: 11, points: 119, jury: 67, tele: 52 },
+{ edition: 28, countryId: "RU", ro: "05", place: 12, points: 108, jury: 46, tele: 62 },
+{ edition: 28, countryId: "PL", ro: "23", place: 13, points: 105, jury: 85, tele: 20 },
+{ edition: 28, countryId: "NL", ro: "14", place: 14, points: 97, jury: 73, tele: 24 },
+{ edition: 28, countryId: "NO", ro: "09", place: 15, points: 86, jury: 72, tele: 14 },
+{ edition: 28, countryId: "FI", ro: "04", place: 16, points: 74, jury: 14, tele: 60 },
+{ edition: 28, countryId: "SM", ro: "08", place: 17, points: 71, jury: 32, tele: 39 },
+{ edition: 28, countryId: "DE", ro: "22", place: 18, points: 66, jury: 13, tele: 53 },
+{ edition: 28, countryId: "MD", ro: "06", place: 19, points: 54, jury: 8, tele: 46 },
+{ edition: 28, countryId: "AD", ro: "15", place: 20, points: 51, jury: 51, tele: 0 },
+{ edition: 28, countryId: "IT", ro: "20", place: 21, points: 42, jury: 38, tele: 4 },
+{ edition: 28, countryId: "BE", ro: "16", place: 22, points: 35, jury: 21, tele: 14 },
+{ edition: 28, countryId: "MC", ro: "24", place: 23, points: 5, jury: 0, tele: 5 },
+{ edition: 28, countryId: "GB", ro: "03", place: 24, points: 3, jury: 0, tele: 3 }
+                
             ]
         };
 
