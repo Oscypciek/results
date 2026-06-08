@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contest Results Database Pro</title>
@@ -41,6 +48,19 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
 
+        /* Map Container */
+        #mapdiv {
+            width: 100%;
+            height: 450px;
+            background-color: var(--table-row-odd);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+        
+        
         /* Navbar */
         .navbar { background-color: var(--nav-bg); display: flex; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
         .nav-btn { background: none; border: none; color: var(--text-muted); padding: 15px 15px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; }
@@ -217,6 +237,7 @@
 
             <div class="participation-tracker" id="participation-tracker"></div>
 
+             <div id="mapdiv"></div>
             <div class="table-wrapper">
                 <table id="edition-table">
                     <thead>
@@ -1134,6 +1155,9 @@
             ]
         };
 
+        let mapRoot;
+        let polygonSeries;
+        
         let activeEdition = 1;
         let activeStage = 'GF'; 
         let activeCountryId = "DE"; 
@@ -1184,6 +1208,7 @@
         function init() {
             renderPickers();
             populateH2HDropdowns();
+            initMap();
             renderEditionTable();
             renderCountryTable();
             renderROStats();
@@ -1331,6 +1356,93 @@
         // ==========================================
         // TAB 1: EDITIONS
         // ==========================================
+
+                function initMap() {
+            mapRoot = am5.Root.new("mapdiv");
+            mapRoot.setThemes([am5themes_Animated.new(mapRoot)]);
+
+            let chart = mapRoot.container.children.push(
+                am5map.MapChart.new(mapRoot, {
+                    panX: "translateX",
+                    panY: "translateY",
+                    projection: am5map.geoMercator(),
+                    homeZoomLevel: 3.5, // Zooms directly into Europe
+                    homeGeoPoint: { longitude: 15, latitude: 52 }
+                })
+            );
+
+            polygonSeries = chart.series.push(
+                am5map.MapPolygonSeries.new(mapRoot, {
+                    geoJSON: am5geodata_worldLow,
+                    exclude: ["AQ"] // Exclude Antarctica
+                })
+            );
+
+            // Set up base appearance and tooltip
+            polygonSeries.mapPolygons.template.setAll({
+                tooltipText: "{name}\n[bold]{placement}[/]",
+                interactive: true,
+                stroke: am5.color(0x24294a),
+                strokeWidth: 1
+            });
+
+            polygonSeries.mapPolygons.template.states.create("hover", {
+                fill: am5.color(0x4a5596)
+            });
+
+            // Make the map read our dynamic colors
+            polygonSeries.mapPolygons.template.adapters.add("fill", function(fill, target) {
+                if (target.dataItem && target.dataItem.dataContext && target.dataItem.dataContext.fill) {
+                    return am5.color(target.dataItem.dataContext.fill);
+                }
+                return am5.color(0x1a1e36); // Default dark blue for DNP
+            });
+        }
+
+        function updateMap() {
+            if (!polygonSeries) return;
+
+            const participatingIds = db.results
+                .filter(r => r.edition === activeEdition)
+                .map(r => r.countryId);
+            
+            let mapData = [];
+            
+            Object.keys(db.countries).forEach(cId => {
+                let isParticipating = participatingIds.includes(cId);
+                let color = 0x1a1e36; // default: not participating
+                let placementText = "Did Not Participate";
+
+                if(isParticipating) {
+                    let result = db.results.find(r => r.edition === activeEdition && r.countryId === cId);
+                    if(result && result.place) {
+                        // Heat mapping placements
+                        if(result.place === 1) color = 0xffd700; // 1st - Gold
+                        else if (result.place === 2) color = 0xc0c0c0; // 2nd - Silver
+                        else if (result.place === 3) color = 0xcd7f32; // 3rd - Bronze
+                        else color = 0xff2a5f; // Other Participants - Primary Pink
+                        
+                        let suffix = "th";
+                        if(result.place === 1) suffix = "st";
+                        else if(result.place === 2) suffix = "nd";
+                        else if(result.place === 3) suffix = "rd";
+                        placementText = `${result.place}${suffix} Place`;
+                    } else {
+                        color = 0xff2a5f; 
+                        placementText = "Participated (NQ)"; 
+                    }
+                }
+                
+                mapData.push({
+                    id: cId,
+                    fill: color,
+                    placement: placementText
+                });
+            });
+
+            polygonSeries.data.setAll(mapData);
+        }
+        
         function renderEditionTable() {
     const oldSystemEditions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 19, 20]; 
     const gfPtsDesc = document.getElementById("gf-pts-desc");
@@ -1398,6 +1510,7 @@
                     </tr>
                 `;
             });
+            updateMap();
         }
 
         // ==========================================
