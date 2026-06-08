@@ -1357,7 +1357,10 @@
         // TAB 1: EDITIONS
         // ==========================================
 
-        function initMap() {
+                function initMap() {
+            // Zabezpieczenie: jeśli mapa już istnieje, niszczymy ją przed narysowaniem nowej
+            if (mapRoot) { mapRoot.dispose(); }
+
             mapRoot = am5.Root.new("mapdiv");
             mapRoot.setThemes([am5themes_Animated.new(mapRoot)]);
 
@@ -1365,20 +1368,23 @@
                 am5map.MapChart.new(mapRoot, {
                     panX: "translateX",
                     panY: "translateY",
-                    projection: am5map.geoMercator()
-                    // We removed the fixed zoom so the map can dynamically re-center itself
+                    projection: am5map.geoMercator(),
+                    // Stały, bezpieczny zoom na Europę
+                    homeZoomLevel: 3.5, 
+                    homeGeoPoint: { longitude: 15, latitude: 52 } 
                 })
             );
 
             polygonSeries = chart.series.push(
                 am5map.MapPolygonSeries.new(mapRoot, {
-                    geoJSON: am5geodata_worldLow
+                    geoJSON: am5geodata_worldLow,
+                    exclude: ["AQ"] // Wykluczamy Antarktydę
                 })
             );
 
-            // Set up base appearance and dynamic tooltip
+            // Wygląd państw i tooltip
             polygonSeries.mapPolygons.template.setAll({
-                tooltipText: "{name}\n{tooltipInfo}", // Updated to show status info
+                tooltipText: "{name}\n{tooltipInfo}",
                 interactive: true,
                 stroke: am5.color(0x24294a),
                 strokeWidth: 1
@@ -1388,7 +1394,7 @@
                 fill: am5.color(0x4a5596)
             });
 
-            // Make the map read our dynamic colors
+            // Podpinanie dynamicznych kolorów
             polygonSeries.mapPolygons.template.adapters.add("fill", function(fill, target) {
                 if (target.dataItem && target.dataItem.dataContext && target.dataItem.dataContext.fill) {
                     return am5.color(target.dataItem.dataContext.fill);
@@ -1401,41 +1407,40 @@
             if (!polygonSeries) return;
 
             let mapData = [];
-            let includeIds = []; // This array will control which countries exist on the map
+            let includeIds = []; 
             
             Object.keys(db.countries).forEach(cId => {
                 const status = getParticipationStatus(cId, activeEdition);
                 
-                // IF PRE-DEBUT: Skip entirely. It will literally be cut out of the map.
+                // Odcinamy z mapy kraje przed debiutem
                 if (status === 'pre-debut') return; 
 
-                // Add to the map if it has debuted
                 includeIds.push(cId);
                 
                 let color;
                 let statusText = "";
 
-                // Apply your custom colors based on status
+                // Twoje kolory statusów
                 if (status === 'debut') {
-                    color = 0xa855f7; // Purple
+                    color = 0xa855f7; // Fioletowy
                     statusText = "Debut";
                 } else if (status === 'active') {
-                    color = 0x22c55e; // Green
+                    color = 0x22c55e; // Zielony
                     statusText = "Participating";
                 } else if (status === 'return') {
-                    color = 0xa3e635; // Lime
+                    color = 0xa3e635; // Limonkowy
                     statusText = "Returning";
                 } else if (status === 'withdraw') {
-                    color = 0xf87171; // Light red
+                    color = 0xf87171; // Jasnoczerwony
                     statusText = "Withdrawing";
                 } else if (status === 'absent') {
-                    color = 0x800000; // Maroon
+                    color = 0x800000; // Bordowy
                     statusText = "Absent";
                 }
                 
-                // Keep the placement info in the tooltip if they made it to the stage
                 let result = db.results.find(r => r.edition === activeEdition && r.countryId === cId);
                 let placementText = "";
+                
                 if (result) {
                     if (isQualifier(result)) {
                         let suffix = "th";
@@ -1455,18 +1460,13 @@
                 });
             });
 
-            // 1. Cut the map to ONLY show countries that exist in includeIds
+            // Renderujemy tylko kraje, które już zadebiutowały
             polygonSeries.set("include", includeIds);
             
-            // 2. Apply the color and tooltip data
+            // Nakładamy dane o kolorach
             polygonSeries.data.setAll(mapData);
-            
-            // 3. Magically auto-zoom the map perfectly to frame the visible countries
-            const chart = mapRoot.container.children.getIndex(0);
-            polygonSeries.events.once("datavalidated", function () {
-                chart.zoomToGeoBounds(polygonSeries.geoBounds());
-            });
         }
+
 
         
         function renderEditionTable() {
