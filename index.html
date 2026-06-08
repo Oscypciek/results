@@ -1402,6 +1402,38 @@
                 document.getElementById("country-stats-top").innerHTML = "";
             }
 
+                        let dnpStart = null;
+            let dnpEnd = null;
+            let dnpFlagCode = null;
+
+            // Helper function to draw the "Did not participate" rows
+            function flushDNP() {
+                if (dnpStart !== null) {
+                    if (dnpStart === dnpEnd) {
+                        // Only missed 1 edition - draw it normally
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><span class="edition-cell">${getFlag(dnpFlagCode)} ${dnpStart}</span></td>
+                                <td colspan="4" class="did-not-participate">Did not participate</td>
+                            </tr>
+                        `;
+                    } else {
+                        // Missed multiple editions - group them into one row
+                        tbody.innerHTML += `
+                            <tr>
+                                <td colspan="5" class="did-not-participate" style="letter-spacing: 2px;">
+                                    Did not participate in editions ${dnpStart} - ${dnpEnd}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    // Reset the streak memory
+                    dnpStart = null;
+                    dnpEnd = null;
+                    dnpFlagCode = null;
+                }
+            }
+
             db.editions.forEach(ed => {
                 const status = getParticipationStatus(activeCountryId, ed);
                 if (status === 'pre-debut') return; 
@@ -1413,6 +1445,9 @@
                 let hostFlagCode = db.countries[hostCountryId].code;
                 
                 if (result) {
+                    // Country participated! Flush any active DNP streaks first
+                    flushDNP();
+
                     let gfClass = "";
                     if (isQualifier(result)) {
                         const gfResults = db.results.filter(r => r.edition === ed && isQualifier(r));
@@ -1463,17 +1498,22 @@
                     }
 
                 } else {
+                    // Country did not participate! Add gap to chart, then update streak memory
                     chartData.push(null);
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
-                            <td colspan="4" class="did-not-participate">Did not participate</td>
-                        </tr>
-                    `;
+                    if (dnpStart === null) {
+                        dnpStart = ed;
+                        dnpFlagCode = hostFlagCode; // Save flag just in case it's only a 1-edition gap
+                    }
+                    dnpEnd = ed;
                 }
             });
+
+            // Loop is over, flush any remaining DNP streaks
+            flushDNP();
+
             drawTrendChart(chartLabels, chartData);
         }
+
 
         function drawTrendChart(labels, data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
