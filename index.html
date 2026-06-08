@@ -1357,6 +1357,7 @@
         // TAB 1: EDITIONS
         // ==========================================
 
+
                 function initMap() {
             mapRoot = am5.Root.new("mapdiv");
             mapRoot.setThemes([am5themes_Animated.new(mapRoot)]);
@@ -1365,22 +1366,20 @@
                 am5map.MapChart.new(mapRoot, {
                     panX: "translateX",
                     panY: "translateY",
-                    projection: am5map.geoMercator(),
-                    homeZoomLevel: 3.5, // Zooms directly into Europe
-                    homeGeoPoint: { longitude: 15, latitude: 52 }
+                    projection: am5map.geoMercator()
+                    // We removed the fixed zoom so the map can dynamically re-center itself
                 })
             );
 
             polygonSeries = chart.series.push(
                 am5map.MapPolygonSeries.new(mapRoot, {
-                    geoJSON: am5geodata_worldLow,
-                    exclude: ["AQ"] // Exclude Antarctica
+                    geoJSON: am5geodata_worldLow
                 })
             );
 
-            // Set up base appearance and tooltip
+            // Set up base appearance and dynamic tooltip
             polygonSeries.mapPolygons.template.setAll({
-                tooltipText: "{name}\n[bold]{placement}[/]",
+                tooltipText: "{name}\n{tooltipInfo}", // Updated to show status info
                 interactive: true,
                 stroke: am5.color(0x24294a),
                 strokeWidth: 1
@@ -1395,53 +1394,81 @@
                 if (target.dataItem && target.dataItem.dataContext && target.dataItem.dataContext.fill) {
                     return am5.color(target.dataItem.dataContext.fill);
                 }
-                return am5.color(0x1a1e36); // Default dark blue for DNP
+                return fill;
             });
         }
 
         function updateMap() {
             if (!polygonSeries) return;
 
-            const participatingIds = db.results
-                .filter(r => r.edition === activeEdition)
-                .map(r => r.countryId);
-            
             let mapData = [];
+            let includeIds = []; // This array will control which countries exist on the map
             
             Object.keys(db.countries).forEach(cId => {
-                let isParticipating = participatingIds.includes(cId);
-                let color = 0x1a1e36; // default: not participating
-                let placementText = "Did Not Participate";
+                const status = getParticipationStatus(cId, activeEdition);
+                
+                // IF PRE-DEBUT: Skip entirely. It will literally be cut out of the map.
+                if (status === 'pre-debut') return; 
 
-                if(isParticipating) {
-                    let result = db.results.find(r => r.edition === activeEdition && r.countryId === cId);
-                    if(result && result.place) {
-                        // Heat mapping placements
-                        if(result.place === 1) color = 0xffd700; // 1st - Gold
-                        else if (result.place === 2) color = 0xc0c0c0; // 2nd - Silver
-                        else if (result.place === 3) color = 0xcd7f32; // 3rd - Bronze
-                        else color = 0xff2a5f; // Other Participants - Primary Pink
-                        
+                // Add to the map if it has debuted
+                includeIds.push(cId);
+                
+                let color;
+                let statusText = "";
+
+                // Apply your custom colors based on status
+                if (status === 'debut') {
+                    color = 0xa855f7; // Purple
+                    statusText = "Debut";
+                } else if (status === 'active') {
+                    color = 0x22c55e; // Green
+                    statusText = "Participating";
+                } else if (status === 'return') {
+                    color = 0xa3e635; // Lime
+                    statusText = "Returning";
+                } else if (status === 'withdraw') {
+                    color = 0xf87171; // Light red
+                    statusText = "Withdrawing";
+                } else if (status === 'absent') {
+                    color = 0x800000; // Maroon
+                    statusText = "Absent";
+                }
+                
+                // Keep the placement info in the tooltip if they made it to the stage
+                let result = db.results.find(r => r.edition === activeEdition && r.countryId === cId);
+                let placementText = "";
+                if (result) {
+                    if (isQualifier(result)) {
                         let suffix = "th";
                         if(result.place === 1) suffix = "st";
                         else if(result.place === 2) suffix = "nd";
                         else if(result.place === 3) suffix = "rd";
-                        placementText = `${result.place}${suffix} Place`;
+                        placementText = `\n[bold]${result.place}${suffix} Place[/]`;
                     } else {
-                        color = 0xff2a5f; 
-                        placementText = "Participated (NQ)"; 
+                        placementText = `\n[bold]NQ[/]`;
                     }
                 }
-                
+
                 mapData.push({
                     id: cId,
                     fill: color,
-                    placement: placementText
+                    tooltipInfo: statusText + placementText
                 });
             });
 
+            // 1. Cut the map to ONLY show countries that exist in includeIds
+            polygonSeries.set("include", includeIds);
+            
+            // 2. Apply the color and tooltip data
             polygonSeries.data.setAll(mapData);
+            
+            // 3. Magically auto-zoom the map perfectly to frame the visible countries
+            const chart = mapRoot.container.children.getIndex(0);
+            polygonSeries.events.once("datavalidated", function () {
+                chart.zoomToGeoBounds(polygonSeries.geoBounds());
+            });
         }
+
         
         function renderEditionTable() {
     const oldSystemEditions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 19, 20]; 
