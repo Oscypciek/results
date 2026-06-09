@@ -7,7 +7,6 @@
     <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
     <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
     <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
-    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -360,12 +359,6 @@
         </div>
 
         <div id="overall" class="tab-content">
-            
-            <div class="picker-container" style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="picker-title" style="margin:0;">All-Time Points Race (Top 15)</h3>
-                <button class="picker-btn" id="play-race-btn" onclick="startRace()" style="color:var(--text-1st); border-color:var(--text-1st); font-size: 16px;">▶ Play Race</button>
-            </div>
-            <div id="racediv" style="width: 100%; height: 500px; background-color: var(--table-row-odd); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);"></div>
             <div class="stats-grid">
                 <div class="stat-card border-gold">
                     <h3>Longest Qualification Streak</h3>
@@ -1171,13 +1164,6 @@
         let activeRoStage = 'GF'; 
         let trendChartInstance = null; 
 
-let raceRoot;
-        let raceSeries;
-        let raceYAxis;
-        let raceXAxis;
-        let raceInterval;
-        let currentRaceEdition = 1;
-            
         function getFlag(code, lg = false, extraStyle = "") {
             if (!code) return "";
             return `<img src="https://flagcdn.com/${code}.svg" class="flag-icon ${lg ? 'flag-icon-lg' : ''}" style="${extraStyle}" alt="${code}" loading="lazy">`;
@@ -1223,7 +1209,6 @@ let raceRoot;
             renderPickers();
             populateH2HDropdowns();
             initMap();
-                initRaceChart();
             renderEditionTable();
             renderCountryTable();
             renderROStats();
@@ -2246,135 +2231,6 @@ let bdHtml = "";
                 worstHtml += `<li><div class="list-country-info">${getFlag(c.code)} ${c.name}</div><span class="txt-highlight">${item.val}${suffix}</span></li>`;
             });
             document.getElementById("stat-worst-place").innerHTML = worstHtml;
-        }
-
-            // ==========================================
-        // BAR CHART RACE LOGIC
-        // ==========================================
-        function getCumulativePoints(uptoEdition) {
-            let scores = {};
-            Object.keys(db.countries).forEach(cId => scores[cId] = 0);
-            
-            db.results.forEach(r => {
-                if (r.edition <= uptoEdition && isQualifier(r)) {
-                    scores[r.countryId] += r.points;
-                }
-            });
-
-            let arr = Object.keys(scores).map(cId => ({
-                countryName: db.countries[cId].name,
-                points: scores[cId]
-            }));
-
-            arr.sort((a, b) => b.points - a.points);
-            let top15 = arr.slice(0, 15);
-            top15.reverse(); // amCharts draws Y axis from bottom to top, so we reverse it
-            return top15;
-        }
-
-        function initRaceChart() {
-            raceRoot = am5.Root.new("racediv");
-            raceRoot.setThemes([am5themes_Animated.new(raceRoot)]);
-
-            let chart = raceRoot.container.children.push(am5xy.XYChart.new(raceRoot, {
-                panX: false, panY: false, wheelX: "none", wheelY: "none",
-                paddingLeft: 0, paddingRight: 40
-            }));
-
-            raceYAxis = chart.yAxes.push(am5xy.CategoryAxis.new(raceRoot, {
-                categoryField: "countryName",
-                renderer: am5xy.AxisRendererY.new(raceRoot, {
-                    inversed: false,
-                    cellStartLocation: 0.1,
-                    cellEndLocation: 0.9,
-                    minGridDistance: 20
-                })
-            }));
-            
-            raceYAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xa0a5bc), fontSize: 13, fontWeight: "bold" });
-            raceYAxis.set("interpolationDuration", 1000);
-
-            raceXAxis = chart.xAxes.push(am5xy.ValueAxis.new(raceRoot, {
-                min: 0, strictMinMax: true,
-                renderer: am5xy.AxisRendererX.new(raceRoot, {})
-            }));
-            
-            raceXAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xa0a5bc) });
-
-            raceSeries = chart.series.push(am5xy.ColumnSeries.new(raceRoot, {
-                xAxis: raceXAxis, yAxis: raceYAxis,
-                valueXField: "points", categoryYField: "countryName"
-            }));
-
-            raceSeries.columns.template.setAll({ cornerRadiusTR: 5, cornerRadiusBR: 5, strokeOpacity: 0 });
-            
-            // Vibrant colors for bars
-            raceSeries.columns.template.adapters.add("fill", function (fill, target) {
-                return chart.get("colors").getIndex(raceSeries.columns.indexOf(target));
-            });
-
-            // Point labels jumping at the end of bars
-            raceSeries.bullets.push(function () {
-                return am5.Bullet.new(raceRoot, {
-                    locationX: 1,
-                    sprite: am5.Label.new(raceRoot, {
-                        text: "{valueXWorking.formatNumber('#.')}",
-                        fill: am5.color(0xffffff),
-                        centerX: am5.p0, centerY: am5.p50,
-                        populateText: true, dx: 5, fontWeight: "bold"
-                    })
-                });
-            });
-            
-            raceSeries.set("interpolationDuration", 1000);
-
-            // Giant Background Edition Number
-            let yearLabel = chart.plotContainer.children.push(am5.Label.new(raceRoot, {
-                text: "Ed 1", fontSize: 80, fontWeight: "bold",
-                fill: am5.color(0xff2a5f), fillOpacity: 0.15,
-                x: am5.p100, y: am5.p100, centerX: am5.p100, centerY: am5.p100,
-                dx: -20, dy: -20
-            }));
-            
-            raceRoot.yearLabel = yearLabel;
-            updateRaceData(1);
-        }
-
-        function updateRaceData(ed) {
-            let data = getCumulativePoints(ed);
-            raceYAxis.data.setAll(data);
-            raceSeries.data.setAll(data);
-            
-            if(raceRoot.yearLabel) {
-                raceRoot.yearLabel.set("text", "Edition " + ed);
-            }
-        }
-
-        function startRace() {
-            let btn = document.getElementById("play-race-btn");
-            if (raceInterval) {
-                clearInterval(raceInterval);
-                raceInterval = null;
-                btn.innerHTML = "▶ Play Race";
-                return;
-            }
-            
-            btn.innerHTML = "⏸ Pause Race";
-            
-            if(currentRaceEdition >= db.editions.length) {
-                currentRaceEdition = 0; // reset if it reached the end
-            }
-
-            raceInterval = setInterval(function () {
-                currentRaceEdition++;
-                updateRaceData(currentRaceEdition);
-                
-                if (currentRaceEdition >= db.editions.length) {
-                    clearInterval(raceInterval);
-                    raceInterval = null;
-                    btn.innerHTML = "▶ Restart Race";
-                }
-            }, 1200); // 1.2 seconds per edition hop
         }
 
         // ==========================================
