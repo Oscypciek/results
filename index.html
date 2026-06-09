@@ -1881,8 +1881,22 @@
         .sort((a, b) => b.localeCompare(a)); // Reversed so A is at the top of the Y-axis
 
     // Setup axes data
-    matrixXAxis.data.setAll(db.editions.map(ed => ({ edition: "Ed " + ed })));
-    matrixYAxis.data.setAll(allCountriesSorted.map(c => ({ country: c })));
+            matrixXAxis.data.setAll(db.editions.map(ed => {
+                let hostCode = db.countries[db.hosts[ed]].code;
+                return { 
+                    edition: "Ed " + ed, 
+                    labelHtml: `<div style="text-align:center; color:#a0a5bc; font-size:11px; margin-top:5px; padding-bottom:5px;"><img src="https://flagcdn.com/${hostCode}.svg" style="width:16px; height:11px; border-radius:2px; box-shadow: 0 1px 3px rgba(0,0,0,0.5); margin-bottom:4px;"><br>Ed ${ed}</div>`
+                };
+            }));
+
+            matrixYAxis.data.setAll(allCountriesSorted.map(cName => {
+                let cId = Object.keys(db.countries).find(k => db.countries[k].name === cName);
+                let cCode = db.countries[cId].code;
+                return { 
+                    country: cName, 
+                    labelHtml: `<div style="color:#ffffff; font-size:11px; font-weight:bold; display:flex; align-items:center; white-space:nowrap; padding-right:8px;"><img src="https://flagcdn.com/${cCode}.svg" style="width:16px; height:11px; border-radius:2px; margin-right:6px; box-shadow: 0 1px 3px rgba(0,0,0,0.5);"> ${cName}</div>`
+                };
+            }));
 
     db.editions.forEach(ed => {
         Object.keys(db.countries).forEach(cId => {
@@ -2368,14 +2382,27 @@
                 categoryField: "edition",
                 renderer: am5xy.AxisRendererX.new(matrixChartRoot, { minGridDistance: 20 })
             }));
-            matrixXAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xa0a5bc), fontSize: 11, rotation: -45, centerY: am5.p50, centerX: am5.p100 });
+            
+            // Set rotation to 0 and render as HTML to inject flags
+            matrixXAxis.get("renderer").labels.template.setAll({ 
+                html: "{labelHtml}",
+                populateText: true,
+                rotation: 0, 
+                centerY: am5.p50, 
+                centerX: am5.p50 
+            });
 
             matrixYAxis = chart.yAxes.push(am5xy.CategoryAxis.new(matrixChartRoot, {
                 categoryField: "country",
                 renderer: am5xy.AxisRendererY.new(matrixChartRoot, { minGridDistance: 15 })
             }));
-            matrixYAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xffffff), fontSize: 11, fontWeight: "bold" });
-
+            
+            // Render country names as HTML to inject flags
+            matrixYAxis.get("renderer").labels.template.setAll({ 
+                html: "{labelHtml}",
+                populateText: true,
+                centerY: am5.p50 
+            });
             matrixSeries = chart.series.push(am5xy.ColumnSeries.new(matrixChartRoot, {
                 xAxis: matrixXAxis, yAxis: matrixYAxis,
                 categoryXField: "edition", categoryYField: "country",
