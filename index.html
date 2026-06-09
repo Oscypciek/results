@@ -1557,14 +1557,19 @@
             tbody.innerHTML = "";
             
             let amChartData = [];
+            let chartLabels = []; // Prevents ReferenceError further down
+            let chartData = [];   // Prevents ReferenceError further down
 
-            chartDataSubset.forEach(d => {
-                let dataPoint = { edition: "Ed " + d.edition };
+            db.editions.forEach(ed => {
+                let dataPoint = { edition: "Ed " + ed };
+                let result = db.results.find(r => r.edition === ed && r.countryId === activeCountryId);
+                
                 // Only plot a point if they qualified for the final
-                if(d.result && isQualifier(d.result)) {
-                    dataPoint.place = d.result.place;
+                if (result && isQualifier(result)) {
+                    dataPoint.place = result.place;
                 }
                 amChartData.push(dataPoint);
+            });
             });
 
             // Set categories for X Axis and data for series
