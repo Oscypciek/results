@@ -263,7 +263,9 @@
 
             <div class="stats-grid stats-grid-mini" id="country-stats-top" style="margin-bottom:25px;"></div>
             
-            <div class="chart-container"><canvas id="trendChart"></canvas></div>
+            <div class="chart-container" style="height: 350px;">
+                <div id="countryChartDiv" style="width: 100%; height: 100%;"></div>
+            </div>
             
             <div class="table-wrapper">
                 <table id="country-table">
@@ -311,6 +313,9 @@
 
         <div id="matrix" class="tab-content">
             <h3 class="picker-title">Editions Grid Matrix</h3>
+            
+            <div id="matrixChartDiv" style="width: 100%; height: 750px; background-color: var(--table-row-odd); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);"></div>
+
             <div class="table-wrapper">
                 <table id="matrix-table" class="matrix-table">
                     <thead id="matrix-head"></thead>
@@ -1163,6 +1168,8 @@
         let activeCountryId = "DE"; 
         let activeRoStage = 'GF'; 
         let trendChartInstance = null; 
+        let countryChartRoot, countryChartSeries, countryChartXAxis, countryChartYAxis;
+        let matrixChartRoot, matrixSeries, matrixXAxis, matrixYAxis;
 
         function getFlag(code, lg = false, extraStyle = "") {
             if (!code) return "";
@@ -1209,6 +1216,8 @@
             renderPickers();
             populateH2HDropdowns();
             initMap();
+        initCountryChart();   
+            initMatrixHeatmap();
             renderEditionTable();
             renderCountryTable();
             renderROStats();
@@ -1546,8 +1555,20 @@
             const tbody = document.getElementById("country-body");
             tbody.innerHTML = "";
             
-            let chartLabels = [];
-            let chartData = [];
+            let amChartData = [];
+
+            chartDataSubset.forEach(d => {
+                let dataPoint = { edition: "Ed " + d.edition };
+                // Only plot a point if they qualified for the final
+                if(d.result && isQualifier(d.result)) {
+                    dataPoint.place = d.result.place;
+                }
+                amChartData.push(dataPoint);
+            });
+
+            // Set categories for X Axis and data for series
+            countryChartXAxis.data.setAll(amChartData);
+            countryChartSeries.data.setAll(amChartData);
 
             // Display Top 10 Ranking Point Info
             let top10Data = getTop10Rankings();
@@ -1794,153 +1815,203 @@
         // TAB 4: MATRIX 
         // ==========================================
         function renderMatrix() {
-            const thead = document.getElementById("matrix-head");
-            const tbody = document.getElementById("matrix-body");
-            
-            let lastPlaces = {};
-            db.editions.forEach(ed => {
-                const edResults = db.results.filter(r => r.edition === ed && isQualifier(r));
-                if(edResults.length > 0) lastPlaces[ed] = Math.max(...edResults.map(r => r.place));
-            });
+    const thead = document.getElementById("matrix-head");
+    const tbody = document.getElementById("matrix-body");
+    
+    let lastPlaces = {};
+    db.editions.forEach(ed => {
+        const edResults = db.results.filter(r => r.edition === ed && isQualifier(r));
+        if(edResults.length > 0) lastPlaces[ed] = Math.max(...edResults.map(r => r.place));
+    });
 
-            let headHtml = `<tr><th rowspan="2" style="background-color: var(--table-header);">Country / Ed</th>`;
-            db.editions.forEach(ed => { headHtml += `<th>#${ed}</th>`; });
-            headHtml += `</tr><tr>`;
-            
-            db.editions.forEach(ed => {
-                let hostCountryId = db.hosts[ed];
-                let hostCode = db.countries[hostCountryId].code;
-                headHtml += `<th>${getFlag(hostCode)}</th>`;
-            });
-            headHtml += `</tr>`;
-            thead.innerHTML = headHtml;
+    let headHtml = `<tr><th rowspan="2" style="background-color: var(--table-header);">Country / Ed</th>`;
+    db.editions.forEach(ed => { headHtml += `<th>#${ed}</th>`; });
+    headHtml += `</tr><tr>`;
+    
+    db.editions.forEach(ed => {
+        let hostCountryId = db.hosts[ed];
+        let hostCode = db.countries[hostCountryId].code;
+        headHtml += `<th>${getFlag(hostCode)}</th>`;
+    });
+    headHtml += `</tr>`;
+    thead.innerHTML = headHtml;
 
-            const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
-            let bodyHtml = "";
+    const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+    let bodyHtml = "";
 
-            sortedCountryIds.forEach(cId => {
-                let cData = db.countries[cId];
-                bodyHtml += `<tr><td class="matrix-country">${getFlag(cData.code)} ${cData.name}</td>`;
-                
-                db.editions.forEach(ed => {
-                    const result = db.results.find(r => r.edition === ed && r.countryId === cId);
-                    const status = getParticipationStatus(cId, ed);
+    sortedCountryIds.forEach(cId => {
+        let cData = db.countries[cId];
+        bodyHtml += `<tr><td class="matrix-country">${getFlag(cData.code)} ${cData.name}</td>`;
+        
+        db.editions.forEach(ed => {
+            const result = db.results.find(r => r.edition === ed && r.countryId === cId);
+            const status = getParticipationStatus(cId, ed);
 
-                    if(result) {
-                        if (isQualifier(result)) {
-                            let cellClass = "cell-normal";
-                            if(result.place === 1) cellClass = "cell-1st";
-                            else if(result.place === 2) cellClass = "cell-2nd";
-                            else if(result.place === 3) cellClass = "cell-3rd";
-                            else if(result.place === lastPlaces[ed]) cellClass = "cell-last";
-                            
-                            bodyHtml += `<td class="${cellClass}">${result.place}</td>`;
-                        } else {
-                            bodyHtml += `<td class="cell-nq">NQ</td>`;
-                        }
-                    } else {
-                        if (status === 'pre-debut') {
-                            bodyHtml += `<td class="cell-normal" style="border-color: transparent;"></td>`;
-                        } else {
-                            bodyHtml += `<td class="cell-dnp"></td>`;
-                        }
-                    }
-                });
-                bodyHtml += `</tr>`;
-            });
-            tbody.innerHTML = bodyHtml;
-
-            // Generate Placement Counts (Medal Table)
-            let counts = {};
-            Object.keys(db.countries).forEach(cId => counts[cId] = { first: 0, second: 0, third: 0, last: 0 });
-            db.results.forEach(r => {
-                if (isQualifier(r)) {
-                    if (r.place === 1) counts[r.countryId].first++;
-                    if (r.place === 2) counts[r.countryId].second++;
-                    if (r.place === 3) counts[r.countryId].third++;
-                    if (r.place === lastPlaces[r.edition]) counts[r.countryId].last++;
-                }
-            });
-
-            let countArr = Object.keys(counts).map(cId => ({ cId, ...counts[cId] }));
-            countArr.sort((a, b) => {
-                if (b.first !== a.first) return b.first - a.first;
-                if (b.second !== a.second) return b.second - a.second;
-                if (b.third !== a.third) return b.third - a.third;
-                return db.countries[a.cId].name.localeCompare(db.countries[b.cId].name);
-            });
-
-            let countBodyHtml = "";
-            countArr.forEach(item => {
-                if (item.first === 0 && item.second === 0 && item.third === 0 && item.last === 0) return; // Skip entirely empty
-                const cData = db.countries[item.cId];
-                countBodyHtml += `<tr>
-                    <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
-                    <td class="${item.first > 0 ? 'txt-1st' : ''}">${item.first}</td>
-                    <td class="${item.second > 0 ? 'txt-2nd' : ''}">${item.second}</td>
-                    <td class="${item.third > 0 ? 'txt-3rd' : ''}">${item.third}</td>
-                    <td style="${item.last > 0 ? 'color:var(--primary-color)' : ''}">${item.last}</td>
-                </tr>`;
-            });
-            document.getElementById("matrix-counts-body").innerHTML = countBodyHtml;
-
-            // Generate All-Time Top 10 Ranking Table
-            let top10Data = getTop10Rankings();
-            let top10BodyHtml = "";
-            const ptsMap = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
-
-            top10Data.forEach(item => {
-                const cData = db.countries[item.cId];
-let bdHtml = "";
-                let places = Object.keys(item.breakdown).sort((a,b) => a - b);
-                if(places.length > 0) {
-                    // Start building an actual HTML table
-                    bdHtml = `<table class="breakdown-table">
-                                <thead>
-                                    <tr>
-                                        <th>Placement</th>
-                                        <th>Count</th>
-                                        <th>Points Earned</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-                                
-                    places.forEach(p => {
-                        let times = item.breakdown[p];
-                        let pts = ptsMap[p] * times;
-                        let suffix = "th";
-                        if(p == 1) suffix = "st"; else if(p == 2) suffix = "nd"; else if(p == 3) suffix = "rd";
-                        
-                        // Add table rows instead of divs
-                        bdHtml += `<tr>
-                                     <td class="bd-place">${p}${suffix} Place</td>
-                                     <td>${times} time${times>1?'s':''}</td>
-                                     <td class="bd-pts">+${pts} pts</td>
-                                   </tr>`;
-                    });
+            if(result) {
+                if (isQualifier(result)) {
+                    let cellClass = "cell-normal";
+                    if(result.place === 1) cellClass = "cell-1st";
+                    else if(result.place === 2) cellClass = "cell-2nd";
+                    else if(result.place === 3) cellClass = "cell-3rd";
+                    else if(result.place === lastPlaces[ed]) cellClass = "cell-last";
                     
-                    bdHtml += `</tbody></table>`; // Close the table
+                    bodyHtml += `<td class="${cellClass}">${result.place}</td>`;
                 } else {
-                    bdHtml = `<span style="font-style:italic; color: var(--text-muted);">No Top 10 placements.</span>`;
+                    bodyHtml += `<td class="cell-nq">NQ</td>`;
+                }
+            } else {
+                if (status === 'pre-debut') {
+                    bodyHtml += `<td class="cell-normal" style="border-color: transparent;"></td>`;
+                } else {
+                    bodyHtml += `<td class="cell-dnp"></td>`;
+                }
+            }
+        });
+        bodyHtml += `</tr>`;
+    });
+    tbody.innerHTML = bodyHtml;
+
+    // --- ADDED HEATMAP DATA ---
+    let heatmapData = [];
+    let allCountriesSorted = Object.keys(db.countries)
+        .map(c => db.countries[c].name)
+        .sort((a, b) => b.localeCompare(a)); // Reversed so A is at the top of the Y-axis
+
+    // Setup axes data
+    matrixXAxis.data.setAll(db.editions.map(ed => ({ edition: "Ed " + ed })));
+    matrixYAxis.data.setAll(allCountriesSorted.map(c => ({ country: c })));
+
+    db.editions.forEach(ed => {
+        Object.keys(db.countries).forEach(cId => {
+            let cName = db.countries[cId].name;
+            let result = db.results.find(r => r.edition === ed && r.countryId === cId);
+            
+            if (result) {
+                let cellColor = am5.color(0x3b82f6); // Default Blue for mid-table finalist
+                let label = "";
+                let tooltip = "";
+
+                if (isQualifier(result)) {
+                    label = result.place.toString();
+                    tooltip = `[bold]${cName} (Ed ${ed})[/]\nFinal: ${result.place} place (${result.points} pts)`;
+
+                    if (result.place === 1) cellColor = am5.color(0xffd700); // Gold
+                    else if (result.place === 2) cellColor = am5.color(0xc0c0c0); // Silver
+                    else if (result.place === 3) cellColor = am5.color(0xcd7f32); // Bronze
+                    else if (result.place <= 10) cellColor = am5.color(0x10b981); // Top 10 Green
+                    else if (result.place === lastPlaces[ed]) cellColor = am5.color(0xef4444); // Last Place Red
+                    else cellColor = am5.color(0x4a5596); // Neutral Finalist
+
+                } else {
+                    label = "NQ";
+                    cellColor = am5.color(0x000000); // NQ Black
+                    tooltip = `[bold]${cName} (Ed ${ed})[/]\nNon-Qualifier`;
                 }
 
-                let chevron = `<button class="expand-btn" id="chevron-${item.cId}" onclick="toggleBreakdown('${item.cId}')">▼</button>`;
+                heatmapData.push({
+                    edition: "Ed " + ed,
+                    country: cName,
+                    valueText: label,
+                    tooltipText: tooltip,
+                    columnSettings: { fill: cellColor }
+                });
+            }
+        });
+    });
+    matrixSeries.data.setAll(heatmapData);
+    // --- END ADDED HEATMAP DATA ---
 
-                top10BodyHtml += `<tr>
-                    <td>#${item.rank}</td>
-                    <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
-                    <td class="points-total">
-                        <div style="display: flex; align-items: center; justify-content: center;">
-                            ${item.score} pts ${chevron}
-                        </div>
-                    </td>
-                </tr>
-                <tr class="breakdown-row" id="breakdown-${item.cId}" style="display:none;">
-                    <td colspan="3">${bdHtml}</td>
-                </tr>`;
-            });
-            document.getElementById("matrix-top10-body").innerHTML = top10BodyHtml;
+    // Generate Placement Counts (Medal Table)
+    let counts = {};
+    Object.keys(db.countries).forEach(cId => counts[cId] = { first: 0, second: 0, third: 0, last: 0 });
+    db.results.forEach(r => {
+        if (isQualifier(r)) {
+            if (r.place === 1) counts[r.countryId].first++;
+            if (r.place === 2) counts[r.countryId].second++;
+            if (r.place === 3) counts[r.countryId].third++;
+            if (r.place === lastPlaces[r.edition]) counts[r.countryId].last++;
         }
+    });
+
+    let countArr = Object.keys(counts).map(cId => ({ cId, ...counts[cId] }));
+    countArr.sort((a, b) => {
+        if (b.first !== a.first) return b.first - a.first;
+        if (b.second !== a.second) return b.second - a.second;
+        if (b.third !== a.third) return b.third - a.third;
+        return db.countries[a.cId].name.localeCompare(db.countries[b.cId].name);
+    });
+
+    let countBodyHtml = "";
+    countArr.forEach(item => {
+        if (item.first === 0 && item.second === 0 && item.third === 0 && item.last === 0) return; // Skip entirely empty
+        const cData = db.countries[item.cId];
+        countBodyHtml += `<tr>
+            <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
+            <td class="${item.first > 0 ? 'txt-1st' : ''}">${item.first}</td>
+            <td class="${item.second > 0 ? 'txt-2nd' : ''}">${item.second}</td>
+            <td class="${item.third > 0 ? 'txt-3rd' : ''}">${item.third}</td>
+            <td style="${item.last > 0 ? 'color:var(--primary-color)' : ''}">${item.last}</td>
+        </tr>`;
+    });
+    document.getElementById("matrix-counts-body").innerHTML = countBodyHtml;
+
+    // Generate All-Time Top 10 Ranking Table
+    let top10Data = getTop10Rankings();
+    let top10BodyHtml = "";
+    const ptsMap = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
+
+    top10Data.forEach(item => {
+        const cData = db.countries[item.cId];
+        let bdHtml = "";
+        let places = Object.keys(item.breakdown).sort((a,b) => a - b);
+        if(places.length > 0) {
+            // Start building an actual HTML table
+            bdHtml = `<table class="breakdown-table">
+                        <thead>
+                            <tr>
+                                <th>Placement</th>
+                                <th>Count</th>
+                                <th>Points Earned</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            places.forEach(p => {
+                let times = item.breakdown[p];
+                let pts = ptsMap[p] * times;
+                let suffix = "th";
+                if(p == 1) suffix = "st"; else if(p == 2) suffix = "nd"; else if(p == 3) suffix = "rd";
+                
+                // Add table rows instead of divs
+                bdHtml += `<tr>
+                             <td class="bd-place">${p}${suffix} Place</td>
+                             <td>${times} time${times>1?'s':''}</td>
+                             <td class="bd-pts">+${pts} pts</td>
+                           </tr>`;
+            });
+            
+            bdHtml += `</tbody></table>`; // Close the table
+        } else {
+            bdHtml = `<span style="font-style:italic; color: var(--text-muted);">No Top 10 placements.</span>`;
+        }
+
+        let chevron = `<button class="expand-btn" id="chevron-${item.cId}" onclick="toggleBreakdown('${item.cId}')">▼</button>`;
+
+        top10BodyHtml += `<tr>
+            <td>#${item.rank}</td>
+            <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
+            <td class="points-total">
+                <div style="display: flex; align-items: center; justify-content: center;">
+                    ${item.score} pts ${chevron}
+                </div>
+            </td>
+        </tr>
+        <tr class="breakdown-row" id="breakdown-${item.cId}" style="display:none;">
+            <td colspan="3">${bdHtml}</td>
+        </tr>`;
+    });
+    document.getElementById("matrix-top10-body").innerHTML = top10BodyHtml;
+}
 
         // ==========================================
         // TAB 5: HEAD TO HEAD 
@@ -2233,6 +2304,99 @@ let bdHtml = "";
             document.getElementById("stat-worst-place").innerHTML = worstHtml;
         }
 
+// ==========================================
+        // AMCHARTS: COUNTRY LINE CHART
+        // ==========================================
+        function initCountryChart() {
+            if (countryChartRoot) countryChartRoot.dispose();
+            countryChartRoot = am5.Root.new("countryChartDiv");
+            countryChartRoot.setThemes([am5themes_Animated.new(countryChartRoot)]);
+
+            let chart = countryChartRoot.container.children.push(am5xy.XYChart.new(countryChartRoot, {
+                panX: true, panY: false, wheelX: "panX", wheelY: "zoomX",
+                paddingLeft: 0, paddingRight: 20
+            }));
+
+            countryChartXAxis = chart.xAxes.push(am5xy.CategoryAxis.new(countryChartRoot, {
+                categoryField: "edition",
+                renderer: am5xy.AxisRendererX.new(countryChartRoot, { minGridDistance: 30 }),
+                tooltip: am5.Tooltip.new(countryChartRoot, {})
+            }));
+            countryChartXAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xa0a5bc), fontSize: 12 });
+
+            countryChartYAxis = chart.yAxes.push(am5xy.ValueAxis.new(countryChartRoot, {
+                min: 1, strictMinMax: false,
+                renderer: am5xy.AxisRendererY.new(countryChartRoot, { inversed: true }) // Inverted: 1 is at the top
+            }));
+            countryChartYAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xa0a5bc), fontSize: 12 });
+
+            countryChartSeries = chart.series.push(am5xy.LineSeries.new(countryChartRoot, {
+                xAxis: countryChartXAxis, yAxis: countryChartYAxis,
+                valueYField: "place", categoryXField: "edition",
+                tooltip: am5.Tooltip.new(countryChartRoot, { labelText: "Place: {valueY}" }),
+                stroke: am5.color(0xff2a5f)
+            }));
+
+            countryChartSeries.strokes.template.setAll({ strokeWidth: 3 });
+            countryChartSeries.bullets.push(function() {
+                return am5.Bullet.new(countryChartRoot, {
+                    sprite: am5.Circle.new(countryChartRoot, { radius: 5, fill: am5.color(0xffffff), stroke: am5.color(0xff2a5f), strokeWidth: 2 })
+                });
+            });
+
+            // Make line continuous even if there are NQ gaps
+            countryChartSeries.set("connect", true); 
+        }
+
+        // ==========================================
+        // AMCHARTS: MATRIX HEATMAP
+        // ==========================================
+        function initMatrixHeatmap() {
+            if (matrixChartRoot) matrixChartRoot.dispose();
+            matrixChartRoot = am5.Root.new("matrixChartDiv");
+            matrixChartRoot.setThemes([am5themes_Animated.new(matrixChartRoot)]);
+
+            let chart = matrixChartRoot.container.children.push(am5xy.XYChart.new(matrixChartRoot, {
+                panX: false, panY: false, wheelX: "none", wheelY: "none",
+                paddingLeft: 0, paddingRight: 20, paddingTop: 20, paddingBottom: 20
+            }));
+
+            matrixXAxis = chart.xAxes.push(am5xy.CategoryAxis.new(matrixChartRoot, {
+                categoryField: "edition",
+                renderer: am5xy.AxisRendererX.new(matrixChartRoot, { minGridDistance: 20 })
+            }));
+            matrixXAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xa0a5bc), fontSize: 11, rotation: -45, centerY: am5.p50, centerX: am5.p100 });
+
+            matrixYAxis = chart.yAxes.push(am5xy.CategoryAxis.new(matrixChartRoot, {
+                categoryField: "country",
+                renderer: am5xy.AxisRendererY.new(matrixChartRoot, { minGridDistance: 15 })
+            }));
+            matrixYAxis.get("renderer").labels.template.setAll({ fill: am5.color(0xffffff), fontSize: 11, fontWeight: "bold" });
+
+            matrixSeries = chart.series.push(am5xy.ColumnSeries.new(matrixChartRoot, {
+                xAxis: matrixXAxis, yAxis: matrixYAxis,
+                categoryXField: "edition", categoryYField: "country",
+                tooltip: am5.Tooltip.new(matrixChartRoot, { labelText: "{tooltipText}" })
+            }));
+
+            matrixSeries.columns.template.setAll({
+                stroke: am5.color(0x1a1e36), strokeWidth: 1, strokeOpacity: 1,
+                width: am5.percent(100), height: am5.percent(100),
+                templateField: "columnSettings"
+            });
+
+            // Add the text label inside the heatmap cells (e.g. "1", "2", "NQ")
+            matrixSeries.bullets.push(function() {
+                return am5.Bullet.new(matrixChartRoot, {
+                    sprite: am5.Label.new(matrixChartRoot, {
+                        text: "{valueText}", fill: am5.color(0xffffff),
+                        centerY: am5.p50, centerX: am5.p50,
+                        fontSize: 10, populateText: true
+                    })
+                });
+            });
+        }
+            
         // ==========================================
         // UI HELPERS
         // ==========================================
