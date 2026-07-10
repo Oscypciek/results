@@ -429,10 +429,10 @@
         // DATABASE STRUCTURE
         // ==========================================
         const db = {
-            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], 
+            editions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40], 
             hosts: { 1: "GB", 2: "CH", 3: "FR", 4: "SM", 5: "PT", 6: "PL", 7: "UA", 8: "PL", 9: "LU", 10: "BE", 11: "NL", 12: "MC", 13: "MC", 14: "PL", 15: "IE",
                    16: "DK", 17: "MC", 18: "DK", 19: "CH", 20: "RU", 21: "BE", 22: "DE", 23: "IT", 24: "DE", 25: "UA", 26: "BE", 27: "PT", 28: "SE", 29: "FR", 30: "UA",
-                   31: "NL", 32: "MD", 33: "IS", 34: "LU", 35: "RO", 36: "RS", 37: "IT", 38: "IS", 39: "RO"},
+                   31: "NL", 32: "MD", 33: "IS", 34: "LU", 35: "RO", 36: "RS", 37: "IT", 38: "IS", 39: "RO", 40: "GB"},
             countries: {
                 "AD": { name: "Andorra", code: "ad", tier: "small" },
                 "AT": { name: "Austria", code: "at", tier: "medium" },
@@ -471,6 +471,7 @@
                 "ME": { name: "Montenegro", code: "me", tier: "small" },
                 "BA": { name: "Bosnia & Herzegovina", code: "ba", tier: "medium" },
                 "HR": { name: "Croatia", code: "hr", tier: "small" },
+				 "CY": { name: "Cyprus", code: "cy", tier: "medium" },
             },
             results: [
                 // EDITION 1 
@@ -1310,7 +1311,51 @@
                 { edition: 39, countryId: "ME", ro: "09", place: 23, points: 38, jury: 8, tele: 30 },
                 { edition: 39, countryId: "RS", ro: "05", place: 24, points: 35, jury: 33, tele: 2 },
                 { edition: 39, countryId: "MC", ro: "10", place: 25, points: 22, jury: 0, tele: 22 },
-                { edition: 39, countryId: "SI", ro: "18", place: 26, points: 22, jury: 21, tele: 1 }
+                { edition: 39, countryId: "SI", ro: "18", place: 26, points: 22, jury: 21, tele: 1 },
+
+				// EDITION 40
+                // Grand Finalists & Qualifiers from Semi-Final 1
+                { edition: 40, countryId: "MC", semi: 1, semiRo: "11", semiPlace: 1, semiPoints: 282, semiJury: 150, semiTele: 132, ro: "11", place: 9, points: 239, jury: 160, tele: 79 },
+                { edition: 40, countryId: "SI", semi: 1, semiRo: "02", semiPlace: 2, semiPoints: 235, semiJury: 93, semiTele: 142, ro: "07", place: 5, points: 272, jury: 139, tele: 133 },
+                { edition: 40, countryId: "NO", semi: 1, semiRo: "14", semiPlace: 3, semiPoints: 228, semiJury: 98, semiTele: 130, ro: "03", place: 7, points: 246, jury: 118, tele: 128 },
+                { edition: 40, countryId: "AT", semi: 1, semiRo: "15", semiPlace: 4, semiPoints: 224, semiJury: 146, semiTele: 78, ro: "13", place: 4, points: 294, jury: 202, tele: 92 },
+                { edition: 40, countryId: "UA", semi: 1, semiRo: "12", semiPlace: 5, semiPoints: 169, semiJury: 39, semiTele: 130, ro: "14", place: 11, points: 181, jury: 33, tele: 148 },
+                { edition: 40, countryId: "DE", semi: 1, semiRo: "04", semiPlace: 6, semiPoints: 158, semiJury: 116, semiTele: 42, ro: "05", place: 19, points: 41, jury: 41, tele: 0 },
+                { edition: 40, countryId: "RS", semi: 1, semiRo: "09", semiPlace: 7, semiPoints: 155, semiJury: 99, semiTele: 56, ro: "06", place: 10, points: 199, jury: 149, tele: 50 },
+                { edition: 40, countryId: "GR", semi: 1, semiRo: "03", semiPlace: 8, semiPoints: 115, semiJury: 31, semiTele: 84, ro: "17", place: 17, points: 78, jury: 67, tele: 11 },
+                { edition: 40, countryId: "AL", semi: 1, semiRo: "05", semiPlace: 9, semiPoints: 102, semiJury: 1, semiTele: 101, ro: "08", place: 14, points: 85, jury: 4, tele: 81 },
+                { edition: 40, countryId: "CY", semi: 1, semiRo: "01", semiPlace: 10, semiPoints: 76, semiJury: 60, semiTele: 16, ro: "01", place: 21, points: 7, jury: 0, tele: 7 },
+
+                // Non-Qualifiers from Semi-Final 1
+                { edition: 40, countryId: "SM", semi: 1, semiRo: "06", semiPlace: 11, semiPoints: 55, semiJury: 0, semiTele: 55 },
+                { edition: 40, countryId: "FR", semi: 1, semiRo: "08", semiPlace: 12, semiPoints: 54, semiJury: 50, semiTele: 4 },
+                { edition: 40, countryId: "MK", semi: 1, semiRo: "13", semiPlace: 13, semiPoints: 49, semiJury: 48, semiTele: 1 },
+                { edition: 40, countryId: "MT", semi: 1, semiRo: "10", semiPlace: 14, semiPoints: 28, semiJury: 14, semiTele: 14 },
+                { edition: 40, countryId: "RU", semi: 1, semiRo: "16", semiPlace: 15, semiPoints: 27, semiJury: 26, semiTele: 1 },
+                { edition: 40, countryId: "ES", semi: 1, semiRo: "07", semiPlace: 16, semiPoints: 15, semiJury: 15, semiTele: 0 },
+
+                // Grand Finalists & Qualifiers from Semi-Final 2
+                { edition: 40, countryId: "BE", semi: 2, semiRo: "02", semiPlace: 1, semiPoints: 225, semiJury: 108, semiTele: 117, ro: "15", place: 1, points: 422, jury: 186, tele: 236 },
+                { edition: 40, countryId: "SE", semi: 2, semiRo: "03", semiPlace: 2, semiPoints: 204, semiJury: 70, semiTele: 134, ro: "21", place: 8, points: 241, jury: 78, tele: 163 },
+                { edition: 40, countryId: "NL", semi: 2, semiRo: "06", semiPlace: 3, semiPoints: 202, semiJury: 95, semiTele: 107, ro: "02", place: 3, points: 343, jury: 137, tele: 206 },
+                { edition: 40, countryId: "AD", semi: 2, semiRo: "07", semiPlace: 4, semiPoints: 193, semiJury: 78, semiTele: 115, ro: "16", place: 2, points: 375, jury: 93, tele: 282 },
+                { edition: 40, countryId: "PT", semi: 2, semiRo: "04", semiPlace: 5, semiPoints: 175, semiJury: 53, semiTele: 122, ro: "20", place: 15, points: 85, jury: 42, tele: 43 },
+                { edition: 40, countryId: "IT", semi: 2, semiRo: "14", semiPlace: 6, semiPoints: 161, semiJury: 79, semiTele: 82, ro: "12", place: 20, points: 9, jury: 9, tele: 0 },
+                { edition: 40, countryId: "HR", semi: 2, semiRo: "16", semiPlace: 7, semiPoints: 150, semiJury: 116, semiTele: 34, ro: "10", place: 6, points: 257, jury: 154, tele: 103 },
+                { edition: 40, countryId: "LU", semi: 2, semiRo: "08", semiPlace: 8, semiPoints: 141, semiJury: 83, semiTele: 58, ro: "04", place: 12, points: 174, jury: 91, tele: 83 },
+                { edition: 40, countryId: "DK", semi: 2, semiRo: "09", semiPlace: 9, semiPoints: 137, semiJury: 77, semiTele: 60, ro: "19", place: 13, points: 140, jury: 106, tele: 34 },
+                { edition: 40, countryId: "IE", semi: 2, semiRo: "15", semiPlace: 10, semiPoints: 133, semiJury: 67, semiTele: 66, ro: "18", place: 18, points: 56, jury: 52, tele: 4 },
+
+                // Non-Qualifiers from Semi-Final 2
+                { edition: 40, countryId: "PL", semi: 2, semiRo: "12", semiPlace: 11, semiPoints: 97, semiJury: 87, semiTele: 10 },
+                { edition: 40, countryId: "BG", semi: 2, semiRo: "05", semiPlace: 12, semiPoints: 93, semiJury: 17, semiTele: 76 },
+                { edition: 40, countryId: "IS", semi: 2, semiRo: "11", semiPlace: 13, semiPoints: 37, semiJury: 37, semiTele: 0 },
+                { edition: 40, countryId: "CH", semi: 2, semiRo: "10", semiPlace: 14, semiPoints: 18, semiJury: 18, semiTele: 0 },
+                { edition: 40, countryId: "RO", semi: 2, semiRo: "01", semiPlace: 15, semiPoints: 4, semiJury: 1, semiTele: 3 },
+                { edition: 40, countryId: "MD", semi: 2, semiRo: "13", semiPlace: 16, semiPoints: 2, semiJury: 0, semiTele: 2 },
+
+                // Pre-qualified Host (United Kingdom did not perform in the Semis)
+                { edition: 40, countryId: "GB", ro: "09", place: 16, points: 84, jury: 53, tele: 31 }
             ]
         };
 
