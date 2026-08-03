@@ -150,18 +150,21 @@
         .txt-highlight { color: var(--primary-color); font-weight: bold; }
 
         /* Head to Head */
-        .h2h-selector { display: flex; justify-content: space-around; background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; gap: 15px; flex-wrap: wrap; }
-        .h2h-country-box { text-align: center; flex: 1; min-width: 150px; }
-        .h2h-country-box select { background-color: var(--table-header); color: var(--text-main); border: 1px solid var(--primary-color); padding: 10px; border-radius: 5px; width: 100%; margin-top: 10px; cursor: pointer; outline: none; }
-        .vs-badge { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--text-muted); font-style: italic; }
-        .h2h-results { display: flex; flex-direction: column; gap: 10px; }
-        .h2h-row { display: flex; background-color: var(--table-row-odd); border-radius: 8px; overflow: hidden; text-align: center; }
-        .h2h-stat-a, .h2h-stat-b { flex: 1; padding: 15px; font-size: 24px; font-weight: bold; display: flex; flex-direction: column; justify-content: center; }
-        .h2h-label { flex: 1; padding: 15px; background-color: var(--table-header); color: var(--text-muted); text-transform: uppercase; font-size: 12px; display: flex; align-items: center; justify-content: center;}
-        .h2h-subtext { font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 5px; font-style: italic; }
-        .winner-stat { color: var(--text-1st); }
-        .loser-stat { color: var(--text-muted); }
-        .tie-stat { color: var(--text-main); }
+        .vs-header { text-align: center; margin: -10px 0 15px 0; }
+        .vs-header h1 { margin: 0; font-style: italic; color: var(--table-hover); font-size: 36px; letter-spacing: 2px; }
+        .h2h-row { background: var(--table-row-odd); border-radius: 8px; margin-bottom: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .h2h-label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: var(--text-muted); text-align: center; margin-bottom: 15px; letter-spacing: 1px; }
+        .h2h-stats-flex { display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
+        .h2h-stat-a { width: 30%; text-align: right; color: var(--text-main); }
+        .h2h-stat-b { width: 30%; text-align: left; color: var(--text-main); }
+        .h2h-bar-container { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; margin: 0 20px; display: flex; overflow: hidden; }
+        .h2h-bar-a { background-color: var(--primary-color); transition: width 0.5s ease; }
+        .h2h-bar-b { background-color: var(--secondary-color); transition: width 0.5s ease; }
+        .h2h-subtext { font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 5px; font-style: italic; display: block; }
+        
+        .stat-win { color: var(--text-1st); font-size: 28px; }
+        .stat-lose { color: var(--text-muted); font-size: 18px; }
+        .stat-tie { color: var(--text-main); }
 
         /* Matrix Cross Table */
         .matrix-table { min-width: max-content; border-collapse: separate; border-spacing: 0; background-color: var(--table-row-even); }
@@ -429,12 +432,23 @@
             </div>
         </div>
 
-        <div id="h2h" class="tab-content">
-            <div class="h2h-selector">
-                <div class="h2h-country-box"><div id="h2h-flag-a"></div><select id="h2h-select-a" onchange="renderH2H()"></select></div>
-                <div class="vs-badge">VS</div>
-                <div class="h2h-country-box"><div id="h2h-flag-b"></div><select id="h2h-select-b" onchange="renderH2H()"></select></div>
+       <div id="h2h" class="tab-content">
+            <div class="picker-container">
+                <h3 class="picker-title" style="text-align: center; color: var(--primary-color);">Country A</h3>
+                <div class="timeline-wrapper">
+                    <div class="timeline-container" id="h2h-carousel-a"></div>
+                </div>
             </div>
+
+            <div class="vs-header"><h1>VS</h1></div>
+
+            <div class="picker-container">
+                <h3 class="picker-title" style="text-align: center; color: var(--secondary-color);">Country B</h3>
+                <div class="timeline-wrapper">
+                    <div class="timeline-container" id="h2h-carousel-b"></div>
+                </div>
+            </div>
+
             <div class="h2h-results" id="h2h-stats-container"></div>
         </div>
 
@@ -1825,6 +1839,8 @@
         let activeStage = 'GF'; 
         let activeCountryId = "DE"; 
         let activeRoStage = 'GF'; 
+		let h2hActiveA = null; 
+        let h2hActiveB = null;
         let trendChartInstance = null; 
         let countryChartRoot, countryChartSeries, countryChartXAxis, countryChartYAxis;
         let matrixChartRoot, matrixSeries, matrixXAxis, matrixYAxis;
@@ -1872,7 +1888,7 @@
         // ==========================================
         function init() {
             renderPickers();
-            populateH2HDropdowns();
+            renderH2HPickers();
             initMap();
         initCountryChart();   
             initMatrixHeatmap();
@@ -2650,27 +2666,58 @@
         // ==========================================
         // TAB 5: HEAD TO HEAD 
         // ==========================================
-        function populateH2HDropdowns() {
-            const selA = document.getElementById('h2h-select-a');
-            const selB = document.getElementById('h2h-select-b');
+        function renderH2HPickers() {
+            const containerA = document.getElementById('h2h-carousel-a');
+            const containerB = document.getElementById('h2h-carousel-b');
+            containerA.innerHTML = "";
+            containerB.innerHTML = "";
+            
             const sortedIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
             
-            sortedIds.forEach((id) => {
-                selA.innerHTML += `<option value="${id}">${db.countries[id].name}</option>`;
-                selB.innerHTML += `<option value="${id}">${db.countries[id].name}</option>`;
+            // Set defaults if null
+            if (!h2hActiveA) h2hActiveA = sortedIds[0];
+            if (!h2hActiveB) h2hActiveB = sortedIds[1] || sortedIds[0];
+
+            sortedIds.forEach(cId => {
+                const cData = db.countries[cId];
+                const flagHtml = getFlag(cData.code, false, "margin: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.4); width: 28px; height: 20px; border-radius: 3px;");
+                
+                // --- Picker for Country A ---
+                const btnA = document.createElement("div");
+                btnA.className = `timeline-node ${cId === h2hActiveA ? "active" : ""}`;
+                btnA.innerHTML = `<span class="ed-number" style="font-size: 11px;">${cData.name}</span>${flagHtml}`;
+                btnA.onclick = () => {
+                    h2hActiveA = cId;
+                    renderH2HPickers();
+                    renderH2H();
+                    btnA.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                };
+                containerA.appendChild(btnA);
+
+                // --- Picker for Country B ---
+                const btnB = document.createElement("div");
+                btnB.className = `timeline-node ${cId === h2hActiveB ? "active" : ""}`;
+                if (cId === h2hActiveB) {
+                    btnB.style.borderColor = "var(--secondary-color)";
+                    btnB.style.backgroundColor = "var(--secondary-color)";
+                    btnB.style.boxShadow = "0 4px 15px rgba(74, 85, 150, 0.4)";
+                }
+                btnB.innerHTML = `<span class="ed-number" style="font-size: 11px;">${cData.name}</span>${flagHtml}`;
+                btnB.onclick = () => {
+                    h2hActiveB = cId;
+                    renderH2HPickers();
+                    renderH2H();
+                    btnB.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                };
+                containerB.appendChild(btnB);
             });
-            if(sortedIds.length > 1) {
-                selA.value = sortedIds[0];
-                selB.value = sortedIds[1];
-            }
         }
 
         function renderH2H() {
-            const idA = document.getElementById('h2h-select-a').value;
-            const idB = document.getElementById('h2h-select-b').value;
+            const idA = h2hActiveA;
+            const idB = h2hActiveB;
             
-            document.getElementById('h2h-flag-a').innerHTML = getFlag(db.countries[idA].code, true);
-            document.getElementById('h2h-flag-b').innerHTML = getFlag(db.countries[idB].code, true);
+            if(!idA || !idB) return;
 
             let statsA = { wins: 0, headToHead: 0, sumPlace: 0, appearances: 0, bestPlace: 999, totalPts: 0, maxPts: 0 };
             let statsB = { wins: 0, headToHead: 0, sumPlace: 0, appearances: 0, bestPlace: 999, totalPts: 0, maxPts: 0 };
@@ -2725,30 +2772,55 @@
             const container = document.getElementById('h2h-stats-container');
             container.innerHTML = "";
 
-            function createRow(label, valA, valB, lowerIsBetter, subA = "", subB = "") {
-                let classA = "tie-stat"; let classB = "tie-stat";
+            function createVisualRow(label, valA, valB, lowerIsBetter, subA = "", subB = "") {
+                let classA = "stat-tie"; let classB = "stat-tie";
+                let pctA = 50; let pctB = 50;
                 
                 if(valA !== "-" && valB !== "-") {
                     let numA = parseFloat(valA); let numB = parseFloat(valB);
                     if(numA !== numB) {
                         if(lowerIsBetter) {
-                            if(numA < numB) { classA = "winner-stat"; classB = "loser-stat"; }
-                            else { classB = "winner-stat"; classA = "loser-stat"; }
+                            if(numA < numB) { classA = "stat-win"; classB = "stat-lose"; }
+                            else { classB = "stat-win"; classA = "stat-lose"; }
                         } else {
-                            if(numA > numB) { classA = "winner-stat"; classB = "loser-stat"; }
-                            else { classB = "winner-stat"; classA = "loser-stat"; }
+                            if(numA > numB) { classA = "stat-win"; classB = "stat-lose"; }
+                            else { classB = "stat-win"; classA = "stat-lose"; }
                         }
                     }
+                    
+                    // Bar width calculation
+                    let total = numA + numB;
+                    if (total > 0 && !lowerIsBetter) {
+                        pctA = (numA / total) * 100;
+                        pctB = (numB / total) * 100;
+                    } else if (total > 0 && lowerIsBetter) {
+                        pctA = (numB / total) * 100;
+                        pctB = (numA / total) * 100;
+                    } else if (numA === 0 && numB === 0) {
+                        pctA = 0; pctB = 0;
+                    }
+                } else if (valA !== "-" && valB === "-") {
+                    pctA = 100; pctB = 0; classA = "stat-win";
+                } else if (valA === "-" && valB !== "-") {
+                    pctA = 0; pctB = 100; classB = "stat-win";
+                } else {
+                    pctA = 0; pctB = 0;
                 }
 
-                let subHtmlA = subA ? `<div class="h2h-subtext">${subA}</div>` : "";
-                let subHtmlB = subB ? `<div class="h2h-subtext">${subB}</div>` : "";
+                let subHtmlA = subA ? `<span class="h2h-subtext">${subA}</span>` : "";
+                let subHtmlB = subB ? `<span class="h2h-subtext">${subB}</span>` : "";
 
                 return `
                     <div class="h2h-row">
-                        <div class="h2h-stat-a ${classA}">${valA}${subHtmlA}</div>
                         <div class="h2h-label">${label}</div>
-                        <div class="h2h-stat-b ${classB}">${valB}${subHtmlB}</div>
+                        <div class="h2h-stats-flex">
+                            <div class="h2h-stat-a ${classA}">${valA}${subHtmlA}</div>
+                            <div class="h2h-bar-container">
+                                <div class="h2h-bar-a" style="width: ${pctA}%;"></div>
+                                <div class="h2h-bar-b" style="width: ${pctB}%;"></div>
+                            </div>
+                            <div class="h2h-stat-b ${classB}">${valB}${subHtmlB}</div>
+                        </div>
                     </div>
                 `;
             }
@@ -2756,14 +2828,14 @@
             let edStrA = aBeatsB.length > 0 ? `(Ed: ${aBeatsB.join(', ')})` : "";
             let edStrB = bBeatsA.length > 0 ? `(Ed: ${bBeatsA.join(', ')})` : "";
 
-            container.innerHTML += createRow("GF Matchups Won", statsA.headToHead, statsB.headToHead, false, edStrA, edStrB);
-            container.innerHTML += createRow("GF Appearances", statsA.appearances, statsB.appearances, false);
-            container.innerHTML += createRow("Total GF Points", statsA.totalPts || "-", statsB.totalPts || "-", false);
-            container.innerHTML += createRow("Highest GF Score", maxPtsA, maxPtsB, false);
-            container.innerHTML += createRow("Total GF Wins", statsA.wins, statsB.wins, false);
-            container.innerHTML += createRow("Best GF Placement", bestA, bestB, true);
-            container.innerHTML += createRow("Avg. GF Placement", avgA, avgB, true);
-            container.innerHTML += createRow("Avg. GF Points", avgPtsA, avgPtsB, false);
+            container.innerHTML += createVisualRow("GF Matchups Won", statsA.headToHead, statsB.headToHead, false, edStrA, edStrB);
+            container.innerHTML += createVisualRow("GF Appearances", statsA.appearances, statsB.appearances, false);
+            container.innerHTML += createVisualRow("Total GF Points", statsA.totalPts || "-", statsB.totalPts || "-", false);
+            container.innerHTML += createVisualRow("Highest GF Score", maxPtsA, maxPtsB, false);
+            container.innerHTML += createVisualRow("Total GF Wins", statsA.wins, statsB.wins, false);
+            container.innerHTML += createVisualRow("Best GF Placement", bestA, bestB, true);
+            container.innerHTML += createVisualRow("Avg. GF Placement", avgA, avgB, true);
+            container.innerHTML += createVisualRow("Avg. GF Points", avgPtsA, avgPtsB, false);
         }
 
         // ==========================================
