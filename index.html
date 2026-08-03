@@ -2719,60 +2719,121 @@
             
             if(!idA || !idB) return;
 
-            let statsA = { wins: 0, headToHead: 0, sumPlace: 0, appearances: 0, bestPlace: 999, totalPts: 0, maxPts: 0 };
-            let statsB = { wins: 0, headToHead: 0, sumPlace: 0, appearances: 0, bestPlace: 999, totalPts: 0, maxPts: 0 };
-            
-            let aBeatsB = [];
-            let bBeatsA = [];
+            let statsA = {
+                h2hGF: 0, h2hSF: 0,
+                apps: 0, sfApps: 0, sfQuals: 0,
+                gfWins: 0, sfWins: 0,
+                bestGF: 999, bestSF: 999,
+                sumGFPlace: 0, sumSFPlace: 0, gfCount: 0, sfCount: 0,
+                sumGFPts: 0, sumSFPts: 0, maxGFPts: 0, maxSFPts: 0
+            };
+            let statsB = {
+                h2hGF: 0, h2hSF: 0,
+                apps: 0, sfApps: 0, sfQuals: 0,
+                gfWins: 0, sfWins: 0,
+                bestGF: 999, bestSF: 999,
+                sumGFPlace: 0, sumSFPlace: 0, gfCount: 0, sfCount: 0,
+                sumGFPts: 0, sumSFPts: 0, maxGFPts: 0, maxSFPts: 0
+            };
 
             db.editions.forEach(ed => {
                 const rA = db.results.find(r => r.edition === ed && r.countryId === idA);
                 const rB = db.results.find(r => r.edition === ed && r.countryId === idB);
 
-                if(isQualifier(rA)) {
-                    if(rA.place === 1) statsA.wins++;
-                    if(rA.place < statsA.bestPlace) statsA.bestPlace = rA.place;
-                    statsA.sumPlace += rA.place;
-                    statsA.appearances++;
-                    statsA.totalPts += rA.points;
-                    if(rA.points > statsA.maxPts) statsA.maxPts = rA.points;
+                // Process A
+                if(rA) {
+                    statsA.apps++;
+                    if(rA.semi !== undefined) {
+                        statsA.sfApps++;
+                        if(isQualifier(rA)) statsA.sfQuals++;
+                        
+                        if(rA.semiPlace) {
+                            statsA.sfCount++;
+                            statsA.sumSFPlace += rA.semiPlace;
+                            statsA.sumSFPts += rA.semiPoints;
+                            if(rA.semiPlace === 1) statsA.sfWins++;
+                            if(rA.semiPlace < statsA.bestSF) statsA.bestSF = rA.semiPlace;
+                            if(rA.semiPoints > statsA.maxSFPts) statsA.maxSFPts = rA.semiPoints;
+                        }
+                    }
+                    if(isQualifier(rA)) {
+                        statsA.gfCount++;
+                        statsA.sumGFPlace += rA.place;
+                        statsA.sumGFPts += rA.points;
+                        if(rA.place === 1) statsA.gfWins++;
+                        if(rA.place < statsA.bestGF) statsA.bestGF = rA.place;
+                        if(rA.points > statsA.maxGFPts) statsA.maxGFPts = rA.points;
+                    }
                 }
-                if(isQualifier(rB)) {
-                    if(rB.place === 1) statsB.wins++;
-                    if(rB.place < statsB.bestPlace) statsB.bestPlace = rB.place;
-                    statsB.sumPlace += rB.place;
-                    statsB.appearances++;
-                    statsB.totalPts += rB.points;
-                    if(rB.points > statsB.maxPts) statsB.maxPts = rB.points;
+
+                // Process B
+                if(rB) {
+                    statsB.apps++;
+                    if(rB.semi !== undefined) {
+                        statsB.sfApps++;
+                        if(isQualifier(rB)) statsB.sfQuals++;
+                        
+                        if(rB.semiPlace) {
+                            statsB.sfCount++;
+                            statsB.sumSFPlace += rB.semiPlace;
+                            statsB.sumSFPts += rB.semiPoints;
+                            if(rB.semiPlace === 1) statsB.sfWins++;
+                            if(rB.semiPlace < statsB.bestSF) statsB.bestSF = rB.semiPlace;
+                            if(rB.semiPoints > statsB.maxSFPts) statsB.maxSFPts = rB.semiPoints;
+                        }
+                    }
+                    if(isQualifier(rB)) {
+                        statsB.gfCount++;
+                        statsB.sumGFPlace += rB.place;
+                        statsB.sumGFPts += rB.points;
+                        if(rB.place === 1) statsB.gfWins++;
+                        if(rB.place < statsB.bestGF) statsB.bestGF = rB.place;
+                        if(rB.points > statsB.maxGFPts) statsB.maxGFPts = rB.points;
+                    }
                 }
                 
-                if(isQualifier(rA) && isQualifier(rB)) {
-                    if(rA.place < rB.place) {
-                        statsA.headToHead++;
-                        aBeatsB.push(ed);
-                    } else if(rB.place < rA.place) {
-                        statsB.headToHead++;
-                        bBeatsA.push(ed);
-                    }
+                // Direct Head-to-Head (GF)
+                if(rA && rB && isQualifier(rA) && isQualifier(rB)) {
+                    if(rA.place < rB.place) statsA.h2hGF++;
+                    else if(rB.place < rA.place) statsB.h2hGF++;
+                }
+
+                // Direct Head-to-Head (SF - Only if drawn in the same Semi-Final)
+                if(rA && rB && rA.semi !== undefined && rA.semi === rB.semi && rA.semiPlace && rB.semiPlace) {
+                    if(rA.semiPlace < rB.semiPlace) statsA.h2hSF++;
+                    else if(rB.semiPlace < rA.semiPlace) statsB.h2hSF++;
                 }
             });
 
-            const avgA = statsA.appearances ? (statsA.sumPlace / statsA.appearances).toFixed(1) : "-";
-            const avgB = statsB.appearances ? (statsB.sumPlace / statsB.appearances).toFixed(1) : "-";
+            // Format variables
+            const fmtPct = (q, t) => t ? ((q/t)*100).toFixed(1) : "-";
+            const fmtAvg = (s, c) => c ? (s/c).toFixed(1) : "-";
             
-            const avgPtsA = statsA.appearances ? (statsA.totalPts / statsA.appearances).toFixed(1) : "-";
-            const avgPtsB = statsB.appearances ? (statsB.totalPts / statsB.appearances).toFixed(1) : "-";
+            const qualRateA = statsA.sfApps ? fmtPct(statsA.sfQuals, statsA.sfApps) : "-";
+            const qualRateB = statsB.sfApps ? fmtPct(statsB.sfQuals, statsB.sfApps) : "-";
 
-            const bestA = statsA.bestPlace !== 999 ? statsA.bestPlace : "-";
-            const bestB = statsB.bestPlace !== 999 ? statsB.bestPlace : "-";
+            const avgGFPlaceA = fmtAvg(statsA.sumGFPlace, statsA.gfCount);
+            const avgGFPlaceB = fmtAvg(statsB.sumGFPlace, statsB.gfCount);
+            const avgSFPlaceA = fmtAvg(statsA.sumSFPlace, statsA.sfCount);
+            const avgSFPlaceB = fmtAvg(statsB.sumSFPlace, statsB.sfCount);
 
-            const maxPtsA = statsA.maxPts || "-";
-            const maxPtsB = statsB.maxPts || "-";
+            const avgGFPtsA = fmtAvg(statsA.sumGFPts, statsA.gfCount);
+            const avgGFPtsB = fmtAvg(statsB.sumGFPts, statsB.gfCount);
+            const avgSFPtsA = fmtAvg(statsA.sumSFPts, statsA.sfCount);
+            const avgSFPtsB = fmtAvg(statsB.sumSFPts, statsB.sfCount);
+
+            const totalWinsA = statsA.gfWins + statsA.sfWins;
+            const totalWinsB = statsB.gfWins + statsB.sfWins;
+
+            const bestGFA = statsA.bestGF !== 999 ? statsA.bestGF : "-";
+            const bestGFB = statsB.bestGF !== 999 ? statsB.bestGF : "-";
+            const bestSFA = statsA.bestSF !== 999 ? statsA.bestSF : "-";
+            const bestSFB = statsB.bestSF !== 999 ? statsB.bestSF : "-";
 
             const container = document.getElementById('h2h-stats-container');
             container.innerHTML = "";
 
-            function createVisualRow(label, valA, valB, lowerIsBetter, subA = "", subB = "") {
+            function createVisualRow(label, valA, valB, lowerIsBetter, subA = "", subB = "", isPercentage = false) {
                 let classA = "stat-tie"; let classB = "stat-tie";
                 let pctA = 50; let pctB = 50;
                 
@@ -2788,54 +2849,62 @@
                         }
                     }
                     
-                    // Bar width calculation
                     let total = numA + numB;
                     if (total > 0 && !lowerIsBetter) {
                         pctA = (numA / total) * 100;
                         pctB = (numB / total) * 100;
                     } else if (total > 0 && lowerIsBetter) {
+                        // For placements (lower is better), we invert the bar sizes
                         pctA = (numB / total) * 100;
                         pctB = (numA / total) * 100;
                     } else if (numA === 0 && numB === 0) {
-                        pctA = 0; pctB = 0;
+                        pctA = 50; pctB = 50;
                     }
                 } else if (valA !== "-" && valB === "-") {
                     pctA = 100; pctB = 0; classA = "stat-win";
                 } else if (valA === "-" && valB !== "-") {
                     pctA = 0; pctB = 100; classB = "stat-win";
                 } else {
-                    pctA = 0; pctB = 0;
+                    pctA = 50; pctB = 50;
                 }
 
                 let subHtmlA = subA ? `<span class="h2h-subtext">${subA}</span>` : "";
                 let subHtmlB = subB ? `<span class="h2h-subtext">${subB}</span>` : "";
+                let suffix = isPercentage ? "%" : "";
 
                 return `
                     <div class="h2h-row">
                         <div class="h2h-label">${label}</div>
                         <div class="h2h-stats-flex">
-                            <div class="h2h-stat-a ${classA}">${valA}${subHtmlA}</div>
+                            <div class="h2h-stat-a ${classA}">${valA}${valA !== "-" ? suffix : ""}${subHtmlA}</div>
                             <div class="h2h-bar-container">
                                 <div class="h2h-bar-a" style="width: ${pctA}%;"></div>
                                 <div class="h2h-bar-b" style="width: ${pctB}%;"></div>
                             </div>
-                            <div class="h2h-stat-b ${classB}">${valB}${subHtmlB}</div>
+                            <div class="h2h-stat-b ${classB}">${valB}${valB !== "-" ? suffix : ""}${subHtmlB}</div>
                         </div>
                     </div>
                 `;
             }
 
-            let edStrA = aBeatsB.length > 0 ? `(Ed: ${aBeatsB.join(', ')})` : "";
-            let edStrB = bBeatsA.length > 0 ? `(Ed: ${bBeatsA.join(', ')})` : "";
+            // Build the rows
+            container.innerHTML += createVisualRow("Direct GF Matchups Won", statsA.h2hGF, statsB.h2hGF, false);
+            container.innerHTML += createVisualRow("Direct SF Matchups Won", statsA.h2hSF, statsB.h2hSF, false, "When in same SF", "When in same SF");
+            
+            container.innerHTML += createVisualRow("Qualification Rate", qualRateA, qualRateB, false, `${statsA.sfQuals}/${statsA.sfApps} successful`, `${statsB.sfQuals}/${statsB.sfApps} successful`, true);
+            container.innerHTML += createVisualRow("Total Wins (GF + SF)", totalWinsA, totalWinsB, false, `${statsA.gfWins} GF / ${statsA.sfWins} SF`, `${statsB.gfWins} GF / ${statsB.sfWins} SF`);
+            
+            container.innerHTML += createVisualRow("Best Placement (GF)", bestGFA, bestGFB, true);
+            container.innerHTML += createVisualRow("Best Placement (SF)", bestSFA, bestSFB, true);
+            
+            container.innerHTML += createVisualRow("Avg. GF Placement", avgGFPlaceA, avgGFPlaceB, true);
+            container.innerHTML += createVisualRow("Avg. SF Placement", avgSFPlaceA, avgSFPlaceB, true);
 
-            container.innerHTML += createVisualRow("GF Matchups Won", statsA.headToHead, statsB.headToHead, false, edStrA, edStrB);
-            container.innerHTML += createVisualRow("GF Appearances", statsA.appearances, statsB.appearances, false);
-            container.innerHTML += createVisualRow("Total GF Points", statsA.totalPts || "-", statsB.totalPts || "-", false);
-            container.innerHTML += createVisualRow("Highest GF Score", maxPtsA, maxPtsB, false);
-            container.innerHTML += createVisualRow("Total GF Wins", statsA.wins, statsB.wins, false);
-            container.innerHTML += createVisualRow("Best GF Placement", bestA, bestB, true);
-            container.innerHTML += createVisualRow("Avg. GF Placement", avgA, avgB, true);
-            container.innerHTML += createVisualRow("Avg. GF Points", avgPtsA, avgPtsB, false);
+            container.innerHTML += createVisualRow("Avg. GF Points", avgGFPtsA, avgGFPtsB, false);
+            container.innerHTML += createVisualRow("Avg. SF Points", avgSFPtsA, avgSFPtsB, false);
+
+            container.innerHTML += createVisualRow("Highest GF Score", statsA.maxGFPts || "-", statsB.maxGFPts || "-", false);
+            container.innerHTML += createVisualRow("Highest SF Score", statsA.maxSFPts || "-", statsB.maxSFPts || "-", false);
         }
 
         // ==========================================
