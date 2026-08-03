@@ -206,6 +206,87 @@
 }
 .breakdown-table th { background-color: var(--table-header); color: var(--text-muted); text-transform: uppercase; }
 .breakdown-table tr:hover td { background-color: var(--table-hover) !important; }
+
+	/* Horizontal Timeline Picker for Editions */
+.timeline-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.timeline-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 10px 5px 15px 5px;
+    scroll-behavior: smooth;
+    width: 100%;
+    /* Hide scrollbar for cleaner look in some browsers, but keep functionality */
+    scrollbar-width: thin;
+    scrollbar-color: var(--table-header) var(--table-row-odd);
+}
+
+.timeline-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.timeline-container::-webkit-scrollbar-track {
+    background: var(--table-row-odd);
+    border-radius: 4px;
+}
+
+.timeline-container::-webkit-scrollbar-thumb {
+    background: var(--table-header);
+    border-radius: 4px;
+}
+
+.timeline-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+.timeline-node {
+    flex: 0 0 auto;
+    background-color: var(--table-header);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.timeline-node:hover {
+    background-color: var(--table-hover);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.timeline-node.active {
+    background-color: var(--primary-color);
+    color: var(--text-main);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(255, 42, 95, 0.4);
+    transform: scale(1.05);
+}
+
+.timeline-node .ed-number {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.timeline-node:hover .ed-number,
+.timeline-node.active .ed-number {
+    color: var(--text-main);
+}
     </style>
 </head>
 <body>
@@ -1836,40 +1917,55 @@
         }
 
         function renderPickers() {
-            const edGrid = document.getElementById("edition-picker-grid");
-            edGrid.innerHTML = "";
-            db.editions.forEach(ed => {
-                const btn = document.createElement("div");
-                btn.className = `picker-btn ${ed === activeEdition ? "active" : ""}`;
-                const hostFlag = getFlag(db.countries[db.hosts[ed]].code, false, "margin-left: 6px; margin-right: 0;");
-                btn.innerHTML = `Edition ${ed} ${hostFlag}`;
-                btn.onclick = () => {
-                    activeEdition = ed;
-                    renderPickers();
-                    renderEditionTable();
-                };
-                edGrid.appendChild(btn);
-            });
+    // 1. Render Editions as a Horizontal Timeline
+    const edGrid = document.getElementById("edition-picker-grid");
+    edGrid.className = "timeline-container"; // Overwrite the generic grid class
+    edGrid.innerHTML = "";
+    
+    db.editions.forEach(ed => {
+        const btn = document.createElement("div");
+        btn.className = `timeline-node ${ed === activeEdition ? "active" : ""}`;
+        
+        // Stack the text and the flag vertically
+        const hostFlag = getFlag(db.countries[db.hosts[ed]].code, false, "margin: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.4); width: 28px; height: 20px; border-radius: 3px;");
+        btn.innerHTML = `<span class="ed-number">Ed ${ed}</span>${hostFlag}`;
+        
+        btn.onclick = () => {
+            activeEdition = ed;
+            renderPickers();
+            renderEditionTable();
+            // Smoothly center the clicked node in the scrollable view
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        };
+        edGrid.appendChild(btn);
+    });
 
-            updateStageSelectors();
+    // Auto-scroll to the currently active edition on initial load
+    setTimeout(() => {
+        const activeNode = edGrid.querySelector('.timeline-node.active');
+        if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 50);
 
-            const countryGrid = document.getElementById("country-picker-grid");
-            countryGrid.innerHTML = "";
-            const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+    updateStageSelectors();
 
-            sortedCountryIds.forEach(cId => {
-                const cData = db.countries[cId];
-                const btn = document.createElement("div");
-                btn.className = `picker-btn ${cId === activeCountryId ? "active" : ""}`;
-                btn.innerHTML = `${getFlag(cData.code)} ${cData.name}`; 
-                btn.onclick = () => {
-                    activeCountryId = cId;
-                    renderPickers();
-                    renderCountryTable();
-                };
-                countryGrid.appendChild(btn);
-            });
-        }
+    // 2. Render Countries (Keep as a standard grid, since there are many and no sequential order)
+    const countryGrid = document.getElementById("country-picker-grid");
+    countryGrid.innerHTML = "";
+    const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+
+    sortedCountryIds.forEach(cId => {
+        const cData = db.countries[cId];
+        const btn = document.createElement("div");
+        btn.className = `picker-btn ${cId === activeCountryId ? "active" : ""}`;
+        btn.innerHTML = `${getFlag(cData.code)} ${cData.name}`; 
+        btn.onclick = () => {
+            activeCountryId = cId;
+            renderPickers();
+            renderCountryTable();
+        };
+        countryGrid.appendChild(btn);
+    });
+}
 
         function setStage(stage, btn) {
             activeStage = stage;
