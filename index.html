@@ -291,68 +291,126 @@
     color: var(--text-main);
 }
 
-		/* New Overall Stats Design */
+		/* PREMIUM OVERALL STATS DESIGN */
         .overall-section-title {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 22px;
+            font-weight: 800;
             color: var(--text-main);
-            margin: 40px 0 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid rgba(255,255,255,0.05);
+            margin: 50px 0 25px 0;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
         .overall-section-title span {
-            background: var(--table-row-odd);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 16px;
+            background: linear-gradient(135deg, var(--table-header), var(--table-hover));
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
+        .stat-card {
+            background: linear-gradient(145deg, var(--table-row-odd), var(--table-row-even));
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        .stat-card h3 {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ranking-list li {
+            padding: 10px 15px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.02);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ranking-list li:hover { 
+            background: rgba(255,255,255,0.08); 
+            transform: translateX(4px);
+        }
+
+        /* Top 3 Highlighting System */
+        .list-item-1st { 
+            padding: 14px 15px !important; 
+            border-left: 4px solid #ffd700; 
+            background: linear-gradient(90deg, rgba(255,215,0,0.08), transparent) !important; 
+        }
+        .list-item-2nd { border-left: 3px solid #e0e0e0; }
+        .list-item-3rd { border-left: 3px solid #cd7f32; }
+
         .stat-rank {
-            background: rgba(255,255,255,0.1);
-            color: var(--text-muted);
-            font-size: 10px;
-            font-weight: bold;
-            width: 18px;
-            height: 18px;
+            width: 22px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 12px;
+            font-size: 11px;
+            font-weight: 900;
         }
         
-        .stat-rank-1 {
-            background: var(--color-1st);
-            color: var(--text-1st);
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-        }
+        .stat-rank-1 { background: linear-gradient(135deg, #ffd700, #daa520); color: #000; box-shadow: 0 0 10px rgba(255,215,0,0.4); width: 26px; height: 26px; font-size: 13px;}
+        .stat-rank-2 { background: linear-gradient(135deg, #f5f5f5, #b0b0b0); color: #000; box-shadow: 0 0 8px rgba(255,255,255,0.2);}
+        .stat-rank-3 { background: linear-gradient(135deg, #ffa07a, #a0522d); color: #fff; box-shadow: 0 0 8px rgba(205,127,50,0.3);}
+        .stat-rank-other { background: rgba(255,255,255,0.08); color: var(--text-muted); }
 
-        .stat-prefix {
-            color: #a0a5bc;
-            margin-right: 8px;
-            font-size: 11px;
-            font-style: italic;
-        }
+        .stat-val-1st { font-size: 18px !important; color: #ffd700; font-weight: 900; text-shadow: 0 0 8px rgba(255,215,0,0.3); }
 
-        /* The little shadowed text for Streaks */
         .streak-editions-badge {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 3px 6px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 8px;
             border-radius: 4px;
             font-size: 10px;
             color: #a0a5bc;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
-            margin-right: 10px;
-            font-family: monospace;
-            border: 1px solid rgba(255,255,255,0.05);
-            letter-spacing: 0.5px;
+            margin-right: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
 
-        .font-bold { font-weight: bold; }
+        .stat-prefix { color: #a0a5bc; margin-right: 12px; font-size: 11px; font-style: italic; opacity: 0.8; }
+
+        /* Inline Mini Bar Charts for Percentages */
+        .mini-bar-bg {
+            width: 50px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .mini-bar-fill { height: 100%; border-radius: 3px; }
+        .mini-bar-good { background: linear-gradient(90deg, #10b981, #34d399); }
+        .mini-bar-bad { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .mini-bar-neutral { background: linear-gradient(90deg, var(--primary-color), #ff5e85); }
     </style>
 </head>
 <body>
@@ -519,15 +577,15 @@
             <h2 class="overall-section-title"><span>👑</span> Hall of Fame</h2>
             <div class="stats-grid">
                 <div class="stat-card border-gold">
-                    <h3>Most Wins</h3>
+                    <h3>Most Wins <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">1st Places</span></h3>
                     <ul class="ranking-list" id="stat-winners"></ul>
                 </div>
                 <div class="stat-card border-gold">
-                    <h3>Most Top 3 Finishes</h3>
+                    <h3>Most Top 3s <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Podium Finishes</span></h3>
                     <ul class="ranking-list" id="stat-top3"></ul>
                 </div>
                 <div class="stat-card border-gold">
-                    <h3>Most Top 10 Finishes</h3>
+                    <h3>Most Top 10s <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Left Side of Board</span></h3>
                     <ul class="ranking-list" id="stat-top10"></ul>
                 </div>
             </div>
@@ -555,39 +613,39 @@
                     <ul class="ranking-list" id="stat-high-tele"></ul>
                 </div>
                 <div class="stat-card border-gold">
-                    <h3>Highest Qual. Rate (Min 5 SFs)</h3>
+                    <h3>Highest Qual. Rate <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 SFs</span></h3>
                     <ul class="ranking-list" id="stat-qual-rate"></ul>
                 </div>
             </div>
 
-            <h2 class="overall-section-title"><span>📊</span> All-Time Averages (Min 5 Finals)</h2>
+            <h2 class="overall-section-title"><span>📈</span> All-Time Averages</h2>
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>Best Average Placement</h3>
+                    <h3>Best Avg. Placement <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 Finals</span></h3>
                     <ul class="ranking-list" id="stat-avg-place"></ul>
                 </div>
                 <div class="stat-card border-jury">
-                    <h3>Best Avg. Jury Score</h3>
+                    <h3>Best Avg. Jury Score <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 Finals</span></h3>
                     <ul class="ranking-list" id="stat-avg-jury"></ul>
                 </div>
                 <div class="stat-card border-tele">
-                    <h3>Best Avg. Televote Score</h3>
+                    <h3>Best Avg. Televote <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 Finals</span></h3>
                     <ul class="ranking-list" id="stat-avg-tele"></ul>
                 </div>
             </div>
 
-            <h2 class="overall-section-title"><span>💔</span> The Struggle</h2>
+            <h2 class="overall-section-title" style="color: #ef4444; border-bottom-color: rgba(239, 68, 68, 0.2);"><span>💔</span> The Struggle</h2>
             <div class="stats-grid">
                 <div class="stat-card border-wood">
-                    <h3>Wooden Spoons (Last Places)</h3>
+                    <h3>Wooden Spoons <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Last Places</span></h3>
                     <ul class="ranking-list" id="stat-last-place"></ul>
                 </div>
                 <div class="stat-card border-wood">
-                    <h3>Longest Non-Qual. Streak</h3>
+                    <h3>Longest NQ Streak</h3>
                     <ul class="ranking-list" id="stat-streak-nq"></ul>
                 </div>
                 <div class="stat-card border-wood">
-                    <h3>Highest NQ Rate (Min 5 SFs)</h3>
+                    <h3>Highest NQ Rate <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 SFs</span></h3>
                     <ul class="ranking-list" id="stat-nq-rate"></ul>
                 </div>
             </div>
@@ -2998,7 +3056,6 @@
                 records.wins[cId] = 0; records.top3[cId] = 0; records.top10[cId] = 0; records.lastPlaces[cId] = 0;
                 records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 }; records.avgPlace[cId] = { sum: 0, count: 0 };
                 records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
-                // Tracking current lengths and exact starting/ending editions
                 records.qStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null }; 
                 records.nqStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null };
             });
@@ -3037,7 +3094,6 @@
                             records.qStreaks[cId].curr = 0; 
                         }
                     } else {
-                        // Absence resets the active streaks
                         records.qStreaks[cId].curr = 0;
                         records.nqStreaks[cId].curr = 0;
                     }
@@ -3071,8 +3127,8 @@
                 });
             });
 
-            // New Modern List Builder
-            function buildList(arr, valKey, suffix="", topN=10, highlightFirst=false, isStreak=false) {
+            // Premium List Builder
+            function buildList(arr, valKey, suffix="", topN=10, isStreak=false, barType=null) {
                 let html = "";
                 let slice = topN > 0 ? arr.slice(0, topN) : arr;
                 if(slice.length === 0) return "<li><span class='did-not-participate'>None available</span></li>";
@@ -3080,32 +3136,46 @@
                 slice.forEach((item, index) => {
                     const c = db.countries[item.id];
                     let valDisplay = item[valKey] + suffix;
-                    let isTop = (index === 0);
                     
+                    // Style assignments based on placement
+                    let is1st = (index === 0);
+                    let is2nd = (index === 1);
+                    let is3rd = (index === 2);
+                    
+                    let rowClass = "";
+                    let rankClass = "stat-rank-other";
                     let valClass = "txt-highlight";
-                    if(highlightFirst && isTop) valClass = "txt-1st";
+
+                    if (is1st) { rowClass = "list-item-1st"; rankClass = "stat-rank-1"; valClass = "stat-val-1st"; }
+                    else if (is2nd) { rowClass = "list-item-2nd"; rankClass = "stat-rank-2"; }
+                    else if (is3rd) { rowClass = "list-item-3rd"; rankClass = "stat-rank-3"; }
 
                     let prefixText = "";
                     if (item.prefix) {
-                        // Use the shadowed badge for streaks, standard text for editions
-                        if (isStreak) {
-                            prefixText = `<span class="streak-editions-badge">${item.prefix}</span>`;
-                        } else {
-                            prefixText = `<span class="stat-prefix">${item.prefix}</span>`;
-                        }
+                        if (isStreak) prefixText = `<span class="streak-editions-badge">${item.prefix}</span>`;
+                        else prefixText = `<span class="stat-prefix">${item.prefix}</span>`;
                     }
 
-                    let rankBadge = `<span class="stat-rank ${isTop ? 'stat-rank-1' : ''}">${index+1}</span>`;
+                    // Bar Chart Logic
+                    let barHtml = "";
+                    if (barType && item[valKey] !== undefined) {
+                        let pct = parseFloat(item[valKey]);
+                        let barColorClass = "mini-bar-neutral";
+                        if (barType === 'good') barColorClass = "mini-bar-good";
+                        if (barType === 'bad') barColorClass = "mini-bar-bad";
+                        barHtml = `<div class="mini-bar-bg"><div class="mini-bar-fill ${barColorClass}" style="width: ${pct}%;"></div></div>`;
+                    }
 
                     html += `
-                    <li>
+                    <li class="${rowClass}">
                         <div class="list-country-info">
-                            ${rankBadge}
-                            ${getFlag(c.code)} <span class="${isTop ? 'font-bold' : ''}">${c.name}</span>
+                            <span class="stat-rank ${rankClass}">${index+1}</span>
+                            ${getFlag(c.code)} <span class="${is1st ? 'font-bold' : ''}" style="font-size: ${is1st ? '14px' : '13px'};">${c.name}</span>
                         </div>
                         <div style="display:flex; align-items:center;">
                             ${prefixText}
-                            <span class="${valClass} ${isTop ? 'font-bold' : ''}">${valDisplay}</span>
+                            <span class="${valClass} ${is1st ? '' : 'font-bold'}">${valDisplay}</span>
+                            ${barHtml}
                         </div>
                     </li>`;
                 });
@@ -3114,59 +3184,58 @@
 
             // --- POPULATE LISTS ---
             let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id, val: records.wins[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', ' Win(s)', 10, true);
+            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', '', 10);
 
             let top3Arr = Object.keys(records.top3).filter(id => records.top3[id] > 0).map(id => ({id, val: records.top3[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', ' time(s)', 10, true);
+            document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', '', 10);
 
             let top10Arr = Object.keys(records.top10).filter(id => records.top10[id] > 0).map(id => ({id, val: records.top10[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', ' time(s)', 10, true);
+            document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', '', 10);
 
             let highPoints = db.results.filter(r => isQualifier(r)).sort((a,b) => b.points - a.points).map(r => ({id: r.countryId, val: r.points, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', 10, true);
+            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', 10);
 
             let marginArr = margins.sort((a,b) => b.margin - a.margin).map(m => ({id: m.winnerId, val: m.margin, prefix: "Ed "+m.edition}));
-            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts diff', 10, true);
+            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts', 10);
 
             let highJury = db.results.filter(r => isQualifier(r) && r.jury !== undefined).sort((a,b) => b.jury - a.jury).map(r => ({id: r.countryId, val: r.jury, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', 10, true);
+            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', 10);
 
             let highTele = db.results.filter(r => isQualifier(r) && r.tele !== undefined).sort((a,b) => b.tele - a.tele).map(r => ({id: r.countryId, val: r.tele, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', 10, true);
+            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', 10);
 
-            // Streak Tracking using exact editions bounds
             let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => {
                 let r = records.qStreaks[id];
                 let prefixStr = r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}`;
                 return { id, val: r.max, prefix: prefixStr };
             }).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', ' in a row', 10, true, true);
+            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', '', 10, true);
 
             let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => {
                 let r = records.nqStreaks[id];
                 let prefixStr = r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}`;
                 return { id, val: r.max, prefix: prefixStr };
             }).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', ' in a row', 10, false, true);
+            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', '', 10, true);
 
-            // Average/Rate Calculations (Minimum 5 appearances requirement)
+            // Adding inline progress bars for percentages
             let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', 10, true);
-
-            let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) })).sort((a,b) => parseFloat(a.val) - parseFloat(b.val));
-            document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', ' avg', 10, true);
-
-            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', ' avg', 10, true);
-
-            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count >= 5).map(id => ({ id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', ' avg', 10, true);
-
-            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' time(s)', 10, false);
+            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', 10, false, 'good');
 
             let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', 10, false);
+            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', 10, false, 'bad');
+
+            let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) })).sort((a,b) => parseFloat(a.val) - parseFloat(b.val));
+            document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', '', 10);
+
+            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', '', 10);
+
+            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count >= 5).map(id => ({ id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', '', 10);
+
+            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', '', 10);
         }
 
 // ==========================================
