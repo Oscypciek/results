@@ -290,6 +290,69 @@
 .timeline-node.active .ed-number {
     color: var(--text-main);
 }
+
+		/* New Overall Stats Design */
+        .overall-section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-main);
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .overall-section-title span {
+            background: var(--table-row-odd);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .stat-rank {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .stat-rank-1 {
+            background: var(--color-1st);
+            color: var(--text-1st);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+
+        .stat-prefix {
+            color: #a0a5bc;
+            margin-right: 8px;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        /* The little shadowed text for Streaks */
+        .streak-editions-badge {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #a0a5bc;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+            margin-right: 10px;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.05);
+            letter-spacing: 0.5px;
+        }
+
+        .font-bold { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -453,35 +516,24 @@
         </div>
 
         <div id="overall" class="tab-content">
+            <h2 class="overall-section-title"><span>👑</span> Hall of Fame</h2>
             <div class="stats-grid">
                 <div class="stat-card border-gold">
-                    <h3>Longest Qualification Streak</h3>
-                    <ul class="ranking-list" id="stat-streak-q"></ul>
-                </div>
-                <div class="stat-card border-wood">
-                    <h3>Longest Non-Qual. Streak</h3>
-                    <ul class="ranking-list" id="stat-streak-nq"></ul>
-                </div>
-                <div class="stat-card border-gold">
-                    <h3>Winners Wall (Total Wins)</h3>
+                    <h3>Most Wins</h3>
                     <ul class="ranking-list" id="stat-winners"></ul>
                 </div>
-                <div class="stat-card">
-                    <h3>Qualification Rate</h3>
-                    <ul class="ranking-list" id="stat-qual-rate"></ul>
-                </div>
-                <div class="stat-card">
-                    <h3>Non-Qualification Rate</h3>
-                    <ul class="ranking-list" id="stat-nq-rate"></ul>
+                <div class="stat-card border-gold">
+                    <h3>Most Top 3 Finishes</h3>
+                    <ul class="ranking-list" id="stat-top3"></ul>
                 </div>
                 <div class="stat-card border-gold">
-                    <h3>Semi-Final Wins</h3>
-                    <ul class="ranking-list" id="stat-semi-wins"></ul>
+                    <h3>Most Top 10 Finishes</h3>
+                    <ul class="ranking-list" id="stat-top10"></ul>
                 </div>
-                <div class="stat-card border-wood">
-                    <h3>Wooden Spoons (Last Places)</h3>
-                    <ul class="ranking-list" id="stat-last-place"></ul>
-                </div>
+            </div>
+
+            <h2 class="overall-section-title"><span>🔥</span> Records & Streaks</h2>
+            <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Highest Final Score</h3>
                     <ul class="ranking-list" id="stat-highest-score"></ul>
@@ -489,6 +541,10 @@
                 <div class="stat-card">
                     <h3>Biggest Margin of Victory</h3>
                     <ul class="ranking-list" id="stat-margin"></ul>
+                </div>
+                <div class="stat-card border-gold">
+                    <h3>Longest Qual. Streak</h3>
+                    <ul class="ranking-list" id="stat-streak-q"></ul>
                 </div>
                 <div class="stat-card border-jury">
                     <h3>Highest Jury Score</h3>
@@ -498,6 +554,18 @@
                     <h3>Highest Televote Score</h3>
                     <ul class="ranking-list" id="stat-high-tele"></ul>
                 </div>
+                <div class="stat-card border-gold">
+                    <h3>Highest Qual. Rate (Min 5 SFs)</h3>
+                    <ul class="ranking-list" id="stat-qual-rate"></ul>
+                </div>
+            </div>
+
+            <h2 class="overall-section-title"><span>📊</span> All-Time Averages (Min 5 Finals)</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Best Average Placement</h3>
+                    <ul class="ranking-list" id="stat-avg-place"></ul>
+                </div>
                 <div class="stat-card border-jury">
                     <h3>Best Avg. Jury Score</h3>
                     <ul class="ranking-list" id="stat-avg-jury"></ul>
@@ -506,13 +574,21 @@
                     <h3>Best Avg. Televote Score</h3>
                     <ul class="ranking-list" id="stat-avg-tele"></ul>
                 </div>
-                <div class="stat-card">
-                    <h3>Countries Best Placement</h3>
-                    <ul class="ranking-list" id="stat-best-place"></ul>
+            </div>
+
+            <h2 class="overall-section-title"><span>💔</span> The Struggle</h2>
+            <div class="stats-grid">
+                <div class="stat-card border-wood">
+                    <h3>Wooden Spoons (Last Places)</h3>
+                    <ul class="ranking-list" id="stat-last-place"></ul>
                 </div>
                 <div class="stat-card border-wood">
-                    <h3>Countries Worst Placement</h3>
-                    <ul class="ranking-list" id="stat-worst-place"></ul>
+                    <h3>Longest Non-Qual. Streak</h3>
+                    <ul class="ranking-list" id="stat-streak-nq"></ul>
+                </div>
+                <div class="stat-card border-wood">
+                    <h3>Highest NQ Rate (Min 5 SFs)</h3>
+                    <ul class="ranking-list" id="stat-nq-rate"></ul>
                 </div>
             </div>
         </div>
@@ -2912,21 +2988,24 @@
         // ==========================================
         function renderOverallStats() {
             let records = { 
-                wins: {}, lastPlaces: {}, avgJury: {}, avgTele: {}, bestPlace: {}, worstPlace: {},
-                semiWins: {}, sfApps: {}, sfQuals: {}, sfNQs: {},
+                wins: {}, top3: {}, top10: {}, lastPlaces: {},
+                avgJury: {}, avgTele: {}, avgPlace: {},
+                sfApps: {}, sfQuals: {}, sfNQs: {},
                 qStreaks: {}, nqStreaks: {}
             };
 
             Object.keys(db.countries).forEach(cId => {
-                records.wins[cId] = 0; records.lastPlaces[cId] = 0; 
-                records.bestPlace[cId] = 999; records.worstPlace[cId] = -1;
-                records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 };
-                records.semiWins[cId] = 0; records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
-                records.qStreaks[cId] = { curr: 0, max: 0 }; records.nqStreaks[cId] = { curr: 0, max: 0 };
+                records.wins[cId] = 0; records.top3[cId] = 0; records.top10[cId] = 0; records.lastPlaces[cId] = 0;
+                records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 }; records.avgPlace[cId] = { sum: 0, count: 0 };
+                records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
+                // Tracking current lengths and exact starting/ending editions
+                records.qStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null }; 
+                records.nqStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null };
             });
 
             let margins = [];
 
+            // Calculate Exact Streaks with Editions
             db.editions.forEach(ed => {
                 const editionHasSemis = db.results.some(r => r.edition === ed && r.semi !== undefined);
 
@@ -2939,44 +3018,51 @@
                         if (isQualifier(res)) {
                             if (editionHasSemis) {
                                 records.qStreaks[cId].curr++;
-                                if (records.qStreaks[cId].curr > records.qStreaks[cId].max) records.qStreaks[cId].max = records.qStreaks[cId].curr;
+                                if (records.qStreaks[cId].curr === 1) records.qStreaks[cId].start = ed;
+                                if (records.qStreaks[cId].curr > records.qStreaks[cId].max) {
+                                    records.qStreaks[cId].max = records.qStreaks[cId].curr;
+                                    records.qStreaks[cId].maxStart = records.qStreaks[cId].start;
+                                    records.qStreaks[cId].maxEnd = ed;
+                                }
                             }
                             records.nqStreaks[cId].curr = 0; 
                         } else {
                             records.nqStreaks[cId].curr++;
-                            if (records.nqStreaks[cId].curr > records.nqStreaks[cId].max) records.nqStreaks[cId].max = records.nqStreaks[cId].curr;
+                            if (records.nqStreaks[cId].curr === 1) records.nqStreaks[cId].start = ed;
+                            if (records.nqStreaks[cId].curr > records.nqStreaks[cId].max) {
+                                records.nqStreaks[cId].max = records.nqStreaks[cId].curr;
+                                records.nqStreaks[cId].maxStart = records.nqStreaks[cId].start;
+                                records.nqStreaks[cId].maxEnd = ed;
+                            }
                             records.qStreaks[cId].curr = 0; 
                         }
                     } else {
+                        // Absence resets the active streaks
                         records.qStreaks[cId].curr = 0;
                         records.nqStreaks[cId].curr = 0;
                     }
                 });
             });
 
-
+            // Calculate Medals, Rates, and Averages
             db.editions.forEach(ed => {
                 const allEdResults = db.results.filter(r => r.edition === ed);
                 const gfResults = allEdResults.filter(r => isQualifier(r)).sort((a,b) => a.place - b.place);
 
-                if(gfResults.length >= 2) {
-                    margins.push({ edition: ed, winnerId: gfResults[0].countryId, margin: gfResults[0].points - gfResults[1].points });
-                }
-
+                if(gfResults.length >= 2) margins.push({ edition: ed, winnerId: gfResults[0].countryId, margin: gfResults[0].points - gfResults[1].points });
                 const lastPlace = gfResults.length > 0 ? gfResults[gfResults.length - 1].place : null;
 
                 allEdResults.forEach(r => {
                     if (isQualifier(r)) {
                         if (r.place === 1) records.wins[r.countryId]++;
+                        if (r.place <= 3) records.top3[r.countryId]++;
+                        if (r.place <= 10) records.top10[r.countryId]++;
                         if (r.place === lastPlace) records.lastPlaces[r.countryId]++;
-                        if (r.place < records.bestPlace[r.countryId]) records.bestPlace[r.countryId] = r.place;
-                        if (r.place > records.worstPlace[r.countryId]) records.worstPlace[r.countryId] = r.place;
                         
-                        records.avgJury[r.countryId].sum += r.jury; records.avgJury[r.countryId].count++;
-                        records.avgTele[r.countryId].sum += r.tele; records.avgTele[r.countryId].count++;
+                        records.avgPlace[r.countryId].sum += r.place; records.avgPlace[r.countryId].count++;
+                        if (r.jury !== undefined) { records.avgJury[r.countryId].sum += r.jury; records.avgJury[r.countryId].count++; }
+                        if (r.tele !== undefined) { records.avgTele[r.countryId].sum += r.tele; records.avgTele[r.countryId].count++; }
                     }
-
-                    if (r.semiPlace === 1) records.semiWins[r.countryId]++;
                     if (r.semi !== undefined) {
                         records.sfApps[r.countryId]++;
                         if (isQualifier(r)) records.sfQuals[r.countryId]++;
@@ -2985,98 +3071,102 @@
                 });
             });
 
-            function buildList(arr, valKey, suffix="", topN=0, highlightFirst=false) {
+            // New Modern List Builder
+            function buildList(arr, valKey, suffix="", topN=10, highlightFirst=false, isStreak=false) {
                 let html = "";
                 let slice = topN > 0 ? arr.slice(0, topN) : arr;
-                if(slice.length === 0) return "<li>None</li>";
+                if(slice.length === 0) return "<li><span class='did-not-participate'>None available</span></li>";
 
                 slice.forEach((item, index) => {
                     const c = db.countries[item.id];
                     let valDisplay = item[valKey] + suffix;
-                    let valClass = (highlightFirst && index === 0) ? "txt-1st" : "txt-highlight";
-                    let prefixText = item.prefix ? `<span style="color:#a0a5bc; margin-right:8px; font-size:11px;">${item.prefix}</span>` : "";
+                    let isTop = (index === 0);
+                    
+                    let valClass = "txt-highlight";
+                    if(highlightFirst && isTop) valClass = "txt-1st";
 
-                    html += `<li><div class="list-country-info">${prefixText} ${getFlag(c.code)} ${c.name}</div><span class="${valClass}">${valDisplay}</span></li>`;
+                    let prefixText = "";
+                    if (item.prefix) {
+                        // Use the shadowed badge for streaks, standard text for editions
+                        if (isStreak) {
+                            prefixText = `<span class="streak-editions-badge">${item.prefix}</span>`;
+                        } else {
+                            prefixText = `<span class="stat-prefix">${item.prefix}</span>`;
+                        }
+                    }
+
+                    let rankBadge = `<span class="stat-rank ${isTop ? 'stat-rank-1' : ''}">${index+1}</span>`;
+
+                    html += `
+                    <li>
+                        <div class="list-country-info">
+                            ${rankBadge}
+                            ${getFlag(c.code)} <span class="${isTop ? 'font-bold' : ''}">${c.name}</span>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            ${prefixText}
+                            <span class="${valClass} ${isTop ? 'font-bold' : ''}">${valDisplay}</span>
+                        </div>
+                    </li>`;
                 });
                 return html;
             }
 
-            let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => ({id: id, val: records.qStreaks[id].max})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', ' in a row', 5, true);
+            // --- POPULATE LISTS ---
+            let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id, val: records.wins[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', ' Win(s)', 10, true);
 
-            let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => ({id: id, val: records.nqStreaks[id].max})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', ' in a row', 5, false);
+            let top3Arr = Object.keys(records.top3).filter(id => records.top3[id] > 0).map(id => ({id, val: records.top3[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', ' time(s)', 10, true);
 
-            let semiWinArr = Object.keys(records.semiWins).filter(id => records.semiWins[id] > 0).map(id => ({id: id, val: records.semiWins[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-semi-wins").innerHTML = buildList(semiWinArr, 'val', ' Win(s)', 0, true);
+            let top10Arr = Object.keys(records.top10).filter(id => records.top10[id] > 0).map(id => ({id, val: records.top10[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', ' time(s)', 10, true);
 
-            let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] > 0).map(id => {
-                return { id: id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) };
-            }).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', 0, true);
-
-            let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] > 0).map(id => {
-                return { id: id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) };
-            }).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', 0, false);
-
-            let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id: id, val: records.wins[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', ' Win(s)', 0, true);
-
-            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id: id, val: records.lastPlaces[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' Last Place(s)', 0, false);
-
-            let allGFRes = db.results.filter(r => isQualifier(r));
-            
-            let highPoints = allGFRes.sort((a,b) => b.points - a.points).map(r => ({id: r.countryId, val: r.points, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', 5, true);
-
-            let highJury = allGFRes.sort((a,b) => b.jury - a.jury).map(r => ({id: r.countryId, val: r.jury, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', 5, true);
-
-            let highTele = allGFRes.sort((a,b) => b.tele - a.tele).map(r => ({id: r.countryId, val: r.tele, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', 5, true);
+            let highPoints = db.results.filter(r => isQualifier(r)).sort((a,b) => b.points - a.points).map(r => ({id: r.countryId, val: r.points, prefix: "Ed "+r.edition}));
+            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', 10, true);
 
             let marginArr = margins.sort((a,b) => b.margin - a.margin).map(m => ({id: m.winnerId, val: m.margin, prefix: "Ed "+m.edition}));
-            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts diff', 5, true);
+            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts diff', 10, true);
 
-            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count > 0).map(id => ({ id: id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', ' avg', 5, true);
+            let highJury = db.results.filter(r => isQualifier(r) && r.jury !== undefined).sort((a,b) => b.jury - a.jury).map(r => ({id: r.countryId, val: r.jury, prefix: "Ed "+r.edition}));
+            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', 10, true);
 
-            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count > 0).map(id => ({ id: id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', ' avg', 5, true);
+            let highTele = db.results.filter(r => isQualifier(r) && r.tele !== undefined).sort((a,b) => b.tele - a.tele).map(r => ({id: r.countryId, val: r.tele, prefix: "Ed "+r.edition}));
+            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', 10, true);
 
-            // Best Placement Generation
-            let bestArr = Object.keys(records.bestPlace).filter(id => records.bestPlace[id] !== 999).map(id => ({id: id, val: records.bestPlace[id]})).sort((a,b) => {
-                if (a.val !== b.val) return a.val - b.val;
-                return db.countries[a.id].name.localeCompare(db.countries[b.id].name);
-            });
-            let bestHtml = "";
-            bestArr.forEach(item => {
-                const c = db.countries[item.id];
-                let suffix = "th"; let placeClass = "";
-                if (item.val === 1) { placeClass = "txt-1st"; suffix = "st"; }
-                else if (item.val === 2) { placeClass = "txt-2nd"; suffix = "nd"; }
-                else if (item.val === 3) { placeClass = "txt-3rd"; suffix = "rd"; }
-                bestHtml += `<li><div class="list-country-info">${getFlag(c.code)} ${c.name}</div><span class="${placeClass}">${item.val}${suffix}</span></li>`;
-            });
-            document.getElementById("stat-best-place").innerHTML = bestHtml;
+            // Streak Tracking using exact editions bounds
+            let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => {
+                let r = records.qStreaks[id];
+                let prefixStr = r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}`;
+                return { id, val: r.max, prefix: prefixStr };
+            }).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', ' in a row', 10, true, true);
 
-            // Worst Placement Generation
-            let worstArr = Object.keys(records.worstPlace).filter(id => records.worstPlace[id] !== -1).map(id => ({id: id, val: records.worstPlace[id]})).sort((a,b) => {
-                if (a.val !== b.val) return b.val - a.val; // Sort descending
-                return db.countries[a.id].name.localeCompare(db.countries[b.id].name);
-            });
-            let worstHtml = "";
-            worstArr.forEach(item => {
-                const c = db.countries[item.id];
-                let suffix = "th";
-                if (item.val % 10 === 1 && item.val !== 11) suffix = "st";
-                else if (item.val % 10 === 2 && item.val !== 12) suffix = "nd";
-                else if (item.val % 10 === 3 && item.val !== 13) suffix = "rd";
-                worstHtml += `<li><div class="list-country-info">${getFlag(c.code)} ${c.name}</div><span class="txt-highlight">${item.val}${suffix}</span></li>`;
-            });
-            document.getElementById("stat-worst-place").innerHTML = worstHtml;
+            let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => {
+                let r = records.nqStreaks[id];
+                let prefixStr = r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}`;
+                return { id, val: r.max, prefix: prefixStr };
+            }).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', ' in a row', 10, false, true);
+
+            // Average/Rate Calculations (Minimum 5 appearances requirement)
+            let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', 10, true);
+
+            let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) })).sort((a,b) => parseFloat(a.val) - parseFloat(b.val));
+            document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', ' avg', 10, true);
+
+            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', ' avg', 10, true);
+
+            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count >= 5).map(id => ({ id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', ' avg', 10, true);
+
+            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]})).sort((a,b) => b.val - a.val);
+            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' time(s)', 10, false);
+
+            let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
+            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', 10, false);
         }
 
 // ==========================================
