@@ -411,6 +411,88 @@
         .mini-bar-good { background: linear-gradient(90deg, #10b981, #34d399); }
         .mini-bar-bad { background: linear-gradient(90deg, #ef4444, #f87171); }
         .mini-bar-neutral { background: linear-gradient(90deg, var(--primary-color), #ff5e85); }
+		/* Fixed Row Heights & Truncation */
+        .ranking-list {
+            list-style: none; padding: 0; margin: 0; text-align: left; 
+            max-height: none; /* Removed so it can expand smoothly */
+            overflow: hidden; 
+        }
+        
+        .ranking-list.collapsed li:nth-child(n+11) {
+            display: none; /* Hides items after the 10th when collapsed */
+        }
+
+        .ranking-list li {
+            padding: 12px 15px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.02);
+            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 48px; /* Fixed height to prevent uneven rows */
+            box-sizing: border-box;
+        }
+
+        .list-country-info {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            flex: 1; /* Pushes the value to the right */
+            min-width: 0; /* Crucial for text-overflow to work in flexbox */
+            padding-right: 15px;
+        }
+
+        .list-stat-value {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-shrink: 0; /* Prevents the numbers/badges from shrinking */
+        }
+
+        .streak-editions-badge {
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #a0a5bc;
+            margin-right: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* Show All / Expand Button */
+        .stat-card-footer {
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+
+        .show-all-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px dashed rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .show-all-btn:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+            border-color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -577,16 +659,19 @@
             <h2 class="overall-section-title"><span>👑</span> Hall of Fame</h2>
             <div class="stats-grid">
                 <div class="stat-card border-gold">
-                    <h3>Most Wins <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">1st Places</span></h3>
-                    <ul class="ranking-list" id="stat-winners"></ul>
+                    <h3>Most Wins</h3>
+                    <ul class="ranking-list collapsed" id="stat-winners"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-winners', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-gold">
                     <h3>Most Top 3s <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Podium Finishes</span></h3>
-                    <ul class="ranking-list" id="stat-top3"></ul>
+                    <ul class="ranking-list collapsed" id="stat-top3"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-top3', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-gold">
-                    <h3>Most Top 10s <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Left Side of Board</span></h3>
-                    <ul class="ranking-list" id="stat-top10"></ul>
+                    <h3>Most Top 10s <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Top Tier Finishes</span></h3>
+                    <ul class="ranking-list collapsed" id="stat-top10"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-top10', this)">Show All</button></div>
                 </div>
             </div>
 
@@ -594,27 +679,33 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Highest Final Score</h3>
-                    <ul class="ranking-list" id="stat-highest-score"></ul>
+                    <ul class="ranking-list collapsed" id="stat-highest-score"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-highest-score', this)">Show All</button></div>
                 </div>
                 <div class="stat-card">
                     <h3>Biggest Margin of Victory</h3>
-                    <ul class="ranking-list" id="stat-margin"></ul>
+                    <ul class="ranking-list collapsed" id="stat-margin"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-margin', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-gold">
                     <h3>Longest Qual. Streak</h3>
-                    <ul class="ranking-list" id="stat-streak-q"></ul>
+                    <ul class="ranking-list collapsed" id="stat-streak-q"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-streak-q', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-jury">
                     <h3>Highest Jury Score</h3>
-                    <ul class="ranking-list" id="stat-high-jury"></ul>
+                    <ul class="ranking-list collapsed" id="stat-high-jury"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-high-jury', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-tele">
                     <h3>Highest Televote Score</h3>
-                    <ul class="ranking-list" id="stat-high-tele"></ul>
+                    <ul class="ranking-list collapsed" id="stat-high-tele"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-high-tele', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-gold">
                     <h3>Highest Qual. Rate <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 SFs</span></h3>
-                    <ul class="ranking-list" id="stat-qual-rate"></ul>
+                    <ul class="ranking-list collapsed" id="stat-qual-rate"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-qual-rate', this)">Show All</button></div>
                 </div>
             </div>
 
@@ -622,31 +713,42 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Best Avg. Placement <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 Finals</span></h3>
-                    <ul class="ranking-list" id="stat-avg-place"></ul>
+                    <ul class="ranking-list collapsed" id="stat-avg-place"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-avg-place', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-jury">
                     <h3>Best Avg. Jury Score <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 Finals</span></h3>
-                    <ul class="ranking-list" id="stat-avg-jury"></ul>
+                    <ul class="ranking-list collapsed" id="stat-avg-jury"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-avg-jury', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-tele">
                     <h3>Best Avg. Televote <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 Finals</span></h3>
-                    <ul class="ranking-list" id="stat-avg-tele"></ul>
+                    <ul class="ranking-list collapsed" id="stat-avg-tele"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-avg-tele', this)">Show All</button></div>
                 </div>
             </div>
 
             <h2 class="overall-section-title" style="color: #ef4444; border-bottom-color: rgba(239, 68, 68, 0.2);"><span>💔</span> The Struggle</h2>
             <div class="stats-grid">
                 <div class="stat-card border-wood">
+                    <h3>Waiting for a Victory <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Most Finals w/o Win</span></h3>
+                    <ul class="ranking-list collapsed" id="stat-no-wins"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-no-wins', this)">Show All</button></div>
+                </div>
+                <div class="stat-card border-wood">
                     <h3>Wooden Spoons <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Last Places</span></h3>
-                    <ul class="ranking-list" id="stat-last-place"></ul>
+                    <ul class="ranking-list collapsed" id="stat-last-place"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-last-place', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-wood">
                     <h3>Longest NQ Streak</h3>
-                    <ul class="ranking-list" id="stat-streak-nq"></ul>
+                    <ul class="ranking-list collapsed" id="stat-streak-nq"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-streak-nq', this)">Show All</button></div>
                 </div>
                 <div class="stat-card border-wood">
                     <h3>Highest NQ Rate <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">Min 5 SFs</span></h3>
-                    <ul class="ranking-list" id="stat-nq-rate"></ul>
+                    <ul class="ranking-list collapsed" id="stat-nq-rate"></ul>
+                    <div class="stat-card-footer"><button class="show-all-btn" onclick="toggleShowAll('stat-nq-rate', this)">Show All</button></div>
                 </div>
             </div>
         </div>
@@ -3044,25 +3146,39 @@
         // ==========================================
         // TAB 6: OVERALL STATS
         // ==========================================
+        // Global toggle function for expanding lists
+        window.toggleShowAll = function(listId, btn) {
+            const list = document.getElementById(listId);
+            if (list.classList.contains('collapsed')) {
+                list.classList.remove('collapsed');
+                btn.innerText = "Show Less";
+            } else {
+                list.classList.add('collapsed');
+                btn.innerText = "Show All";
+                // Optionally scroll back up slightly if the list was huge
+                btn.parentElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+
         function renderOverallStats() {
             let records = { 
                 wins: {}, top3: {}, top10: {}, lastPlaces: {},
                 avgJury: {}, avgTele: {}, avgPlace: {},
-                sfApps: {}, sfQuals: {}, sfNQs: {},
+                sfApps: {}, sfQuals: {}, sfNQs: {}, totalFinals: {},
                 qStreaks: {}, nqStreaks: {}
             };
 
             Object.keys(db.countries).forEach(cId => {
                 records.wins[cId] = 0; records.top3[cId] = 0; records.top10[cId] = 0; records.lastPlaces[cId] = 0;
                 records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 }; records.avgPlace[cId] = { sum: 0, count: 0 };
-                records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0;
+                records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0; records.totalFinals[cId] = 0;
                 records.qStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null }; 
                 records.nqStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null };
             });
 
             let margins = [];
 
-            // Calculate Exact Streaks with Editions
+            // Calculate Exact Streaks
             db.editions.forEach(ed => {
                 const editionHasSemis = db.results.some(r => r.edition === ed && r.semi !== undefined);
 
@@ -3073,6 +3189,7 @@
                     const res = db.results.find(r => r.edition === ed && r.countryId === cId);
                     if (res) {
                         if (isQualifier(res)) {
+                            records.totalFinals[cId]++; // Count total finals for "Waiting for a victory" table
                             if (editionHasSemis) {
                                 records.qStreaks[cId].curr++;
                                 if (records.qStreaks[cId].curr === 1) records.qStreaks[cId].start = ed;
@@ -3127,17 +3244,15 @@
                 });
             });
 
-            // Premium List Builder
-            function buildList(arr, valKey, suffix="", topN=10, isStreak=false, barType=null) {
+            // List Builder: Renders ALL items (CSS handles the top 10 limit)
+            function buildList(arr, valKey, suffix="", isStreak=false, barType=null) {
                 let html = "";
-                let slice = topN > 0 ? arr.slice(0, topN) : arr;
-                if(slice.length === 0) return "<li><span class='did-not-participate'>None available</span></li>";
+                if(arr.length === 0) return "<li><span class='did-not-participate' style='padding-left:15px;'>None available</span></li>";
 
-                slice.forEach((item, index) => {
+                arr.forEach((item, index) => {
                     const c = db.countries[item.id];
                     let valDisplay = item[valKey] + suffix;
                     
-                    // Style assignments based on placement
                     let is1st = (index === 0);
                     let is2nd = (index === 1);
                     let is3rd = (index === 2);
@@ -3156,7 +3271,6 @@
                         else prefixText = `<span class="stat-prefix">${item.prefix}</span>`;
                     }
 
-                    // Bar Chart Logic
                     let barHtml = "";
                     if (barType && item[valKey] !== undefined) {
                         let pct = parseFloat(item[valKey]);
@@ -3170,9 +3284,9 @@
                     <li class="${rowClass}">
                         <div class="list-country-info">
                             <span class="stat-rank ${rankClass}">${index+1}</span>
-                            ${getFlag(c.code)} <span class="${is1st ? 'font-bold' : ''}" style="font-size: ${is1st ? '14px' : '13px'};">${c.name}</span>
+                            ${getFlag(c.code)} <span class="${is1st ? 'font-bold' : ''}" style="font-size: ${is1st ? '14px' : '13px'}; margin-left: 5px;">${c.name}</span>
                         </div>
-                        <div style="display:flex; align-items:center;">
+                        <div class="list-stat-value">
                             ${prefixText}
                             <span class="${valClass} ${is1st ? '' : 'font-bold'}">${valDisplay}</span>
                             ${barHtml}
@@ -3182,60 +3296,96 @@
                 return html;
             }
 
-            // --- POPULATE LISTS ---
-            let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id, val: records.wins[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', '', 10);
+            // --- POPULATE LISTS WITH ADVANCED TIE-BREAKERS ---
+            
+            // Tie-breaker: Wins > Top 3s > Top 10s > Alphabetical
+            let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id, val: records.wins[id]}))
+                .sort((a,b) => b.val - a.val || records.top3[b.id] - records.top3[a.id] || records.top10[b.id] - records.top10[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', '');
 
-            let top3Arr = Object.keys(records.top3).filter(id => records.top3[id] > 0).map(id => ({id, val: records.top3[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', '', 10);
+            // Tie-breaker: Top 3s > Wins > Top 10s > Alphabetical
+            let top3Arr = Object.keys(records.top3).filter(id => records.top3[id] > 0).map(id => ({id, val: records.top3[id]}))
+                .sort((a,b) => b.val - a.val || records.wins[b.id] - records.wins[a.id] || records.top10[b.id] - records.top10[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', '');
 
-            let top10Arr = Object.keys(records.top10).filter(id => records.top10[id] > 0).map(id => ({id, val: records.top10[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', '', 10);
+            // Tie-breaker: Top 10s > Top 3s > Wins > Alphabetical
+            let top10Arr = Object.keys(records.top10).filter(id => records.top10[id] > 0).map(id => ({id, val: records.top10[id]}))
+                .sort((a,b) => b.val - a.val || records.top3[b.id] - records.top3[a.id] || records.wins[b.id] - records.wins[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', '');
 
-            let highPoints = db.results.filter(r => isQualifier(r)).sort((a,b) => b.points - a.points).map(r => ({id: r.countryId, val: r.points, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', 10);
+            // Highest points: Points > Most recent edition
+            let highPoints = db.results.filter(r => isQualifier(r))
+                .map(r => ({id: r.countryId, val: r.points, edition: r.edition, prefix: "Ed "+r.edition}))
+                .sort((a,b) => b.val - a.val || b.edition - a.edition);
+            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts');
 
-            let marginArr = margins.sort((a,b) => b.margin - a.margin).map(m => ({id: m.winnerId, val: m.margin, prefix: "Ed "+m.edition}));
-            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts', 10);
+            let marginArr = margins.map(m => ({id: m.winnerId, val: m.margin, edition: m.edition, prefix: "Ed "+m.edition}))
+                .sort((a,b) => b.val - a.val || b.edition - a.edition);
+            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts');
 
-            let highJury = db.results.filter(r => isQualifier(r) && r.jury !== undefined).sort((a,b) => b.jury - a.jury).map(r => ({id: r.countryId, val: r.jury, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', 10);
+            let highJury = db.results.filter(r => isQualifier(r) && r.jury !== undefined)
+                .map(r => ({id: r.countryId, val: r.jury, edition: r.edition, prefix: "Ed "+r.edition}))
+                .sort((a,b) => b.val - a.val || b.edition - a.edition);
+            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts');
 
-            let highTele = db.results.filter(r => isQualifier(r) && r.tele !== undefined).sort((a,b) => b.tele - a.tele).map(r => ({id: r.countryId, val: r.tele, prefix: "Ed "+r.edition}));
-            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', 10);
+            let highTele = db.results.filter(r => isQualifier(r) && r.tele !== undefined)
+                .map(r => ({id: r.countryId, val: r.tele, edition: r.edition, prefix: "Ed "+r.edition}))
+                .sort((a,b) => b.val - a.val || b.edition - a.edition);
+            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts');
 
+            // Streaks: Length > Most recent end edition
             let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => {
                 let r = records.qStreaks[id];
-                let prefixStr = r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}`;
-                return { id, val: r.max, prefix: prefixStr };
-            }).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', '', 10, true);
+                return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
+            }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
+            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', '', true);
 
             let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => {
                 let r = records.nqStreaks[id];
-                let prefixStr = r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}`;
-                return { id, val: r.max, prefix: prefixStr };
-            }).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', '', 10, true);
+                return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
+            }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
+            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', '', true);
 
-            // Adding inline progress bars for percentages
-            let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', 10, false, 'good');
+            // Averages and Rates
+            let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) }))
+                .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', false, 'good');
 
-            let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', 10, false, 'bad');
+            let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) }))
+                .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', false, 'bad');
 
-            let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) })).sort((a,b) => parseFloat(a.val) - parseFloat(b.val));
-            document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', '', 10);
+            let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) }))
+                .sort((a,b) => parseFloat(a.val) - parseFloat(b.val) || records.totalFinals[b.id] - records.totalFinals[a.id]); // Lower is better
+            document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', '');
 
-            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', '', 10);
+            let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) }))
+                .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
+            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', '');
 
-            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count >= 5).map(id => ({ id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) })).sort((a,b) => parseFloat(b.val) - parseFloat(a.val));
-            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', '', 10);
+            let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count >= 5).map(id => ({ id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) }))
+                .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
+            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', '');
 
-            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]})).sort((a,b) => b.val - a.val);
-            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', '', 10);
+            // Struggle Tables
+            let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]}))
+                .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' time(s)');
+
+            // Waiting for a Victory: Zero wins, sorted by highest number of Grand Final appearances
+            let noWinArr = Object.keys(records.wins)
+                .filter(id => records.wins[id] === 0 && records.totalFinals[id] > 0)
+                .map(id => ({id, val: records.totalFinals[id]}))
+                .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-no-wins").innerHTML = buildList(noWinArr, 'val', ' Finals');
+            
+            // Hide buttons if the list is smaller than 10
+            document.querySelectorAll(".ranking-list").forEach(ul => {
+                if(ul.children.length <= 10) {
+                    let btn = ul.parentElement.querySelector(".show-all-btn");
+                    if(btn) btn.style.display = "none";
+                }
+            });
         }
 
 // ==========================================
