@@ -493,6 +493,33 @@
             background: rgba(255,255,255,0.05);
             border-color: var(--primary-color);
         }
+		/* Fix for long country names breaking layout */
+        .list-country-info {
+            display: flex;
+            align-items: center;
+            flex: 1 1 0%; /* Crucial: Allows container to shrink */
+            min-width: 0;  /* Crucial: Forces flexbox to respect boundaries */
+            padding-right: 15px;
+        }
+
+        .country-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-left: 6px;
+        }
+
+        /* Prevent badges and flags from shrinking */
+        .stat-rank, .flag-icon, .list-stat-value, .streak-editions-badge, .stat-prefix {
+            flex-shrink: 0; 
+        }
+
+        .list-stat-value {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -3155,18 +3182,33 @@
             }
         };
 
+        // Global toggle function for expanding lists
+        window.toggleShowAll = function(listId, btn) {
+            const list = document.getElementById(listId);
+            if (list.classList.contains('collapsed')) {
+                list.classList.remove('collapsed');
+                btn.innerText = "Show Less";
+            } else {
+                list.classList.add('collapsed');
+                // Dynamically name the button based on if it's a capped list
+                btn.innerText = list.children.length === 50 ? "Show Top 50" : "Show All";
+                btn.parentElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+
         function renderOverallStats() {
             let records = { 
                 wins: {}, top3: {}, top10: {}, lastPlaces: {},
                 avgJury: {}, avgTele: {}, avgPlace: {},
-                sfApps: {}, sfQuals: {}, sfNQs: {}, totalFinals: {},
+                sfApps: {}, sfQuals: {}, sfNQs: {}, totalFinals: {}, totalApps: {},
                 qStreaks: {}, nqStreaks: {}
             };
 
             Object.keys(db.countries).forEach(cId => {
                 records.wins[cId] = 0; records.top3[cId] = 0; records.top10[cId] = 0; records.lastPlaces[cId] = 0;
                 records.avgJury[cId] = { sum: 0, count: 0 }; records.avgTele[cId] = { sum: 0, count: 0 }; records.avgPlace[cId] = { sum: 0, count: 0 };
-                records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0; records.totalFinals[cId] = 0;
+                records.sfApps[cId] = 0; records.sfQuals[cId] = 0; records.sfNQs[cId] = 0; 
+                records.totalFinals[cId] = 0; records.totalApps[cId] = 0;
                 records.qStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null }; 
                 records.nqStreaks[cId] = { curr: 0, start: null, max: 0, maxStart: null, maxEnd: null };
             });
@@ -3184,7 +3226,6 @@
                     const res = db.results.find(r => r.edition === ed && r.countryId === cId);
                     if (res) {
                         if (isQualifier(res)) {
-                            records.totalFinals[cId]++; // Count total finals for "Waiting for a victory" table
                             if (editionHasSemis) {
                                 records.qStreaks[cId].curr++;
                                 if (records.qStreaks[cId].curr === 1) records.qStreaks[cId].start = ed;
@@ -3221,7 +3262,10 @@
                 const lastPlace = gfResults.length > 0 ? gfResults[gfResults.length - 1].place : null;
 
                 allEdResults.forEach(r => {
+                    records.totalApps[r.countryId]++;
+
                     if (isQualifier(r)) {
+                        records.totalFinals[r.countryId]++;
                         if (r.place === 1) records.wins[r.countryId]++;
                         if (r.place <= 3) records.top3[r.countryId]++;
                         if (r.place <= 10) records.top10[r.countryId]++;
@@ -3239,12 +3283,19 @@
                 });
             });
 
-            // List Builder: Renders ALL items (CSS handles the top 10 limit)
-            function buildList(arr, valKey, suffix="", isStreak=false, barType=null) {
+            // Enhanced List Builder with maxItems parameter
+            function buildList(arr, valKey, suffix="", isStreak=false, barType=null, maxItems=null) {
                 let html = "";
-                if(arr.length === 0) return "<li><span class='did-not-participate' style='padding-left:15px;'>None available</span></li>";
+                
+                // Slice array if a maximum limit is provided
+                let slice = arr;
+                if (maxItems && arr.length > maxItems) {
+                    slice = arr.slice(0, maxItems);
+                }
 
-                arr.forEach((item, index) => {
+                if(slice.length === 0) return "<li><span class='did-not-participate' style='padding-left:15px;'>None available</span></li>";
+
+                slice.forEach((item, index) => {
                     const c = db.countries[item.id];
                     let valDisplay = item[valKey] + suffix;
                     
@@ -3279,7 +3330,8 @@
                     <li class="${rowClass}">
                         <div class="list-country-info">
                             <span class="stat-rank ${rankClass}">${index+1}</span>
-                            ${getFlag(c.code)} <span class="${is1st ? 'font-bold' : ''}" style="font-size: ${is1st ? '14px' : '13px'}; margin-left: 5px;">${c.name}</span>
+                            ${getFlag(c.code)} 
+                            <span class="country-name ${is1st ? 'font-bold' : ''}" style="font-size: ${is1st ? '14px' : '13px'};">${c.name}</span>
                         </div>
                         <div class="list-stat-value">
                             ${prefixText}
@@ -3291,67 +3343,53 @@
                 return html;
             }
 
-            // --- POPULATE LISTS WITH ADVANCED TIE-BREAKERS ---
+            // --- POPULATE LISTS ---
             
-            // Tie-breaker: Wins > Top 3s > Top 10s > Alphabetical
             let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id, val: records.wins[id]}))
                 .sort((a,b) => b.val - a.val || records.top3[b.id] - records.top3[a.id] || records.top10[b.id] - records.top10[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
             document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', '');
 
-            // Tie-breaker: Top 3s > Wins > Top 10s > Alphabetical
             let top3Arr = Object.keys(records.top3).filter(id => records.top3[id] > 0).map(id => ({id, val: records.top3[id]}))
                 .sort((a,b) => b.val - a.val || records.wins[b.id] - records.wins[a.id] || records.top10[b.id] - records.top10[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
             document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', '');
 
-            // Tie-breaker: Top 10s > Top 3s > Wins > Alphabetical
             let top10Arr = Object.keys(records.top10).filter(id => records.top10[id] > 0).map(id => ({id, val: records.top10[id]}))
                 .sort((a,b) => b.val - a.val || records.top3[b.id] - records.top3[a.id] || records.wins[b.id] - records.wins[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
             document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', '');
 
-            // Highest points: Points > Most recent edition
+            // Lists bounded to Max 50
             let highPoints = db.results.filter(r => isQualifier(r))
                 .map(r => ({id: r.countryId, val: r.points, edition: r.edition, prefix: "Ed "+r.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts');
+            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', false, null, 50);
 
             let marginArr = margins.map(m => ({id: m.winnerId, val: m.margin, edition: m.edition, prefix: "Ed "+m.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts');
+            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts', false, null, 50);
 
             let highJury = db.results.filter(r => isQualifier(r) && r.jury !== undefined)
                 .map(r => ({id: r.countryId, val: r.jury, edition: r.edition, prefix: "Ed "+r.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts');
+            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', false, null, 50);
 
             let highTele = db.results.filter(r => isQualifier(r) && r.tele !== undefined)
                 .map(r => ({id: r.countryId, val: r.tele, edition: r.edition, prefix: "Ed "+r.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts');
+            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', false, null, 50);
 
-            // Streaks: Length > Most recent end edition
+            // Streaks
             let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => {
                 let r = records.qStreaks[id];
                 return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
             }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
             document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', '', true);
 
-            let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => {
-                let r = records.nqStreaks[id];
-                return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
-            }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
-            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', '', true);
-
-            // Averages and Rates
             let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) }))
                 .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
             document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', false, 'good');
 
-            let nqRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfNQs[id] / records.sfApps[id] * 100).toFixed(1) }))
-                .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-nq-rate").innerHTML = buildList(nqRateArr, 'val', '%', false, 'bad');
-
             let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) }))
-                .sort((a,b) => parseFloat(a.val) - parseFloat(b.val) || records.totalFinals[b.id] - records.totalFinals[a.id]); // Lower is better
+                .sort((a,b) => parseFloat(a.val) - parseFloat(b.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
             document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', '');
 
             let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) }))
@@ -3362,23 +3400,42 @@
                 .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
             document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', '');
 
-            // Struggle Tables
             let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]}))
                 .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
             document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' time(s)');
 
-            // Waiting for a Victory: Zero wins, sorted by highest number of Grand Final appearances
-            let noWinArr = Object.keys(records.wins)
+            let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => {
+                let r = records.nqStreaks[id];
+                return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
+            }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
+            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', '', true);
+
+            let noWinFinalsArr = Object.keys(records.wins)
                 .filter(id => records.wins[id] === 0 && records.totalFinals[id] > 0)
                 .map(id => ({id, val: records.totalFinals[id]}))
                 .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-no-wins").innerHTML = buildList(noWinArr, 'val', ' Finals');
+            document.getElementById("stat-no-wins-finals").innerHTML = buildList(noWinFinalsArr, 'val', ' Finals');
+
+            let noWinAllArr = Object.keys(records.wins)
+                .filter(id => records.wins[id] === 0 && records.totalApps[id] > 0)
+                .map(id => ({id, val: records.totalApps[id]}))
+                .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
+            document.getElementById("stat-no-wins-all").innerHTML = buildList(noWinAllArr, 'val', ' Apps');
             
-            // Hide buttons if the list is smaller than 10
+            // Auto-hide the 'Show All' button if there are 10 or fewer items, rename to Top 50 if maxed
             document.querySelectorAll(".ranking-list").forEach(ul => {
-                if(ul.children.length <= 10) {
-                    let btn = ul.parentElement.querySelector(".show-all-btn");
-                    if(btn) btn.style.display = "none";
+                let btn = ul.parentElement.querySelector(".show-all-btn");
+                if (btn) {
+                    if (ul.children.length <= 10) {
+                        btn.style.display = "none";
+                    } else {
+                        btn.style.display = "block";
+                        if (ul.children.length === 50) {
+                            btn.innerText = "Show Top 50";
+                        } else {
+                            btn.innerText = "Show All";
+                        }
+                    }
                 }
             });
         }
