@@ -3262,7 +3262,7 @@
                 const lastPlace = gfResults.length > 0 ? gfResults[gfResults.length - 1].place : null;
 
                 allEdResults.forEach(r => {
-                    records.totalApps[r.countryId]++;
+                    records.totalApps[r.countryId]++; // Increment total apps (GF + NQ)
 
                     if (isQualifier(r)) {
                         records.totalFinals[r.countryId]++;
@@ -3287,12 +3287,8 @@
             function buildList(arr, valKey, suffix="", isStreak=false, barType=null, maxItems=null) {
                 let html = "";
                 
-                // Slice array if a maximum limit is provided
                 let slice = arr;
-                if (maxItems && arr.length > maxItems) {
-                    slice = arr.slice(0, maxItems);
-                }
-
+                if (maxItems && arr.length > maxItems) slice = arr.slice(0, maxItems);
                 if(slice.length === 0) return "<li><span class='did-not-participate' style='padding-left:15px;'>None available</span></li>";
 
                 slice.forEach((item, index) => {
@@ -3343,86 +3339,92 @@
                 return html;
             }
 
+            // Failsafe setter prevents app crashing if an HTML ID goes missing
+            function safeSet(id, html) {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = html;
+            }
+
             // --- POPULATE LISTS ---
             
             let winArr = Object.keys(records.wins).filter(id => records.wins[id] > 0).map(id => ({id, val: records.wins[id]}))
                 .sort((a,b) => b.val - a.val || records.top3[b.id] - records.top3[a.id] || records.top10[b.id] - records.top10[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-winners").innerHTML = buildList(winArr, 'val', '');
+            safeSet("stat-winners", buildList(winArr, 'val', ''));
 
             let top3Arr = Object.keys(records.top3).filter(id => records.top3[id] > 0).map(id => ({id, val: records.top3[id]}))
                 .sort((a,b) => b.val - a.val || records.wins[b.id] - records.wins[a.id] || records.top10[b.id] - records.top10[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-top3").innerHTML = buildList(top3Arr, 'val', '');
+            safeSet("stat-top3", buildList(top3Arr, 'val', ''));
 
             let top10Arr = Object.keys(records.top10).filter(id => records.top10[id] > 0).map(id => ({id, val: records.top10[id]}))
                 .sort((a,b) => b.val - a.val || records.top3[b.id] - records.top3[a.id] || records.wins[b.id] - records.wins[a.id] || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-top10").innerHTML = buildList(top10Arr, 'val', '');
+            safeSet("stat-top10", buildList(top10Arr, 'val', ''));
 
-            // Lists bounded to Max 50
             let highPoints = db.results.filter(r => isQualifier(r))
                 .map(r => ({id: r.countryId, val: r.points, edition: r.edition, prefix: "Ed "+r.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-highest-score").innerHTML = buildList(highPoints, 'val', ' pts', false, null, 50);
+            safeSet("stat-highest-score", buildList(highPoints, 'val', ' pts', false, null, 50));
 
             let marginArr = margins.map(m => ({id: m.winnerId, val: m.margin, edition: m.edition, prefix: "Ed "+m.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-margin").innerHTML = buildList(marginArr, 'val', ' pts', false, null, 50);
+            safeSet("stat-margin", buildList(marginArr, 'val', ' pts', false, null, 50));
 
             let highJury = db.results.filter(r => isQualifier(r) && r.jury !== undefined)
                 .map(r => ({id: r.countryId, val: r.jury, edition: r.edition, prefix: "Ed "+r.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-high-jury").innerHTML = buildList(highJury, 'val', ' pts', false, null, 50);
+            safeSet("stat-high-jury", buildList(highJury, 'val', ' pts', false, null, 50));
 
             let highTele = db.results.filter(r => isQualifier(r) && r.tele !== undefined)
                 .map(r => ({id: r.countryId, val: r.tele, edition: r.edition, prefix: "Ed "+r.edition}))
                 .sort((a,b) => b.val - a.val || b.edition - a.edition);
-            document.getElementById("stat-high-tele").innerHTML = buildList(highTele, 'val', ' pts', false, null, 50);
+            safeSet("stat-high-tele", buildList(highTele, 'val', ' pts', false, null, 50));
 
-            // Streaks
             let qStreakArr = Object.keys(records.qStreaks).filter(id => records.qStreaks[id].max > 0).map(id => {
                 let r = records.qStreaks[id];
                 return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
             }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
-            document.getElementById("stat-streak-q").innerHTML = buildList(qStreakArr, 'val', '', true);
+            safeSet("stat-streak-q", buildList(qStreakArr, 'val', '', true));
 
             let qualRateArr = Object.keys(records.sfApps).filter(id => records.sfApps[id] >= 5).map(id => ({ id, val: (records.sfQuals[id] / records.sfApps[id] * 100).toFixed(1) }))
                 .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-qual-rate").innerHTML = buildList(qualRateArr, 'val', '%', false, 'good');
+            safeSet("stat-qual-rate", buildList(qualRateArr, 'val', '%', false, 'good'));
 
             let avgPlaceArr = Object.keys(records.avgPlace).filter(id => records.avgPlace[id].count >= 5).map(id => ({ id, val: (records.avgPlace[id].sum / records.avgPlace[id].count).toFixed(2) }))
                 .sort((a,b) => parseFloat(a.val) - parseFloat(b.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
-            document.getElementById("stat-avg-place").innerHTML = buildList(avgPlaceArr, 'val', '');
+            safeSet("stat-avg-place", buildList(avgPlaceArr, 'val', ''));
 
             let avgJuryArr = Object.keys(records.avgJury).filter(id => records.avgJury[id].count >= 5).map(id => ({ id, val: (records.avgJury[id].sum / records.avgJury[id].count).toFixed(1) }))
                 .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
-            document.getElementById("stat-avg-jury").innerHTML = buildList(avgJuryArr, 'val', '');
+            safeSet("stat-avg-jury", buildList(avgJuryArr, 'val', ''));
 
             let avgTeleArr = Object.keys(records.avgTele).filter(id => records.avgTele[id].count >= 5).map(id => ({ id, val: (records.avgTele[id].sum / records.avgTele[id].count).toFixed(1) }))
                 .sort((a,b) => parseFloat(b.val) - parseFloat(a.val) || records.totalFinals[b.id] - records.totalFinals[a.id]);
-            document.getElementById("stat-avg-tele").innerHTML = buildList(avgTeleArr, 'val', '');
+            safeSet("stat-avg-tele", buildList(avgTeleArr, 'val', ''));
 
             let lastArr = Object.keys(records.lastPlaces).filter(id => records.lastPlaces[id] > 0).map(id => ({id, val: records.lastPlaces[id]}))
                 .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-last-place").innerHTML = buildList(lastArr, 'val', ' time(s)');
+            safeSet("stat-last-place", buildList(lastArr, 'val', ' time(s)'));
 
             let nqStreakArr = Object.keys(records.nqStreaks).filter(id => records.nqStreaks[id].max > 0).map(id => {
                 let r = records.nqStreaks[id];
                 return { id, val: r.max, maxEnd: r.maxEnd, prefix: r.maxStart === r.maxEnd ? `Ed ${r.maxStart}` : `Ed ${r.maxStart}-${r.maxEnd}` };
             }).sort((a,b) => b.val - a.val || b.maxEnd - a.maxEnd);
-            document.getElementById("stat-streak-nq").innerHTML = buildList(nqStreakArr, 'val', '', true);
+            safeSet("stat-streak-nq", buildList(nqStreakArr, 'val', '', true));
 
+            // Waiting for a victory: Finals only
             let noWinFinalsArr = Object.keys(records.wins)
                 .filter(id => records.wins[id] === 0 && records.totalFinals[id] > 0)
                 .map(id => ({id, val: records.totalFinals[id]}))
                 .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-no-wins-finals").innerHTML = buildList(noWinFinalsArr, 'val', ' Finals');
+            safeSet("stat-no-wins-finals", buildList(noWinFinalsArr, 'val', ' Finals'));
 
+            // Waiting for a victory: All Apps (Inc SF)
             let noWinAllArr = Object.keys(records.wins)
                 .filter(id => records.wins[id] === 0 && records.totalApps[id] > 0)
                 .map(id => ({id, val: records.totalApps[id]}))
                 .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            document.getElementById("stat-no-wins-all").innerHTML = buildList(noWinAllArr, 'val', ' Apps');
+            safeSet("stat-no-wins-all", buildList(noWinAllArr, 'val', ' Apps'));
             
-            // Auto-hide the 'Show All' button if there are 10 or fewer items, rename to Top 50 if maxed
+            // Auto-hide buttons or rename to 'Top 50'
             document.querySelectorAll(".ranking-list").forEach(ul => {
                 let btn = ul.parentElement.querySelector(".show-all-btn");
                 if (btn) {
@@ -3430,11 +3432,7 @@
                         btn.style.display = "none";
                     } else {
                         btn.style.display = "block";
-                        if (ul.children.length === 50) {
-                            btn.innerText = "Show Top 50";
-                        } else {
-                            btn.innerText = "Show All";
-                        }
+                        btn.innerText = ul.children.length === 50 ? "Show Top 50" : "Show All";
                     }
                 }
             });
