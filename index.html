@@ -3422,7 +3422,7 @@
                 .filter(id => records.wins[id] === 0 && records.totalApps[id] > 0)
                 .map(id => ({id, val: records.totalApps[id]}))
                 .sort((a,b) => b.val - a.val || db.countries[a.id].name.localeCompare(db.countries[b.id].name));
-            safeSet("stat-no-wins-all", buildList(noWinAllArr, 'val', ' Apps'));
+            safeSet("stat-no-wins-all", buildList(noWinAllArr, 'val', ' Years'));
             
             // Auto-hide buttons or rename to 'Top 50'
             document.querySelectorAll(".ranking-list").forEach(ul => {
