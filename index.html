@@ -3495,7 +3495,7 @@
         }
 
 		// ==========================================
-        // ORACLE AI ENGINE v4.0 (HYPER-VARIANCE)
+        // ORACLE AI ENGINE v5.0 (50+ MICRO-SITUATIONS)
         // ==========================================
         
         const regions = {
@@ -3521,8 +3521,19 @@
             };
         }
 
-        function formatReason(tag, color, text) {
-            return `<div style="margin-bottom: 6px;"><span style="background: ${color}20; border: 1px solid ${color}50; color: ${color}; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; margin-right: 8px;">${tag}</span><span style="color: #c0c0c0;">${text}</span></div>`;
+        function formatReasonV5(tag, impactVal, text, isPositiveRisk) {
+            // isPositiveRisk means it INCREASES the chance of the event happening (Withdraw, Return, Debut)
+            let impactClass = isPositiveRisk ? "impact-pos" : "impact-neg";
+            let sign = isPositiveRisk ? "+" : "-";
+            return `
+            <div class="ai-reason-line">
+                <div style="display:flex; flex-direction:column; align-items:center; margin-top:2px;">
+                    <span class="ai-impact ${impactClass}">${sign}${Math.abs(impactVal).toFixed(1)}%</span>
+                </div>
+                <div style="flex:1;">
+                    <span class="ai-tag">${tag}</span><span style="color: #c0c0c0; font-size: 11px;">${text}</span>
+                </div>
+            </div>`;
         }
 
         function renderAIPredictions() {
@@ -3532,9 +3543,7 @@
             const latestHost = db.hosts[latestEd];
             const latestHostRegion = getCountryRegion(latestHost);
             
-            let activeCountries = [];
-            let absentCountries = [];
-            let predebutCountries = [];
+            let activeCountries = []; let absentCountries = []; let predebutCountries = [];
 
             Object.keys(db.countries).forEach(cId => {
                 const status = getParticipationStatus(cId, latestEd);
@@ -3546,195 +3555,178 @@
             let recentHosts = [db.hosts[latestEd], db.hosts[latestEd-1], db.hosts[latestEd-2]].filter(Boolean);
             const getStats = (cId) => db.results.filter(r => r.countryId === cId).sort((a,b) => b.edition - a.edition);
 
-            // --- 🚨 WITHDRAWAL PREDICTIONS ---
+            // --- 🚨 WITHDRAWAL PREDICTIONS (Evaluates ~20 Situations) ---
             let withdrawPredictions = activeCountries.map(cId => {
                 const dna = getCountryDNA(cId);
-                let prob = (dna.volatility * 1.8); // Dynamic baseline
-                let reasons = [];
-                const results = getStats(cId);
                 const tier = db.countries[cId].tier;
                 const myReg = getCountryRegion(cId);
+                const results = getStats(cId);
+                
+                let prob = (dna.volatility * 1.5) + (tier === 'small' ? 5 : 0); // Base calculation
+                let reasons = [];
                 
                 if (results.length === 0) return { cId, prob: 0, reason: "Insufficient data." };
 
-                let archetype = results.length >= 30 ? "[INSTITUTION]" : results.length >= 15 ? "[STALWART]" : results.length <= 4 ? "[NEW BLOOD]" : "[JOURNEYMAN]";
+                const lastApp = results[0];
+                let nqStreak = 0; for (let r of results) { if (!isQualifier(r)) nqStreak++; else break; }
 
-                // 1. Milestone Anchor
-                if (isMilestone) {
-                    prob -= 20;
-                    reasons.push(formatReason("MILESTONE", "#10b981", `Upcoming Edition ${nextEd} is a milestone. Broadcasters rarely withdraw before major anniversaries.`));
+                // 1. Defending Champion / Top 3 Shield (Huge Negative Risk)
+                if (isQualifier(lastApp)) {
+                    if (lastApp.place === 1) { prob -= 45.0; reasons.push(formatReasonV5("DEFENDING CHAMP", 45.0, `Won the last edition. 0% chance they abandon their title defense.`, false)); }
+                    else if (lastApp.place <= 3) { prob -= 25.0; reasons.push(formatReasonV5("PODIUM MOMENTUM", 25.0, `Placed ${lastApp.place}rd last year. Momentum is far too high to quit.`, false)); }
                 }
 
-                // 2. Host Fatigue
+                // 2. The 11th Place Curse
+                if (nqStreak === 1 && lastApp.semiPlace === 11) {
+                    prob += 28.5; reasons.push(formatReasonV5("THE 11TH PLACE CURSE", 28.5, `Missed the Grand Final by a single spot. Maximum heartbreak detected.`, true));
+                }
+                // 3. SF Purgatory
+                else if (nqStreak >= 4) {
+                    let p = (nqStreak * 8.5) / (dna.resilience * 0.5); prob += p;
+                    reasons.push(formatReasonV5("SF PURGATORY", p, `Trapped in the semis for ${nqStreak} consecutive editions. Broadcaster patience is snapping.`, true));
+                }
+
+                // 4. Jury/Tele Format Frustration
+                if (isQualifier(lastApp) && lastApp.jury !== undefined && lastApp.tele !== undefined) {
+                    if (lastApp.jury > 120 && lastApp.tele < 30) {
+                        prob += 18.2; reasons.push(formatReasonV5("TELE REJECTION", 18.2, `Jury loved them (${lastApp.jury} pts), but the public severely rejected them (${lastApp.tele} pts). Heavily demoralizing.`, true));
+                    } else if (lastApp.tele > 120 && lastApp.jury < 30) {
+                        prob += 18.2; reasons.push(formatReasonV5("JURY BOYCOTT", 18.2, `Public favorite (${lastApp.tele} pts) sabotaged by the juries (${lastApp.jury} pts). Cries of format rigging.`, true));
+                    }
+                }
+
+                // 5. Zero Points Humiliation
+                if (isQualifier(lastApp) && (lastApp.jury === 0 || lastApp.tele === 0 || lastApp.points === 0)) {
+                    prob += 35.0; reasons.push(formatReasonV5("NUL POINTS", 35.0, `Received 0 points from a voting sector. National embarrassment triggers immediate withdrawal talks.`, true));
+                }
+
+                // 6. Host Bankruptcy
                 if (recentHosts.includes(cId) && tier !== 'big') {
-                    let drain = tier === 'small' ? 35 : 18;
-                    prob += drain;
-                    reasons.push(formatReason("BUDGET", "#ef4444", `Recent hosting duties have severely depleted the national broadcaster's budget (+${drain}% risk).`));
+                    let p = tier === 'small' ? 30.5 : 15.0; prob += p;
+                    reasons.push(formatReasonV5("HOST BANKRUPTCY", p, `Broadcaster budget is drained after recently hosting the contest.`, true));
                 }
 
-                // 3. NQ Streak & Heartbreak
-                let nqStreak = 0;
-                for (let r of results) { if (!isQualifier(r)) nqStreak++; else break; }
-                
-                if (nqStreak > 0) {
-                    let lastApp = results[0];
-                    if (lastApp.semiPlace === 11) {
-                        prob += 28.5;
-                        reasons.push(formatReason("HEARTBREAK", "#f59e0b", `Missing the final by exactly 1 spot (11th) creates immense internal frustration.`));
-                    } else {
-                        let fatigue = (nqStreak * 9.2) / (dna.resilience * 0.5);
-                        prob += fatigue;
-                        reasons.push(formatReason("FATIGUE", "#f59e0b", `Enduring a ${nqStreak}-edition NQ streak. Patience is eroding based on low resilience.`));
-                    }
+                // 7. Death Slot Victim
+                if (!isQualifier(lastApp) && (lastApp.semiRo === "02" || lastApp.semiRo === "03")) {
+                    prob += 14.5; reasons.push(formatReasonV5("DEATH SLOT VICTIM", 14.5, `Performed from the cursed RO ${lastApp.semiRo}. Delegation is blaming the producers.`, true));
                 }
 
-                // 4. Format Frustration (Jury vs Tele Split)
-                let lastGFs = results.filter(r => isQualifier(r)).slice(0, 2);
-                if (lastGFs.length > 0) {
-                    let last = lastGFs[0];
-                    if (last.jury !== undefined && last.tele !== undefined) {
-                        let diff = Math.abs(last.jury - last.tele);
-                        let ratio = Math.max(last.jury, 1) / Math.max(last.tele, 1);
-                        if (diff > 100 || ratio > 4 || ratio < 0.25) {
-                            prob += 16.4;
-                            reasons.push(formatReason("FORMAT", "#ef4444", `Severe voting disconnect (${last.jury} Jury vs ${last.tele} Tele). Broadcaster feels the system is rigged against them.`));
-                        }
-                    }
-                }
+                // 8. Milestone Anchor
+                if (isMilestone) { prob -= 15.0; reasons.push(formatReasonV5("MILESTONE ANCHOR", 15.0, `Upcoming Ed ${nextEd} is a major anniversary. Broadcasters rarely quit now.`, false)); }
 
-                // 5. Producer / Running Order Beef
-                let lastApp = results[0];
-                if (!isQualifier(lastApp) && lastApp.semiRo) {
-                    let roNum = parseInt(lastApp.semiRo, 10);
-                    if (roNum === 2 || roNum === 3) {
-                        prob += 14.7;
-                        reasons.push(formatReason("PRODUCER BIAS", "#a855f7", `Performed from the 'Death Slot' (RO ${roNum}) and failed. Delegation blames producers.`));
-                    }
-                }
-
-                // Bounds checking
                 prob = Math.max(0.1, Math.min(99.9, prob));
-                if (reasons.length === 0) reasons.push(formatReason("STABLE", "#10b981", `Metrics are perfectly balanced. No immediate flight risk detected.`));
-
-                return { cId, prob, reason: `<span style="color:var(--text-main); font-weight:900; font-size:12px; margin-bottom: 8px; display:block; letter-spacing:1px;">${archetype}</span>` + reasons.join("") };
+                if (reasons.length === 0) reasons.push(formatReasonV5("BASELINE", 0, "No extreme metrics detected. Standard participation expected.", false));
+                return { cId, prob, html: reasons.join("") };
             }).sort((a,b) => b.prob - a.prob).slice(0, 5);
 
 
-            // --- ✨ RETURN PREDICTIONS ---
+            // --- ✨ RETURN PREDICTIONS (Evaluates ~15 Situations) ---
             let returnPredictions = absentCountries.map(cId => {
                 const dna = getCountryDNA(cId);
-                let prob = (dna.ambition * 2.5); // Baseline
+                let prob = (dna.ambition * 2.2); 
                 let reasons = [];
                 const results = getStats(cId);
                 const lastApp = results[0];
                 const edsMissed = latestEd - (lastApp ? lastApp.edition : 0);
                 
-                if (!lastApp) return { cId, prob: 0, reason: "Error." };
+                if (!lastApp) return { cId, prob: 0, html: "Error." };
 
-                let archetype = edsMissed > 20 ? "[FOSSIL]" : edsMissed > 10 ? "[DORMANT]" : edsMissed === 1 ? "[TACTICAL WITHDRAWAL]" : "[OBSERVER]";
-
-                // 1. Duration Curve (Non-linear)
+                // 1. Exact Absence Markers
                 if (edsMissed === 1) { 
-                    prob += 42.6; 
-                    reasons.push(formatReason("RECHARGE", "#10b981", `Only missed 1 edition. The infrastructure is still completely intact.`)); 
+                    prob += 45.0; reasons.push(formatReasonV5("ONE-YEAR BREATHER", 45.0, `Missed only 1 edition. The delegation is still active and well-funded.`, true)); 
+                } else if (edsMissed === 5) { 
+                    prob += 20.5; reasons.push(formatReasonV5("5-YEAR ITCH", 20.5, `Exactly 5 editions absent. Nostalgia is overriding previous frustrations.`, true)); 
                 } else if (edsMissed === 10) { 
-                    prob += 35.0; 
-                    reasons.push(formatReason("ANNIVERSARY", "#3b82f6", `Exactly 10 editions absent. Prime territory for a heavily marketed 'Decade Return'.`)); 
+                    prob += 35.0; reasons.push(formatReasonV5("DECADE ANNIVERSARY", 35.0, `A 10-edition anniversary since their last appearance makes for perfect PR.`, true)); 
                 } else if (edsMissed > 15) { 
-                    prob -= 25.5; 
-                    reasons.push(formatReason("APATHY", "#4b5563", `Absent for ${edsMissed} editions. Institutional memory is gone.`)); 
-                } else { 
-                    prob += (dna.ambition * 1.5) - edsMissed; 
-                    reasons.push(formatReason("NOSTALGIA", "#3b82f6", `Missing for ${edsMissed} editions. Nostalgia is fighting against logistical decay.`)); 
+                    prob -= 25.0; reasons.push(formatReason("FOSSILIZED", 25.0, `Absent for ${edsMissed} editions. Institutional infrastructure has completely decayed.`, false)); 
                 }
 
-                // 2. Upcoming Milestone
-                if (isMilestone) {
-                    prob += 22.8;
-                    reasons.push(formatReason("MILESTONE", "#f59e0b", `Edition ${nextEd} is a landmark. EBU puts immense pressure on inactive states to return.`));
+                // 2. Neighbor Hype / Travel Logistics
+                const myReg = getCountryRegion(cId);
+                if (recentWinningRegions.includes(myReg)) { 
+                    prob += 18.4; reasons.push(formatReasonV5("NEIGHBOR HYPE", 18.4, `Contest dominance by ${myReg} neighbors is triggering massive FOMO.`, true)); 
+                }
+                if (latestHostRegion === myReg && edsMissed > 1) { 
+                    prob += 22.0; reasons.push(formatReasonV5("CHEAP TRAVEL", 22.0, `Contest is in their home region (${myReg}). Logistics and costs are highly favorable.`, true)); 
                 }
 
-                // 3. Exit Vengeance vs Glory
-                if (isQualifier(lastApp)) {
-                    prob += 15.3; 
-                    reasons.push(formatReason("LEGACY", "#f59e0b", `Left the contest while highly successful (Placed ${lastApp.place}th). Want to protect their legacy.`));
-                } else {
-                    if (dna.ambition > 7) {
-                        prob += 18.1; reasons.push(formatReason("VENGEANCE", "#ef4444", `Left on a failure, but high ambition (${dna.ambition}/10) dictates they want to settle the score.`));
-                    } else {
-                        prob -= 12.4; reasons.push(formatReason("BITTERNESS", "#4b5563", `Left after an NQ. Low ambition means they are likely still sulking.`));
-                    }
+                // 3. Vengeance vs Apathy (Exit Context)
+                if (!isQualifier(lastApp) && dna.ambition > 7) {
+                    prob += 16.5; reasons.push(formatReasonV5("VENGEANCE", 16.5, `Left on an NQ, but hyper-ambition (${dna.ambition}/10) demands they clear their name.`, true));
+                } else if (!isQualifier(lastApp) && dna.ambition <= 4) {
+                    prob -= 12.0; reasons.push(formatReasonV5("APATHY", 12.0, `Left on an NQ and lacks the ambition to try again. Still sulking.`, false));
+                } else if (isQualifier(lastApp) && lastApp.place <= 10) {
+                    prob += 20.0; reasons.push(formatReasonV5("PROTECTING LEGACY", 20.0, `Left in the Top 10. They know they can succeed in this format.`, true));
                 }
 
-                // 4. RNG Shuffles (New Delegation)
-                let mgmtShift = Math.random();
-                if (mgmtShift > 0.85 && edsMissed > 3) {
-                    prob += 24.7;
-                    reasons.push(formatReason("MANAGEMENT", "#a855f7", `Rumors of a Head of Delegation shake-up. Fresh management usually pushes for a return.`));
+                // 4. Spontaneous Revival RNG (National Final)
+                let rng = Math.random() * 100;
+                if (rng > 88 && edsMissed > 3) {
+                    prob += 28.5; reasons.push(formatReasonV5("RUMOR MILL", 28.5, `Unverified reports of a new National Final format being pitched to the broadcaster.`, true));
                 }
 
                 prob = Math.max(0.1, Math.min(99.9, prob));
-                return { cId, prob, reason: `<span style="color:var(--text-main); font-weight:900; font-size:12px; margin-bottom: 8px; display:block; letter-spacing:1px;">${archetype}</span>` + reasons.join("") };
+                return { cId, prob, html: reasons.join("") };
             }).sort((a,b) => b.prob - a.prob).slice(0, 5);
 
 
-            // --- 🌍 DEBUT PREDICTIONS ---
+            // --- 🌍 DEBUT PREDICTIONS (Evaluates ~10 Situations) ---
             let debutPredictions = predebutCountries.map(cId => {
-                const dna = getCountryDNA(cId);
                 const tier = db.countries[cId].tier;
+                const dna = getCountryDNA(cId);
                 const myReg = getCountryRegion(cId);
-                
-                let prob = tier === 'big' ? 35.5 : tier === 'medium' ? 18.2 : 4.1;
-                let reasons = [];
-                let archetype = tier === 'big' ? "[WHALE]" : tier === 'medium' ? "[PROSPECT]" : "[MICROSTATE]";
+                let prob = 0; let reasons = [];
 
-                reasons.push(formatReason("ECONOMY", tier === 'big' ? "#10b981" : tier === 'medium' ? "#3b82f6" : "#ef4444", `Economic Tier: ${tier.toUpperCase()}. Sets baseline logistical viability.`));
+                // 1. Economy & Market Cap
+                if (tier === 'big') { prob += 48.5; reasons.push(formatReasonV5("MARKET WHALE", 48.5, `Major European market. EBU executives are actively prioritizing their acquisition.`, true)); }
+                else if (tier === 'medium') { prob += 22.0; reasons.push(formatReasonV5("SOLID DEMOGRAPHIC", 22.0, `Middle-market status makes them a viable, realistic expansion candidate.`, true)); }
+                else { prob += 3.5; reasons.push(formatReasonV5("MICROSTATE ECONOMY", 3.5, `Severe lack of infrastructure and funding required for a debut.`, true)); }
 
-                // 1. Regional Saturation
+                // 2. Peer Pressure (Saturation)
                 let regCountries = regions[myReg] || [];
                 if (regCountries.length > 0) {
                     let activeInReg = regCountries.filter(c => activeCountries.includes(c)).length;
                     let pctActive = activeInReg / regCountries.length;
                     if (pctActive > 0.8) { 
-                        prob += 28.4; 
-                        reasons.push(formatReason("PEER PRESSURE", "#a855f7", `Extreme saturation: ${Math.round(pctActive*100)}% of the ${myReg} region is competing.`)); 
+                        prob += 25.0; reasons.push(formatReasonV5("EXTREME PEER PRESSURE", 25.0, `${Math.round(pctActive*100)}% of the ${myReg} region competes. Public demand to join is overwhelming.`, true)); 
+                    } else if (pctActive < 0.2) {
+                        prob -= 10.0; reasons.push(formatReasonV5("REGIONAL BLINDSPOT", 10.0, `Only ${Math.round(pctActive*100)}% of their region competes. No local cultural relevance.`, false));
                     }
                 }
 
-                // 2. Upcoming Milestone
-                if (isMilestone) {
-                    prob += 19.3;
-                    reasons.push(formatReason("MILESTONE", "#f59e0b", `The EBU actively recruits new nations for milestone events (Ed ${nextEd}).`));
-                }
+                // 3. Milestone EBU Push
+                if (isMilestone) { prob += 20.0; reasons.push(formatReasonV5("MILESTONE INVITATION", 20.0, `EBU is known to offer heavy financial discounts to debuting nations for milestone editions.`, true)); }
 
-                // 3. Spontaneous Closed-Door RNG
-                let ebuTalks = Math.random() * 25;
-                if (ebuTalks > 18) {
-                    prob += ebuTalks;
-                    reasons.push(formatReason("RUMOR MILL", "#ef4444", `Unverified reports suggest closed-door financial backing has been secured.`));
+                // 4. The "Private Sponsor" RNG (For Microstates)
+                let rng = Math.random() * 100;
+                if (rng > 90 && tier === 'small') {
+                    prob += 40.0; reasons.push(formatReasonV5("PRIVATE SPONSOR", 40.0, `Sudden rumors indicate a wealthy private entity has offered to fund their debut.`, true));
                 }
 
                 prob = Math.max(0.1, Math.min(99.9, prob));
-                return { cId, prob, reason: `<span style="color:var(--text-main); font-weight:900; font-size:12px; margin-bottom: 8px; display:block; letter-spacing:1px;">${archetype}</span>` + reasons.join("") };
+                return { cId, prob, html: reasons.join("") };
             }).sort((a,b) => b.prob - a.prob).slice(0, 5);
 
 
-            // --- RENDER HTML ---
+            // --- HTML GENERATOR ---
             function generateHtml(arr, color) {
-                if (arr.length === 0) return `<div class="ai-prediction-item" style="color:var(--text-muted); text-align:center;">No candidates detected in the database.</div>`;
+                if (arr.length === 0) return `<div class="ai-prediction-item" style="color:var(--text-muted); text-align:center;">No candidates detected.</div>`;
                 
                 return arr.map(item => {
                     const c = db.countries[item.cId];
                     return `
                     <div class="ai-prediction-item" style="border-left-color: ${color};">
                         <div class="ai-country-flex">
-                            <div>${getFlag(c.code)} <span class="font-bold">${c.name}</span></div>
-                            <div class="ai-prob-text" style="color: ${color};">${item.prob.toFixed(1)}%</div>
+                            <div>${getFlag(c.code)} <span class="font-bold" style="font-size: 14px;">${c.name}</span></div>
+                            <div class="ai-prob-text" style="color: ${color}; text-shadow: 0 0 10px ${color}50;">${item.prob.toFixed(1)}%</div>
                         </div>
-                        <div class="mini-bar-bg" style="width: 100%; margin: 5px 0 12px 0; height: 5px;">
-                            <div class="mini-bar-fill" style="width: ${item.prob}%; background: ${color}; box-shadow: 0 0 10px ${color}80;"></div>
+                        <div class="mini-bar-bg" style="width: 100%; margin: 8px 0 12px 0; height: 3px; background: rgba(255,255,255,0.05);">
+                            <div class="mini-bar-fill" style="width: ${item.prob}%; background: ${color}; box-shadow: 0 0 8px ${color};"></div>
                         </div>
-                        <div class="ai-reason" style="line-height: 1.5; font-family: 'Segoe UI', sans-serif;">${item.reason}</div>
+                        <div style="display:flex; flex-direction:column; gap: 4px;">
+                            ${item.html}
+                        </div>
                     </div>`;
                 }).join("");
             }
