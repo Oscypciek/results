@@ -3464,24 +3464,19 @@
 
 		function renderDataPredictions() {
             const latestEd = Math.max(...db.editions);
+            const ptsMap = { 1: 12, 2: 10, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
             
             let stats = {};
             Object.keys(db.countries).forEach(cId => {
                 stats[cId] = { 
-                    elo: 1500, // Base Elo Rating
-                    yields: [], // Point Yields (% of winner's points)
-                    ema: 0, // Exponential Moving Average (Momentum)
-                    nqMargins: [], // Points away from qualifying
-                    nqStreak: 0, 
-                    lastAppEd: 0, 
-                    isPreDebut: true, 
-                    isActive: false 
+                    elo: 1500, yields: [], ema: 0, nqMargins: [], 
+                    apps: 0, top10Points: 0, h2hWins: 0, h2hMatchups: 0, 
+                    nqStreak: 0, lastAppEd: 0, isPreDebut: true, isActive: false 
                 };
             });
 
-            // 1. Chronological Loop for Elo, Yields, and Bubble Margins
+            // 1. Math Engine: Chronological Loop for Elo, Yields, Bubble Margins, H2H
             let sortedEditions = [...db.editions].sort((a,b) => a - b);
-            
             sortedEditions.forEach(ed => {
                 let edResults = db.results.filter(r => r.edition === ed);
                 if (edResults.length === 0) return;
@@ -3490,12 +3485,10 @@
                 let sf1 = edResults.filter(r => r.semi === 1);
                 let sf2 = edResults.filter(r => r.semi === 2);
 
-                // Point Yield Baseline (Max points in GF)
                 let gfWinner = gf.find(r => r.place === 1);
                 let gfMaxPts = gfWinner ? gfWinner.points : 1;
 
-                // --- ELO RATING CALCULATOR ---
-                // Helper to run Elo matchups for a specific stage
+                // A. Elo Calculator
                 function runElo(group, placeKey) {
                     let changes = {};
                     group.forEach(r => changes[r.countryId] = 0);
@@ -3512,51 +3505,60 @@
                             let e1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400));
                             let e2 = 1 / (1 + Math.pow(10, (r1 - r2) / 400));
 
-                            let k = 16; // Elo K-Factor
+                            let k = 16; 
                             changes[c1] += k * (s1 - e1);
                             changes[c2] += k * (s2 - e2);
+                            
+                            // B. Global Head-to-Head Calculator (in the same loop)
+                            stats[c1].h2hMatchups++; stats[c2].h2hMatchups++;
+                            if (p1 < p2) stats[c1].h2hWins++;
+                            else if (p2 < p1) stats[c2].h2hWins++;
                         }
                     }
                     for(let c in changes) stats[c].elo += changes[c];
                 }
 
-                runElo(gf, 'place');
-                runElo(sf1, 'semiPlace');
-                runElo(sf2, 'semiPlace');
+                runElo(gf, 'place'); runElo(sf1, 'semiPlace'); runElo(sf2, 'semiPlace');
+                
+                // Cross-stage H2H (GF vs SF NQs)
+                let nqs = edResults.filter(r => !isQualifier(r));
+                gf.forEach(q => {
+                    nqs.forEach(nq => {
+                        stats[q.countryId].h2hMatchups++; stats[nq.countryId].h2hMatchups++;
+                        stats[q.countryId].h2hWins++; // Qualifier always beats NQ
+                    });
+                });
 
-                // --- BUBBLE MARGINS & YIELDS ---
+                // C. Bubble Margins (How close they were to qualifying)
                 function processSemi(sfGroup) {
                     if (sfGroup.length === 0) return;
-                    let qualifiers = sfGroup.filter(r => isQualifier(r)).sort((a,b) => a.semiPlace - b.semiPlace);
-                    // The "Bubble" Threshold is the points of the lowest qualifier
+                    let qualifiers = sfGroup.filter(isQualifier).sort((a,b) => a.semiPlace - b.semiPlace);
                     let thresholdPts = qualifiers.length > 0 ? qualifiers[qualifiers.length - 1].semiPoints : 0;
-                    
                     sfGroup.forEach(r => {
                         if (!isQualifier(r) && r.semiPoints !== undefined && thresholdPts > 0) {
-                            let margin = thresholdPts - r.semiPoints; // E.g. missed by 5 points
-                            stats[r.countryId].nqMargins.push(margin);
+                            stats[r.countryId].nqMargins.push(thresholdPts - r.semiPoints);
                         }
                     });
                 }
                 processSemi(sf1); processSemi(sf2);
 
-                // Calculate Point Yields & Update Status
+                // D. Point Yields & Baseline Stats
                 edResults.forEach(r => {
                     stats[r.countryId].isPreDebut = false;
                     stats[r.countryId].lastAppEd = ed;
+                    stats[r.countryId].apps++;
+                    if (isQualifier(r) && ptsMap[r.place]) stats[r.countryId].top10Points += ptsMap[r.place];
                     
                     if (isQualifier(r) && r.points !== undefined) {
-                        let yieldPct = (r.points / gfMaxPts) * 100;
-                        stats[r.countryId].yields.push(yieldPct);
+                        stats[r.countryId].yields.push((r.points / gfMaxPts) * 100);
                     } else if (!isQualifier(r)) {
-                        stats[r.countryId].yields.push(0); // NQ counts as 0 yield for GF momentum
+                        stats[r.countryId].yields.push(0);
                     }
                 });
             });
 
-            // 2. Process Momentum (EMA), Averages, and Streaks
+            // 2. Process Momentum (EMA) & Streaks
             const alpha = 0.3; // EMA weight factor
-            
             Object.keys(db.countries).forEach(cId => {
                 let s = stats[cId];
                 if (s.isPreDebut) return;
@@ -3564,86 +3566,87 @@
                 let status = getParticipationStatus(cId, latestEd);
                 s.isActive = (status === 'active' || status === 'return' || status === 'debut');
 
-                // NQ Streak
                 let results = db.results.filter(r => r.countryId === cId).sort((a,b) => b.edition - a.edition);
-                for (let r of results) {
-                    if (!isQualifier(r)) s.nqStreak++;
-                    else break;
-                }
+                for (let r of results) { if (!isQualifier(r)) s.nqStreak++; else break; }
 
-                // Average Bubble Margin (last 3 NQs)
                 let recentMargins = s.nqMargins.slice(-3);
                 s.avgMargin = recentMargins.length > 0 ? (recentMargins.reduce((a,b)=>a+b,0) / recentMargins.length) : 0;
 
-                // Calculate EMA (Momentum)
                 s.ema = s.yields.length > 0 ? s.yields[0] : 0;
-                for (let i = 1; i < s.yields.length; i++) {
-                    s.ema = (s.yields[i] * alpha) + (s.ema * (1 - alpha));
-                }
+                for (let i = 1; i < s.yields.length; i++) { s.ema = (s.yields[i] * alpha) + (s.ema * (1 - alpha)); }
                 
                 s.absence = latestEd - s.lastAppEd;
+                s.h2hWinRate = s.h2hMatchups > 0 ? (s.h2hWins / s.h2hMatchups) * 100 : 0;
+                s.ptsPerApp = s.apps > 0 ? s.top10Points / s.apps : 0;
             });
 
-            // 3. Generate Probabilities
-            let activeCandidates = [];
-            let absentCandidates = [];
-            let allRankings = [];
+            // 3. UI Helper for Impact Badges
+            function formatReason(tag, impactVal, text, isPositiveRisk) {
+                let impactClass = isPositiveRisk ? "impact-pos" : "impact-neg";
+                let sign = isPositiveRisk ? "+" : "-";
+                let valStr = impactVal !== null ? `<span class="ai-impact ${impactClass}">${sign}${Math.abs(impactVal).toFixed(1)}%</span>` : `<span class="ai-impact impact-neu">INFO</span>`;
+                return `
+                <div class="ai-reason-line">
+                    <div style="display:flex; flex-direction:column; align-items:center; margin-top:2px;">${valStr}</div>
+                    <div style="flex:1;"><span class="ai-tag">${tag}</span><span style="color: #c0c0c0; font-size: 11px;">${text}</span></div>
+                </div>`;
+            }
+
+            // 4. Generate Probabilities & Diagnostic Reasons
+            let activeCandidates = []; let absentCandidates = []; let allRankings = [];
 
             Object.keys(db.countries).forEach(cId => {
                 let s = stats[cId];
                 if (s.isPreDebut) return;
 
-                allRankings.push({ cId, elo: s.elo, ema: s.ema });
+                allRankings.push({ cId, elo: s.elo, h2hWinRate: s.h2hWinRate, ptsPerApp: s.ptsPerApp });
 
                 if (s.isActive) {
-                    // WITHDRAWAL RISK: High NQ Streak + Bad Bubble Margin + Negative Momentum + Low Elo
-                    // High margin = missed final by LOTS of points.
-                    let eloPenalty = (1500 - s.elo) * 0.05; 
-                    let momentumPenalty = (50 - s.ema) * 0.2;
-                    let marginPenalty = (s.avgMargin * 0.4); 
+                    let prob = 5; let reasons = [];
                     
-                    let risk = 5 + (s.nqStreak * 12) + marginPenalty + momentumPenalty + eloPenalty;
-                    risk = Math.max(1, Math.min(99, risk));
+                    if (s.elo < 1500) { let p = (1500 - s.elo) * 0.05; prob += p; reasons.push(formatReason("LOW ELO", p, `Skill rating is ${Math.round(s.elo)} (Below average 1500).`, true)); }
+                    if (s.ema < 25) { let p = (25 - s.ema) * 0.3; prob += p; reasons.push(formatReason("MOMENTUM", p, `EMA Yield is only ${s.ema.toFixed(1)}%. Deep negative trajectory.`, true)); }
+                    if (s.nqStreak > 0) { let p = s.nqStreak * 8; prob += p; reasons.push(formatReason("NQ STREAK", p, `Failed to qualify ${s.nqStreak} times in a row.`, true)); }
+                    if (s.avgMargin > 20) { let p = s.avgMargin * 0.2; prob += p; reasons.push(formatReason("BUBBLE MISS", p, `Averaging ${Math.round(s.avgMargin)}pts away from the qualification threshold.`, true)); }
                     
-                    let reason = `Elo: <b>${Math.round(s.elo)}</b> | Momentum: <b>${s.ema.toFixed(1)}%</b> | Avg Miss: <b>-${Math.round(s.avgMargin)}pts</b>`;
-                    if (s.nqStreak === 0) reason = `Elo: <b>${Math.round(s.elo)}</b> | Momentum: <b>${s.ema.toFixed(1)}%</b> | Streak: <b>Qualifying</b>`;
-
-                    activeCandidates.push({ cId, prob: risk, reason });
+                    prob = Math.max(1, Math.min(99.9, prob));
+                    if(reasons.length === 0) reasons.push(formatReason("STABLE", null, `Data metrics are highly positive. No risk detected.`, false));
+                    activeCandidates.push({ cId, prob, reason: reasons.join("") });
                 } else {
-                    // RETURN LIKELIHOOD: High Elo + High Past Momentum - Absence Penalty
-                    let eloBonus = (s.elo - 1500) * 0.08;
-                    let momentumBonus = s.ema * 0.3;
-                    let absencePenalty = s.absence * 4;
-
-                    let prob = 25 + eloBonus + momentumBonus - absencePenalty;
-                    prob = Math.max(1, Math.min(99, prob));
+                    let prob = 20; let reasons = [];
                     
-                    let reason = `Absent: <b>${s.absence} Ed(s)</b> | Past Elo: <b>${Math.round(s.elo)}</b> | Past Momentum: <b>${s.ema.toFixed(1)}%</b>`;
-                    absentCandidates.push({ cId, prob, reason });
+                    if (s.elo > 1500) { let p = (s.elo - 1500) * 0.06; prob += p; reasons.push(formatReason("HIGH ELO", p, `Historical Elo rating of ${Math.round(s.elo)} proves they can compete.`, true)); }
+                    if (s.ema > 30) { let p = s.ema * 0.2; prob += p; reasons.push(formatReason("PAST MOMENTUM", p, `Left the contest while generating solid point yields (${s.ema.toFixed(1)}%).`, true)); }
+                    if (s.absence > 0) { let p = s.absence * 3; prob -= p; reasons.push(formatReason("DECAY", p, `Absent for ${s.absence} editions. The likelihood drops exponentially over time.`, false)); }
+                    
+                    prob = Math.max(1, Math.min(99.9, prob));
+                    absentCandidates.push({ cId, prob, reason: reasons.join("") });
                 }
             });
 
-            // 4. Render
+            // 5. Render to DOM
             activeCandidates.sort((a,b) => b.prob - a.prob);
             absentCandidates.sort((a,b) => b.prob - a.prob);
-            allRankings.sort((a,b) => b.elo - a.elo); // Sort by Elo Ranking
+            allRankings.sort((a,b) => b.elo - a.elo); 
 
-            function buildCards(arr, color, isEloList = false) {
+            function buildCards(arr, color, isGlobalList = false) {
                 if (arr.length === 0) return `<div style="color:var(--text-muted); font-size:12px;">No data available.</div>`;
                 return arr.slice(0, 10).map((item, i) => {
                     const c = db.countries[item.cId];
-                    let mainVal = isEloList ? Math.round(item.elo) : item.prob.toFixed(1) + '%';
-                    let subText = isEloList ? `Momentum (EMA): <b>${item.ema.toFixed(1)}% Yield</b>` : item.reason;
+                    let mainVal = isGlobalList ? Math.round(item.elo) : item.prob.toFixed(1) + '%';
+                    let subText = isGlobalList 
+                        ? `<div style="margin-top:6px; font-size:10px; color:#a0a5bc;">H2H Win: <b>${item.h2hWinRate.toFixed(1)}%</b> | Top 10 Pts/App: <b>${item.ptsPerApp.toFixed(1)}</b></div>` 
+                        : `<div style="margin-top:8px;">${item.reason}</div>`;
                     
                     return `
-                    <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid ${color}; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 13px; font-weight: bold; display: flex; align-items: center; margin-bottom: 4px;">
-                                <span style="color:var(--text-muted); margin-right:6px; font-size:11px;">#${i+1}</span> ${getFlag(c.code)} ${c.name}
+                    <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid ${color};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 13px; font-weight: bold; display: flex; align-items: center;">
+                                <span style="color:var(--text-muted); margin-right:8px; font-size:11px;">#${i+1}</span> ${getFlag(c.code)} <span style="margin-left:5px;">${c.name}</span>
                             </div>
-                            <div style="font-size: 10.5px; color: #a0a5bc;">${subText}</div>
+                            <div style="font-weight: 900; color: ${color}; font-size: 16px;">${mainVal}</div>
                         </div>
-                        <div style="font-weight: 900; color: ${color}; font-size: 16px;">${mainVal}</div>
+                        ${subText}
                     </div>`;
                 }).join("");
             }
