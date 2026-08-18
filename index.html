@@ -3495,7 +3495,7 @@
         }
 
 		// ==========================================
-        // ORACLE AI ENGINE v3.0 (DIAGNOSTIC SYSTEM)
+        // ORACLE AI ENGINE v4.0 (HYPER-VARIANCE)
         // ==========================================
         
         const regions = {
@@ -3522,11 +3522,13 @@
         }
 
         function formatReason(tag, color, text) {
-            return `<span style="background: ${color}40; color: ${color}; padding: 2px 5px; border-radius: 3px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; margin-right: 6px;">${tag}</span><span style="color: #c0c0c0;">${text}</span>`;
+            return `<div style="margin-bottom: 6px;"><span style="background: ${color}20; border: 1px solid ${color}50; color: ${color}; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; margin-right: 8px;">${tag}</span><span style="color: #c0c0c0;">${text}</span></div>`;
         }
 
         function renderAIPredictions() {
             const latestEd = Math.max(...db.editions);
+            const nextEd = latestEd + 1;
+            const isMilestone = (nextEd % 10 === 0 || nextEd % 25 === 0);
             const latestHost = db.hosts[latestEd];
             const latestHostRegion = getCountryRegion(latestHost);
             
@@ -3542,148 +3544,178 @@
             });
 
             let recentHosts = [db.hosts[latestEd], db.hosts[latestEd-1], db.hosts[latestEd-2]].filter(Boolean);
-
             const getStats = (cId) => db.results.filter(r => r.countryId === cId).sort((a,b) => b.edition - a.edition);
 
             // --- 🚨 WITHDRAWAL PREDICTIONS ---
             let withdrawPredictions = activeCountries.map(cId => {
-                let prob = 5; 
+                const dna = getCountryDNA(cId);
+                let prob = (dna.volatility * 1.8); // Dynamic baseline
                 let reasons = [];
                 const results = getStats(cId);
-                const dna = getCountryDNA(cId);
                 const tier = db.countries[cId].tier;
                 const myReg = getCountryRegion(cId);
                 
                 if (results.length === 0) return { cId, prob: 0, reason: "Insufficient data." };
 
-                let archetype = results.length >= 25 ? "[LOYALIST]" : results.length <= 4 ? "[NEWCOMER]" : "[REGULAR]";
-                if (dna.volatility > 7) archetype = "[VOLATILE]";
+                let archetype = results.length >= 30 ? "[INSTITUTION]" : results.length >= 15 ? "[STALWART]" : results.length <= 4 ? "[NEW BLOOD]" : "[JOURNEYMAN]";
 
-                // 1. Host Fatigue (Budget Drain)
-                if (recentHosts.includes(cId) && tier !== 'big') {
-                    prob += 25;
-                    reasons.push(formatReason("FINANCE", "#ef4444", `Recently hosted the contest. Broadcaster reserves are severely depleted.`));
+                // 1. Milestone Anchor
+                if (isMilestone) {
+                    prob -= 20;
+                    reasons.push(formatReason("MILESTONE", "#10b981", `Upcoming Edition ${nextEd} is a milestone. Broadcasters rarely withdraw before major anniversaries.`));
                 }
 
-                // 2. NQ Streak & Heartbreak
+                // 2. Host Fatigue
+                if (recentHosts.includes(cId) && tier !== 'big') {
+                    let drain = tier === 'small' ? 35 : 18;
+                    prob += drain;
+                    reasons.push(formatReason("BUDGET", "#ef4444", `Recent hosting duties have severely depleted the national broadcaster's budget (+${drain}% risk).`));
+                }
+
+                // 3. NQ Streak & Heartbreak
                 let nqStreak = 0;
                 for (let r of results) { if (!isQualifier(r)) nqStreak++; else break; }
                 
                 if (nqStreak > 0) {
                     let lastApp = results[0];
-                    if (lastApp.semiPlace === 11 || lastApp.semiPlace === 12) {
-                        prob += 20;
-                        reasons.push(formatReason("TRAUMA", "#f59e0b", `Narrowly missed the final (Placed ${lastApp.semiPlace}th). Statistically devastating for morale.`));
+                    if (lastApp.semiPlace === 11) {
+                        prob += 28.5;
+                        reasons.push(formatReason("HEARTBREAK", "#f59e0b", `Missing the final by exactly 1 spot (11th) creates immense internal frustration.`));
                     } else {
-                        prob += (nqStreak * 8) - dna.resilience;
-                        reasons.push(formatReason("FATIGUE", "#f59e0b", `Enduring a ${nqStreak}-edition NQ streak (Resilience: ${dna.resilience}/10).`));
+                        let fatigue = (nqStreak * 9.2) / (dna.resilience * 0.5);
+                        prob += fatigue;
+                        reasons.push(formatReason("FATIGUE", "#f59e0b", `Enduring a ${nqStreak}-edition NQ streak. Patience is eroding based on low resilience.`));
                     }
                 }
 
-                // 3. Regional Isolation
-                let regCountries = regions[myReg] || [];
-                let activeInReg = regCountries.filter(c => activeCountries.includes(c)).length;
-                if (regCountries.length > 3 && (activeInReg / regCountries.length) <= 0.3) {
-                    prob += 12;
-                    reasons.push(formatReason("ISOLATION", "#a855f7", `Only ${Math.round((activeInReg/regCountries.length)*100)}% of the ${myReg} region is active. Lacking neighborly support.`));
-                }
-
-                // 4. Point Collapse
+                // 4. Format Frustration (Jury vs Tele Split)
                 let lastGFs = results.filter(r => isQualifier(r)).slice(0, 2);
-                if (lastGFs.length === 2 && (lastGFs[1].points - lastGFs[0].points > 120)) {
-                    prob += 15;
-                    reasons.push(formatReason("COLLAPSE", "#ef4444", `Massive score drop (-${lastGFs[1].points - lastGFs[0].points} pts) since their last Final.`));
+                if (lastGFs.length > 0) {
+                    let last = lastGFs[0];
+                    if (last.jury !== undefined && last.tele !== undefined) {
+                        let diff = Math.abs(last.jury - last.tele);
+                        let ratio = Math.max(last.jury, 1) / Math.max(last.tele, 1);
+                        if (diff > 100 || ratio > 4 || ratio < 0.25) {
+                            prob += 16.4;
+                            reasons.push(formatReason("FORMAT", "#ef4444", `Severe voting disconnect (${last.jury} Jury vs ${last.tele} Tele). Broadcaster feels the system is rigged against them.`));
+                        }
+                    }
                 }
 
-                if (prob > 95) prob = 95;
-                if (prob < 1) prob = 1;
-                if (reasons.length === 0) reasons.push(formatReason("STABLE", "#10b981", "Trajectory remains solid. Minimal flight risk."));
+                // 5. Producer / Running Order Beef
+                let lastApp = results[0];
+                if (!isQualifier(lastApp) && lastApp.semiRo) {
+                    let roNum = parseInt(lastApp.semiRo, 10);
+                    if (roNum === 2 || roNum === 3) {
+                        prob += 14.7;
+                        reasons.push(formatReason("PRODUCER BIAS", "#a855f7", `Performed from the 'Death Slot' (RO ${roNum}) and failed. Delegation blames producers.`));
+                    }
+                }
 
-                return { cId, prob: Math.round(prob), reason: `<span style="color:var(--text-main); font-weight:bold; font-size:12px; margin-bottom: 6px; display:block;">${archetype}</span>` + reasons.map(r => `<div style="margin-bottom: 4px;">${r}</div>`).join("") };
+                // Bounds checking
+                prob = Math.max(0.1, Math.min(99.9, prob));
+                if (reasons.length === 0) reasons.push(formatReason("STABLE", "#10b981", `Metrics are perfectly balanced. No immediate flight risk detected.`));
+
+                return { cId, prob, reason: `<span style="color:var(--text-main); font-weight:900; font-size:12px; margin-bottom: 8px; display:block; letter-spacing:1px;">${archetype}</span>` + reasons.join("") };
             }).sort((a,b) => b.prob - a.prob).slice(0, 5);
 
 
             // --- ✨ RETURN PREDICTIONS ---
             let returnPredictions = absentCountries.map(cId => {
-                let prob = 10;
+                const dna = getCountryDNA(cId);
+                let prob = (dna.ambition * 2.5); // Baseline
                 let reasons = [];
                 const results = getStats(cId);
-                const dna = getCountryDNA(cId);
                 const lastApp = results[0];
                 const edsMissed = latestEd - (lastApp ? lastApp.edition : 0);
-                let archetype = edsMissed > 15 ? "[DORMANT]" : edsMissed === 1 ? "[RESTING]" : "[WATCHING]";
-
+                
                 if (!lastApp) return { cId, prob: 0, reason: "Error." };
 
-                // 1. Duration Logic
-                if (edsMissed === 1) { prob += 35; reasons.push(formatReason("RECHARGE", "#10b981", `Took a 1-edition breather. Machinery is likely spinning back up.`)); }
-                else if (edsMissed > 15) { prob -= 20; reasons.push(formatReason("APATHY", "#4b5563", `Absent for ${edsMissed} editions. Institutional memory has faded.`)); }
-                else { prob += (dna.ambition * 2); reasons.push(formatReason("NOSTALGIA", "#3b82f6", `Absent for ${edsMissed} editions. Nostalgia scales with natural ambition (${dna.ambition}/10).`)); }
+                let archetype = edsMissed > 20 ? "[FOSSIL]" : edsMissed > 10 ? "[DORMANT]" : edsMissed === 1 ? "[TACTICAL WITHDRAWAL]" : "[OBSERVER]";
 
-                // 2. Logistics (Host Proximity)
-                if (getCountryRegion(cId) === latestHostRegion && edsMissed > 1) {
-                    prob += 20;
-                    reasons.push(formatReason("LOGISTICS", "#a855f7", `Contest is in their own region (${latestHostRegion}). Travel costs are minimal.`));
+                // 1. Duration Curve (Non-linear)
+                if (edsMissed === 1) { 
+                    prob += 42.6; 
+                    reasons.push(formatReason("RECHARGE", "#10b981", `Only missed 1 edition. The infrastructure is still completely intact.`)); 
+                } else if (edsMissed === 10) { 
+                    prob += 35.0; 
+                    reasons.push(formatReason("ANNIVERSARY", "#3b82f6", `Exactly 10 editions absent. Prime territory for a heavily marketed 'Decade Return'.`)); 
+                } else if (edsMissed > 15) { 
+                    prob -= 25.5; 
+                    reasons.push(formatReason("APATHY", "#4b5563", `Absent for ${edsMissed} editions. Institutional memory is gone.`)); 
+                } else { 
+                    prob += (dna.ambition * 1.5) - edsMissed; 
+                    reasons.push(formatReason("NOSTALGIA", "#3b82f6", `Missing for ${edsMissed} editions. Nostalgia is fighting against logistical decay.`)); 
                 }
 
-                // 3. Exit Context & Redemption
+                // 2. Upcoming Milestone
+                if (isMilestone) {
+                    prob += 22.8;
+                    reasons.push(formatReason("MILESTONE", "#f59e0b", `Edition ${nextEd} is a landmark. EBU puts immense pressure on inactive states to return.`));
+                }
+
+                // 3. Exit Vengeance vs Glory
                 if (isQualifier(lastApp)) {
-                    prob += 15; reasons.push(formatReason("LEGACY", "#f59e0b", `Left on a high note (Placed ${lastApp.place}th). Motivation to return is high.`));
-                } else if (lastApp.semiPlace === 11 || lastApp.semiPlace === 12) {
-                    prob += 10; reasons.push(formatReason("REDEMPTION", "#ef4444", `Left bitterly after placing ${lastApp.semiPlace}th. Looking to settle the score.`));
+                    prob += 15.3; 
+                    reasons.push(formatReason("LEGACY", "#f59e0b", `Left the contest while highly successful (Placed ${lastApp.place}th). Want to protect their legacy.`));
+                } else {
+                    if (dna.ambition > 7) {
+                        prob += 18.1; reasons.push(formatReason("VENGEANCE", "#ef4444", `Left on a failure, but high ambition (${dna.ambition}/10) dictates they want to settle the score.`));
+                    } else {
+                        prob -= 12.4; reasons.push(formatReason("BITTERNESS", "#4b5563", `Left after an NQ. Low ambition means they are likely still sulking.`));
+                    }
                 }
 
-                // 4. Past Glory
-                let wins = results.filter(r => r.place === 1).length;
-                if (wins > 0) { prob += (wins * 10); reasons.push(formatReason("CHAMPION", "#f59e0b", `Former winner (${wins} victories). The itch to reclaim the crown remains.`)); }
+                // 4. RNG Shuffles (New Delegation)
+                let mgmtShift = Math.random();
+                if (mgmtShift > 0.85 && edsMissed > 3) {
+                    prob += 24.7;
+                    reasons.push(formatReason("MANAGEMENT", "#a855f7", `Rumors of a Head of Delegation shake-up. Fresh management usually pushes for a return.`));
+                }
 
-                if (prob > 95) prob = 95;
-                if (prob < 2) prob = 2;
-                return { cId, prob: Math.round(prob), reason: `<span style="color:var(--text-main); font-weight:bold; font-size:12px; margin-bottom: 6px; display:block;">${archetype}</span>` + reasons.map(r => `<div style="margin-bottom: 4px;">${r}</div>`).join("") };
+                prob = Math.max(0.1, Math.min(99.9, prob));
+                return { cId, prob, reason: `<span style="color:var(--text-main); font-weight:900; font-size:12px; margin-bottom: 8px; display:block; letter-spacing:1px;">${archetype}</span>` + reasons.join("") };
             }).sort((a,b) => b.prob - a.prob).slice(0, 5);
 
 
             // --- 🌍 DEBUT PREDICTIONS ---
             let debutPredictions = predebutCountries.map(cId => {
-                let prob = 10;
-                let reasons = [];
-                const tier = db.countries[cId].tier;
                 const dna = getCountryDNA(cId);
+                const tier = db.countries[cId].tier;
                 const myReg = getCountryRegion(cId);
+                
+                let prob = tier === 'big' ? 35.5 : tier === 'medium' ? 18.2 : 4.1;
+                let reasons = [];
+                let archetype = tier === 'big' ? "[WHALE]" : tier === 'medium' ? "[PROSPECT]" : "[MICROSTATE]";
 
-                let archetype = tier === 'big' ? "[MAJOR TARGET]" : tier === 'medium' ? "[PROSPECT]" : "[NICHE MARKET]";
+                reasons.push(formatReason("ECONOMY", tier === 'big' ? "#10b981" : tier === 'medium' ? "#3b82f6" : "#ef4444", `Economic Tier: ${tier.toUpperCase()}. Sets baseline logistical viability.`));
 
-                // 1. Market Tier
-                if (tier === 'big') { prob += 40; reasons.push(formatReason("MARKET", "#10b981", `Massive market size. High priority for EBU expansion.`)); }
-                else if (tier === 'medium') { prob += 20; reasons.push(formatReason("DEMOGRAPHIC", "#3b82f6", `Solid middle-market. Broadcaster ambition level: ${dna.ambition}/10.`)); }
-                else { prob -= 5; reasons.push(formatReason("LOGISTICS", "#ef4444", `Microstate economy creates severe financial entry barriers.`)); }
-
-                // 2. Peer Pressure
+                // 1. Regional Saturation
                 let regCountries = regions[myReg] || [];
                 if (regCountries.length > 0) {
                     let activeInReg = regCountries.filter(c => activeCountries.includes(c)).length;
                     let pctActive = activeInReg / regCountries.length;
-                    if (pctActive > 0.75) { 
-                        prob += 25; 
-                        reasons.push(formatReason("PEER PRESSURE", "#a855f7", `${Math.round(pctActive*100)}% of the ${myReg} region is competing. Missing out on cultural zeitgeist.`)); 
+                    if (pctActive > 0.8) { 
+                        prob += 28.4; 
+                        reasons.push(formatReason("PEER PRESSURE", "#a855f7", `Extreme saturation: ${Math.round(pctActive*100)}% of the ${myReg} region is competing.`)); 
                     }
                 }
 
-                // 3. Proximity to Host
-                if (myReg === latestHostRegion) {
-                    prob += 15;
-                    reasons.push(formatReason("PROXIMITY", "#f59e0b", `Contest is being held in their backyard (${latestHostRegion}). Prime debut opportunity.`));
+                // 2. Upcoming Milestone
+                if (isMilestone) {
+                    prob += 19.3;
+                    reasons.push(formatReason("MILESTONE", "#f59e0b", `The EBU actively recruits new nations for milestone events (Ed ${nextEd}).`));
                 }
 
-                // Volatility RNG
-                if (dna.volatility > 7) {
-                    prob += 10;
-                    reasons.push(formatReason("VOLATILE", "#ef4444", `High unpredictability index (${dna.volatility}/10). Backroom negotiations could spontaneously finalize.`));
+                // 3. Spontaneous Closed-Door RNG
+                let ebuTalks = Math.random() * 25;
+                if (ebuTalks > 18) {
+                    prob += ebuTalks;
+                    reasons.push(formatReason("RUMOR MILL", "#ef4444", `Unverified reports suggest closed-door financial backing has been secured.`));
                 }
 
-                if (prob > 92) prob = 92;
-                if (prob < 1) prob = 1;
-                return { cId, prob: Math.round(prob), reason: `<span style="color:var(--text-main); font-weight:bold; font-size:12px; margin-bottom: 6px; display:block;">${archetype}</span>` + reasons.map(r => `<div style="margin-bottom: 4px;">${r}</div>`).join("") };
+                prob = Math.max(0.1, Math.min(99.9, prob));
+                return { cId, prob, reason: `<span style="color:var(--text-main); font-weight:900; font-size:12px; margin-bottom: 8px; display:block; letter-spacing:1px;">${archetype}</span>` + reasons.join("") };
             }).sort((a,b) => b.prob - a.prob).slice(0, 5);
 
 
@@ -3697,12 +3729,12 @@
                     <div class="ai-prediction-item" style="border-left-color: ${color};">
                         <div class="ai-country-flex">
                             <div>${getFlag(c.code)} <span class="font-bold">${c.name}</span></div>
-                            <div class="ai-prob-text" style="color: ${color};">${item.prob}%</div>
+                            <div class="ai-prob-text" style="color: ${color};">${item.prob.toFixed(1)}%</div>
                         </div>
-                        <div class="mini-bar-bg" style="width: 100%; margin: 5px 0 10px 0; height: 4px;">
-                            <div class="mini-bar-fill" style="width: ${item.prob}%; background: ${color}; box-shadow: 0 0 8px ${color};"></div>
+                        <div class="mini-bar-bg" style="width: 100%; margin: 5px 0 12px 0; height: 5px;">
+                            <div class="mini-bar-fill" style="width: ${item.prob}%; background: ${color}; box-shadow: 0 0 10px ${color}80;"></div>
                         </div>
-                        <div class="ai-reason" style="line-height: 1.4;">${item.reason}</div>
+                        <div class="ai-reason" style="line-height: 1.5; font-family: 'Segoe UI', sans-serif;">${item.reason}</div>
                     </div>`;
                 }).join("");
             }
