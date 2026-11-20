@@ -49,17 +49,166 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
 
-        /* Map Container */
-        #mapdiv {
-            width: 100%;
-            height: 450px;
+        /* Editions Sidebar & Main Layout */
+        .editions-layout {
+            display: grid;
+            grid-template-columns: 210px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 820px) {
+            .editions-layout { grid-template-columns: 1fr; }
+        }
+
+        .editions-sidebar {
             background-color: var(--table-row-odd);
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            margin-bottom: 25px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             border: 1px solid rgba(255,255,255,0.05);
-            overflow: hidden;
+            position: sticky;
+            top: 62px;
+            max-height: 78vh;
+            overflow-y: auto;
         }
+        .ed-side-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            background-color: var(--table-header);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .ed-side-item:hover {
+            background-color: var(--table-hover);
+            color: var(--text-main);
+            border-color: rgba(255,255,255,0.12);
+        }
+        .ed-side-item.active {
+            background-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(255, 42, 95, 0.35);
+        }
+        .ed-side-left { display: flex; align-items: center; gap: 8px; }
+
+        /* Stage Segmented Bar */
+        .stage-pills {
+            display: inline-flex;
+            background-color: var(--bg-color);
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+            border: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
+        }
+        .stage-pill-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.25;
+        }
+        .stage-pill-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.04); }
+        .stage-pill-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), #d81b4b);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(255, 42, 95, 0.35);
+        }
+
+        /* Compact Participation Strip */
+        .participation-tracker.compact-tracker {
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px 16px;
+        }
+        .compact-tracker .part-group { margin-bottom: 0; }
+        .compact-tracker .part-label { font-size: 10px; margin-bottom: 5px; }
+        .compact-tracker .part-badge { font-size: 11px; padding: 2px 6px; }
+        .compact-tracker .flag-icon { width: 16px; height: 11px; margin-right: 5px; }
+
+        /* Dual Maps Grid */
+        .maps-dual-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .map-box {
+            background-color: var(--table-row-odd);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .map-box-header {
+            padding: 8px 12px;
+            background-color: var(--table-header);
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #mapdiv, #mapqnqdiv {
+            width: 100%;
+            height: 310px;
+        }
+
+        /* Split Results Grid (2 columns) */
+        .results-split-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .res-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--table-row-even);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 7px;
+            padding: 10px 12px;
+            font-size: 12px;
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        .res-card:hover { background-color: var(--table-hover); transform: translateY(-1px); }
+        .res-card.row-1st { background: rgba(255, 215, 0, 0.16); border-color: rgba(255, 215, 0, 0.45); }
+        .res-card.row-2nd { background: rgba(192, 192, 192, 0.14); border-color: rgba(192, 192, 192, 0.35); }
+        .res-card.row-3rd { background: rgba(205, 127, 50, 0.16); border-color: rgba(205, 127, 50, 0.4); }
+        .res-card.row-last { background: rgba(255, 60, 60, 0.16); border-color: rgba(255, 60, 60, 0.4); }
+        .res-card-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .res-place-badge {
+            min-width: 26px; height: 26px; border-radius: 6px;
+            background: var(--table-header); color: var(--text-main);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 12px; flex-shrink: 0;
+        }
+        .res-ro-tag { font-size: 10px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
+        .res-country-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .res-card-right { text-align: right; flex-shrink: 0; margin-left: 8px; }
+        .res-pts-main { font-weight: 800; font-size: 13px; }
+        .res-jt-sub { font-size: 10px; color: var(--text-muted); }
         
         
         /* Navbar */
@@ -537,37 +686,55 @@
     <div class="container">
         
         <div id="editions" class="tab-content" style="display: block;">
-            <div class="picker-container">
-                <h3 class="picker-title">Select Edition</h3>
-                <div class="picker-grid" id="edition-picker-grid"></div>
-                
-                <div class="stage-selector" id="stage-selector">
-                    <button class="picker-btn active" id="btn-gf" onclick="setStage('GF', this)" style="flex-direction: column; align-items: center; padding: 6px 12px; line-height: 1.2;">
-    <span>Grand Final</span>
-    <span id="gf-pts-desc" style="font-size: 9px; font-weight: normal; margin-top: 3px; color: var(--text-muted);">1, 2, 3, 4, 5, 6, 8, 10 pts.</span>
-</button>
-                    <button class="picker-btn" id="btn-sf1" onclick="setStage('SF1', this)">Semi-Final 1</button>
-                    <button class="picker-btn" id="btn-sf2" onclick="setStage('SF2', this)">Semi-Final 2</button>
+            <div class="editions-layout">
+                <aside class="editions-sidebar">
+                    <h3 class="picker-title" style="margin-bottom: 8px;">Editions</h3>
+                    <div id="edition-sidebar-list"></div>
+                </aside>
+
+                <div class="editions-main">
+                    <div class="picker-container" style="margin-bottom: 14px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div class="picker-title" style="margin-bottom: 2px;">Stage View</div>
+                            <div id="edition-stage-heading" style="font-size: 15px; font-weight: 800;">Edition 1 — Grand Final</div>
+                        </div>
+                        <div class="stage-pills" id="stage-selector">
+                            <button class="stage-pill-btn active" id="btn-gf" onclick="setStage('GF', this)">
+                                <span>Grand Final</span>
+                                <span id="gf-pts-desc" style="font-size: 9px; font-weight: normal; opacity: 0.85;">1, 2, 3, 4, 5, 6, 8, 10 pts.</span>
+                            </button>
+                            <button class="stage-pill-btn" id="btn-sf1" onclick="setStage('SF1', this)">
+                                <span>Semi-Final 1</span>
+                                <span style="font-size: 9px; font-weight: normal; opacity: 0.75;">SF1 Results</span>
+                            </button>
+                            <button class="stage-pill-btn" id="btn-sf2" onclick="setStage('SF2', this)">
+                                <span>Semi-Final 2</span>
+                                <span style="font-size: 9px; font-weight: normal; opacity: 0.75;">SF2 Results</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="participation-tracker compact-tracker" id="participation-tracker"></div>
+
+                    <div class="maps-dual-grid">
+                        <div class="map-box">
+                            <div class="map-box-header">
+                                <span>Participation Status Map</span>
+                                <span style="font-size: 10px;">Debut / Active / Return / Wd / Abs</span>
+                            </div>
+                            <div id="mapdiv"></div>
+                        </div>
+                        <div class="map-box">
+                            <div class="map-box-header">
+                                <span>Final Qualification Map (Q / NQ)</span>
+                                <span style="font-size: 10px;"><span style="color:#10b981;">■</span> Q &nbsp;<span style="color:#ef4444;">■</span> NQ</span>
+                            </div>
+                            <div id="mapqnqdiv"></div>
+                        </div>
+                    </div>
+
+                    <div id="edition-results-grid" class="results-split-grid"></div>
                 </div>
-            </div>
-
-            <div class="participation-tracker" id="participation-tracker"></div>
-
-             <div id="mapdiv"></div>
-            <div class="table-wrapper">
-                <table id="edition-table">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable('edition-table', 0, true)">Place</th>
-                            <th onclick="sortTable('edition-table', 1, true)">RO</th>
-                            <th onclick="sortTable('edition-table', 2, false)">Country</th>
-                            <th onclick="sortTable('edition-table', 3, true)">Total Points</th>
-                            <th onclick="sortTable('edition-table', 4, true)">Jury</th>
-                            <th onclick="sortTable('edition-table', 5, true)">Televote</th>
-                        </tr>
-                    </thead>
-                    <tbody id="edition-body"></tbody>
-                </table>
             </div>
         </div>
 
@@ -2611,6 +2778,8 @@
 
         let mapRoot;
         let polygonSeries;
+        let mapQnqRoot;
+        let polygonQnqSeries;
         
         let activeEdition = 1;
         let activeStage = 'GF'; 
@@ -2711,34 +2880,27 @@
         }
 
         function renderPickers() {
-    // 1. Render Editions as a Horizontal Timeline
-    const edGrid = document.getElementById("edition-picker-grid");
-    edGrid.className = "timeline-container"; // Overwrite the generic grid class
-    edGrid.innerHTML = "";
-    
-    db.editions.forEach(ed => {
-        const btn = document.createElement("div");
-        btn.className = `timeline-node ${ed === activeEdition ? "active" : ""}`;
-        
-        // Stack the text and the flag vertically
-        const hostFlag = getFlag(db.countries[db.hosts[ed]].code, false, "margin: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.4); width: 28px; height: 20px; border-radius: 3px;");
-        btn.innerHTML = `<span class="ed-number">Ed ${ed}</span>${hostFlag}`;
-        
-        btn.onclick = () => {
-            activeEdition = ed;
-            renderPickers();
-            renderEditionTable();
-            // Smoothly center the clicked node in the scrollable view
-            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        };
-        edGrid.appendChild(btn);
-    });
-
-    // Auto-scroll to the currently active edition on initial load
-    setTimeout(() => {
-        const activeNode = edGrid.querySelector('.timeline-node.active');
-        if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }, 50);
+    const sideList = document.getElementById("edition-sidebar-list");
+    if (sideList) {
+        sideList.innerHTML = "";
+        db.editions.forEach(ed => {
+            const item = document.createElement("div");
+            item.className = `ed-side-item ${ed === activeEdition ? "active" : ""}`;
+            const hostId = db.hosts[ed];
+            const hostData = db.countries[hostId];
+            const hostFlag = getFlag(hostData.code, false, "width: 18px; height: 12px; margin-right: 0;");
+            item.innerHTML = `
+                <span class="ed-side-left"><span>ED ${ed}</span></span>
+                <span style="display:flex; align-items:center; gap:5px; font-size:10px; opacity:0.9;">${hostFlag} ${hostId}</span>
+            `;
+            item.onclick = () => {
+                activeEdition = ed;
+                renderPickers();
+                renderEditionTable();
+            };
+            sideList.appendChild(item);
+        });
+    }
 
     updateStageSelectors();
 
@@ -2763,7 +2925,7 @@
 
         function setStage(stage, btn) {
             activeStage = stage;
-            document.querySelectorAll('#stage-selector .picker-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#stage-selector .stage-pill-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             renderEditionTable();
         }
@@ -2833,96 +2995,88 @@
         // TAB 1: EDITIONS
         // ==========================================
 
-                function initMap() {
-            // Zabezpieczenie: jeśli mapa już istnieje, niszczymy ją przed narysowaniem nowej
-            if (mapRoot) { mapRoot.dispose(); }
+                function buildEuropeMap(rootId, existingRoot) {
+            if (existingRoot) existingRoot.dispose();
+            const root = am5.Root.new(rootId);
+            root.setThemes([am5themes_Animated.new(root)]);
 
-            mapRoot = am5.Root.new("mapdiv");
-            mapRoot.setThemes([am5themes_Animated.new(mapRoot)]);
-
-            let chart = mapRoot.container.children.push(
-                am5map.MapChart.new(mapRoot, {
+            const chart = root.container.children.push(
+                am5map.MapChart.new(root, {
                     panX: "translateX",
                     panY: "translateY",
                     projection: am5map.geoMercator(),
-                    // Stały, bezpieczny zoom na Europę
-                    homeZoomLevel: 3.5, 
-                    homeGeoPoint: { longitude: 15, latitude: 52 } 
+                    homeZoomLevel: 3.5,
+                    homeGeoPoint: { longitude: 15, latitude: 52 }
                 })
             );
 
-            polygonSeries = chart.series.push(
-                am5map.MapPolygonSeries.new(mapRoot, {
+            const series = chart.series.push(
+                am5map.MapPolygonSeries.new(root, {
                     geoJSON: am5geodata_worldLow,
-                    exclude: ["AQ"] // Wykluczamy Antarktydę
+                    exclude: ["AQ"]
                 })
             );
 
-            // Wygląd państw i tooltip
-            polygonSeries.mapPolygons.template.setAll({
+            series.mapPolygons.template.setAll({
                 tooltipText: "{name}\n{tooltipInfo}",
                 interactive: true,
                 stroke: am5.color(0x24294a),
                 strokeWidth: 1
             });
 
-            polygonSeries.mapPolygons.template.states.create("hover", {
+            series.mapPolygons.template.states.create("hover", {
                 fill: am5.color(0x4a5596)
             });
 
-            // Podpinanie dynamicznych kolorów
-            polygonSeries.mapPolygons.template.adapters.add("fill", function(fill, target) {
+            series.mapPolygons.template.adapters.add("fill", function(fill, target) {
                 if (target.dataItem && target.dataItem.dataContext && target.dataItem.dataContext.fill) {
                     return am5.color(target.dataItem.dataContext.fill);
                 }
                 return fill;
             });
+
+            return { root, series };
+        }
+
+        function initMap() {
+            const m1 = buildEuropeMap("mapdiv", mapRoot);
+            mapRoot = m1.root;
+            polygonSeries = m1.series;
+
+            const m2 = buildEuropeMap("mapqnqdiv", mapQnqRoot);
+            mapQnqRoot = m2.root;
+            polygonQnqSeries = m2.series;
         }
 
         function updateMap() {
-            if (!polygonSeries) return;
+            if (!polygonSeries || !polygonQnqSeries) return;
 
             let mapData = [];
-            let includeIds = []; 
-            
+            let qnqData = [];
+            let includeIds = [];
+
             Object.keys(db.countries).forEach(cId => {
                 const status = getParticipationStatus(cId, activeEdition);
-                
-                // Odcinamy z mapy kraje przed debiutem
-                if (status === 'pre-debut') return; 
+                if (status === 'pre-debut') return;
 
                 includeIds.push(cId);
-                
-                let color;
-                let statusText = "";
 
-                // Twoje kolory statusów
-                if (status === 'debut') {
-                    color = 0xa855f7; // Fioletowy
-                    statusText = "Debut";
-                } else if (status === 'active') {
-                    color = 0x22c55e; // Zielony
-                    statusText = "Participating";
-                } else if (status === 'return') {
-                    color = 0xa3e635; // Limonkowy
-                    statusText = "Returning";
-                } else if (status === 'withdraw') {
-                    color = 0xf87171; // Jasnoczerwony
-                    statusText = "Withdrawing";
-                } else if (status === 'absent') {
-                    color = 0x800000; // Bordowy
-                    statusText = "Absent";
-                }
-                
-                let result = db.results.find(r => r.edition === activeEdition && r.countryId === cId);
+                let color = 0x4b5563;
+                let statusText = "";
+                if (status === 'debut') { color = 0xa855f7; statusText = "Debut"; }
+                else if (status === 'active') { color = 0x22c55e; statusText = "Participating"; }
+                else if (status === 'return') { color = 0xa3e635; statusText = "Returning"; }
+                else if (status === 'withdraw') { color = 0xf87171; statusText = "Withdrawing"; }
+                else if (status === 'absent') { color = 0x800000; statusText = "Absent"; }
+
+                const result = db.results.find(r => r.edition === activeEdition && r.countryId === cId);
                 let placementText = "";
-                
                 if (result) {
                     if (isQualifier(result)) {
                         let suffix = "th";
-                        if(result.place === 1) suffix = "st";
-                        else if(result.place === 2) suffix = "nd";
-                        else if(result.place === 3) suffix = "rd";
+                        if (result.place === 1) suffix = "st";
+                        else if (result.place === 2) suffix = "nd";
+                        else if (result.place === 3) suffix = "rd";
                         placementText = `\n[bold]${result.place}${suffix} Place[/]`;
                     } else {
                         placementText = `\n[bold]NQ[/]`;
@@ -2934,33 +3088,51 @@
                     fill: color,
                     tooltipInfo: statusText + placementText
                 });
+
+                if (result) {
+                    const qualified = isQualifier(result);
+                    const qnqColor = qualified ? 0x10b981 : 0xef4444;
+                    const qnqLabel = qualified
+                        ? `Finalist (Q) — ${result.place}. place (${result.points} pts)`
+                        : `Non-Qualifier (NQ)${result.semiPlace ? ` — SF${result.semi} #${result.semiPlace}` : ""}`;
+                    qnqData.push({
+                        id: cId,
+                        fill: qnqColor,
+                        tooltipInfo: qnqLabel
+                    });
+                } else {
+                    qnqData.push({
+                        id: cId,
+                        fill: 0x2b3154,
+                        tooltipInfo: "Did not compete in this edition"
+                    });
+                }
             });
 
-            // Renderujemy tylko kraje, które już zadebiutowały
             polygonSeries.set("include", includeIds);
-            
-            // Nakładamy dane o kolorach
             polygonSeries.data.setAll(mapData);
+
+            polygonQnqSeries.set("include", includeIds);
+            polygonQnqSeries.data.setAll(qnqData);
         }
 
-
-        
         function renderEditionTable() {
-    const oldSystemEditions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 19, 20]; 
-    const gfPtsDesc = document.getElementById("gf-pts-desc");
+            const oldSystemEditions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 19, 20];
+            const gfPtsDesc = document.getElementById("gf-pts-desc");
+            if (gfPtsDesc) {
+                gfPtsDesc.innerText = oldSystemEditions.includes(activeEdition)
+                    ? "1, 2, 3, 4, 5, 6, 8, 10 pts."
+                    : "1, 2, 3, 4, 5, 6, 7, 8, 10, 12 pts.";
+            }
 
-    if (gfPtsDesc) {
-        // 2. Logic: If it's in the old list, show old text. Otherwise, default to new.
-        if (oldSystemEditions.includes(activeEdition)) {
-            gfPtsDesc.innerText = "1, 2, 3, 4, 5, 6, 8, 10 pts.";
-        } else {
-            gfPtsDesc.innerText = "1, 2, 3, 4, 5, 6, 7, 8, 10, 12 pts.";
-        }
-    }
-            const tbody = document.getElementById("edition-body");
-            tbody.innerHTML = "";
-            
-            renderParticipationTracker(); 
+            const stageNames = { GF: "Grand Final", SF1: "Semi-Final 1", SF2: "Semi-Final 2" };
+            const headingEl = document.getElementById("edition-stage-heading");
+            if (headingEl) headingEl.innerText = `Edition ${activeEdition} — ${stageNames[activeStage]}`;
+
+            const gridEl = document.getElementById("edition-results-grid");
+            gridEl.innerHTML = "";
+
+            renderParticipationTracker();
 
             const editionData = db.results.filter(r => {
                 if (r.edition !== activeEdition) return false;
@@ -2970,48 +3142,52 @@
                 return false;
             });
 
-            if(editionData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="color:var(--text-muted); font-style:italic;">No data available for this stage.</td></tr>`;
+            if (editionData.length === 0) {
+                gridEl.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:20px; color:var(--text-muted); font-style:italic; background:var(--table-row-odd); border-radius:8px;">No data available for this stage.</div>`;
+                updateMap();
                 return;
             }
 
-            let keyPlace = activeStage === 'GF' ? 'place' : 'semiPlace';
-            let keyRo = activeStage === 'GF' ? 'ro' : 'semiRo';
-            let keyPoints = activeStage === 'GF' ? 'points' : 'semiPoints';
-            let keyJury = activeStage === 'GF' ? 'jury' : 'semiJury';
-            let keyTele = activeStage === 'GF' ? 'tele' : 'semiTele';
-            
+            const keyPlace = activeStage === 'GF' ? 'place' : 'semiPlace';
+            const keyRo = activeStage === 'GF' ? 'ro' : 'semiRo';
+            const keyPoints = activeStage === 'GF' ? 'points' : 'semiPoints';
+            const keyJury = activeStage === 'GF' ? 'jury' : 'semiJury';
+            const keyTele = activeStage === 'GF' ? 'tele' : 'semiTele';
+
             const maxPlace = Math.max(...editionData.map(r => r[keyPlace] || 999).filter(p => p !== 999));
             editionData.sort((a, b) => (a[keyPlace] || 999) - (b[keyPlace] || 999));
 
             editionData.forEach(row => {
                 const cData = db.countries[row.countryId];
-                let rowClass = "";
-                let placeVal = row[keyPlace];
-                
-                if (placeVal === 1) rowClass = "row-1st";
-                else if (placeVal === 2) rowClass = "row-2nd";
-                else if (placeVal === 3) rowClass = "row-3rd";
-                else if (placeVal === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) rowClass = "row-last";
+                const placeVal = row[keyPlace];
+                let cardClass = "";
+                if (placeVal === 1) cardClass = "row-1st";
+                else if (placeVal === 2) cardClass = "row-2nd";
+                else if (placeVal === 3) cardClass = "row-3rd";
+                else if (placeVal === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) cardClass = "row-last";
 
-                let pts = row[keyPoints] !== undefined ? row[keyPoints] : "-";
-                let jury = row[keyJury] !== undefined ? row[keyJury] : "-";
-                let tele = row[keyTele] !== undefined ? row[keyTele] : "-";
-                let ro = row[keyRo] || "-";
+                const pts = row[keyPoints] !== undefined ? row[keyPoints] : "-";
+                const jury = row[keyJury] !== undefined ? row[keyJury] : "-";
+                const tele = row[keyTele] !== undefined ? row[keyTele] : "-";
+                const ro = row[keyRo] || "-";
+                const pointsStr = pts === 0 ? `<span style="color:#fca5a5">0</span>` : pts;
 
-                let pointsStr = pts === 0 ? `<span style="color:#fca5a5">0</span>` : pts;
-
-                tbody.innerHTML += `
-                    <tr class="${rowClass}">
-                        <td>${placeVal || "-"}</td>
-                        <td>${ro}</td>
-                        <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
-                        <td class="points-total">${pointsStr}</td>
-                        <td>${jury}</td>
-                        <td>${tele}</td>
-                    </tr>
+                gridEl.innerHTML += `
+                    <div class="res-card ${cardClass}">
+                        <div class="res-card-left">
+                            <span class="res-place-badge">#${placeVal || "-"}</span>
+                            <span class="res-ro-tag">RO ${ro}</span>
+                            ${getFlag(cData.code)}
+                            <span class="res-country-name">${cData.name}</span>
+                        </div>
+                        <div class="res-card-right">
+                            <div class="res-pts-main">${pointsStr} pts</div>
+                            <div class="res-jt-sub">J: ${jury} · T: ${tele}</div>
+                        </div>
+                    </div>
                 `;
             });
+
             updateMap();
         }
 
