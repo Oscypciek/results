@@ -3573,6 +3573,8 @@ function filterCountriesList() {
             drawCountryChart(chartLabels, gfPoints, sfPoints, nqFlags);
         }
 
+        function drawTrendChart(labels, data) {}
+
         function drawCountryChart(labels, gfData, sfData, nqFlags = []) {
             const canvas = document.getElementById("countryChartCanvas");
             if (!canvas) return;
