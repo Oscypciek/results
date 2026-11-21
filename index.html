@@ -494,8 +494,100 @@
         .cell-normal { background-color: transparent !important; }
         .matrix-table tr:hover td:not(.matrix-country):not(.cell-dnp) { filter: brightness(1.2); }
 
-        .ro-flag-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
-        .ro-flag-item { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 11px;}
+        /* RO Stats Revamp */
+        .ro-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .ro-kpi-card {
+            background: linear-gradient(145deg, var(--table-row-odd), var(--table-row-even));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .ro-kpi-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .ro-kpi-main {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--text-main);
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .ro-kpi-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .ro-bar-wrap {
+            width: 86px;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .ro-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary-color), #ff6b8b);
+        }
+        .ro-bar-fill.alt {
+            background: linear-gradient(90deg, #3b82f6, #818cf8);
+        }
+
+        .ro-flag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: flex-start;
+            max-width: 460px;
+        }
+        .ro-flag-list.collapsed-ro .ro-flag-item:nth-child(n+9) {
+            display: none;
+        }
+        .ro-flag-item {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .ro-flag-item .flag-icon {
+            width: 16px;
+            height: 11px;
+            margin-right: 4px;
+        }
+        .ro-more-btn {
+            background: transparent;
+            border: 1px dashed rgba(255,255,255,0.16);
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .ro-more-btn:hover {
+            color: #fff;
+            border-color: var(--primary-color);
+        }
 
         /* Breakdown Elements */
         .expand-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; margin-left: 8px; padding: 4px; transition: color 0.2s; vertical-align: middle; }
@@ -963,12 +1055,32 @@
         </div>
 
         <div id="ro-stats" class="tab-content">
-            <div class="picker-container">
-                <h3 class="picker-title">Select Stage</h3>
-                <div class="stage-selector" style="margin-top:0; border-top:none; padding-top:0;" id="ro-stage-selector">
-                    <button class="picker-btn active" id="ro-btn-gf" onclick="setRoStage('GF', this)">Grand Final</button>
-                    <button class="picker-btn" id="ro-btn-sf1" onclick="setRoStage('SF1', this)">Semi-Final 1</button>
-                    <button class="picker-btn" id="ro-btn-sf2" onclick="setRoStage('SF2', this)">Semi-Final 2</button>
+            <div class="picker-container" style="margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h3 class="picker-title" style="margin-bottom: 4px;">Running Order Analytics</h3>
+                    <div id="ro-stage-subtitle" style="font-size:12px; color:var(--text-muted);">Performance breakdown by starting slot</div>
+                </div>
+                <div class="stage-pills" id="ro-stage-selector">
+                    <button class="stage-pill-btn active" id="ro-btn-gf" onclick="setRoStage('GF', this)">Grand Final</button>
+                    <button class="stage-pill-btn" id="ro-btn-sf1" onclick="setRoStage('SF1', this)">Semi-Final 1</button>
+                    <button class="stage-pill-btn" id="ro-btn-sf2" onclick="setRoStage('SF2', this)">Semi-Final 2</button>
+                </div>
+            </div>
+
+            <div id="ro-kpi-summary" class="ro-kpi-grid"></div>
+
+            <div class="chart-container" style="height: 310px; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span style="font-size:11px; text-transform:uppercase; font-weight:800; color:var(--text-muted); letter-spacing:0.8px;">
+                        Average Points & Average Placement by RO Slot
+                    </span>
+                    <span style="font-size:11px; color:var(--text-muted); display:flex; gap:12px;">
+                        <span><b style="color:#ff2a5f;">■</b> Avg Points</span>
+                        <span><b style="color:#60a5fa;">■</b> Avg Place (lower = better)</span>
+                    </span>
+                </div>
+                <div style="height: calc(100% - 24px); position: relative;">
+                    <canvas id="roChartCanvas"></canvas>
                 </div>
             </div>
 
@@ -982,7 +1094,7 @@
                             <th onclick="sortTable('ro-table', 3, true)">Lasts</th>
                             <th onclick="sortTable('ro-table', 4, true)">Avg Place</th>
                             <th onclick="sortTable('ro-table', 5, true)">Avg Pts</th>
-                            <th>Countries (Count)</th>
+                            <th>Countries</th>
                         </tr>
                     </thead>
                     <tbody id="ro-body"></tbody>
@@ -2985,6 +3097,7 @@
         let h2hActiveB = null;
         let trendChartInstance = null; 
         let countryChartJsInstance = null;
+		let roChartJsInstance = null;
         let matrixChartRoot, matrixSeries, matrixXAxis, matrixYAxis;
 
         function getFlag(code, lg = false, extraStyle = "") {
@@ -3138,10 +3251,22 @@ function filterCountriesList() {
 
         function setRoStage(stage, btn) {
             activeRoStage = stage;
-            document.querySelectorAll('#ro-stage-selector .picker-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#ro-stage-selector .stage-pill-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             renderROStats();
         }
+
+        window.toggleRoCountries = function(roKey, btn) {
+            const box = document.getElementById(`ro-countries-${roKey}`);
+            if (!box) return;
+            if (box.classList.contains('collapsed-ro')) {
+                box.classList.remove('collapsed-ro');
+                btn.innerText = "Less";
+            } else {
+                box.classList.add('collapsed-ro');
+                btn.innerText = "More";
+            }
+        };
 
         // ==========================================
         // PRE-DEBUT & PARTICIPATION TRACKER
@@ -3680,11 +3805,22 @@ function filterCountriesList() {
 
 
         // ==========================================
-        // TAB 3: RO STATS 
+        // TAB 3: RO STATS (REVAMPED)
         // ==========================================
         function renderROStats() {
             const tbody = document.getElementById("ro-body");
+            const kpiEl = document.getElementById("ro-kpi-summary");
+            const subEl = document.getElementById("ro-stage-subtitle");
+            if (!tbody) return;
             tbody.innerHTML = "";
+
+            const stageLabels = {
+                GF: "Grand Final slots across all editions",
+                SF1: "Semi-Final 1 slots across all editions",
+                SF2: "Semi-Final 2 slots across all editions"
+            };
+            if (subEl) subEl.innerText = stageLabels[activeRoStage] || "";
+
             let roData = {};
 
             db.results.forEach(r => {
@@ -3700,12 +3836,12 @@ function filterCountriesList() {
 
                 if (!isApplicable) return;
 
-                if(!roData[ro]) {
-                    roData[ro] = { uses: 0, wins: 0, lasts: 0, sumPlace: 0, sumPts: 0, countries: {} };
+                if (!roData[ro]) {
+                    roData[ro] = { ro, uses: 0, wins: 0, lasts: 0, sumPlace: 0, sumPts: 0, countries: {} };
                 }
                 roData[ro].uses++;
-                if(place === 1) roData[ro].wins++;
-                
+                if (place === 1) roData[ro].wins++;
+
                 let lastPlaceForThisStage;
                 if (activeRoStage === 'GF') {
                     const edRes = db.results.filter(x => x.edition === r.edition && isQualifier(x));
@@ -3714,46 +3850,181 @@ function filterCountriesList() {
                     const edRes = db.results.filter(x => x.edition === r.edition && x.semi === r.semi);
                     lastPlaceForThisStage = Math.max(...edRes.map(x => x.semiPlace).filter(x => x !== undefined));
                 }
-                
-                if(place === lastPlaceForThisStage && lastPlaceForThisStage !== -Infinity) roData[ro].lasts++;
+
+                if (place === lastPlaceForThisStage && lastPlaceForThisStage !== -Infinity) roData[ro].lasts++;
 
                 roData[ro].sumPlace += place;
                 roData[ro].sumPts += points;
-                
-                if(!roData[ro].countries[r.countryId]) roData[ro].countries[r.countryId] = 0;
+
+                if (!roData[ro].countries[r.countryId]) roData[ro].countries[r.countryId] = 0;
                 roData[ro].countries[r.countryId]++;
             });
 
-            let sortedROs = Object.keys(roData).sort((a,b) => parseInt(a) - parseInt(b));
-            
-            if(sortedROs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted); font-style:italic;">No Running Order data available for this stage.</td></tr>`;
+            const sortedROs = Object.keys(roData).sort((a, b) => parseInt(a) - parseInt(b));
+
+            if (sortedROs.length === 0) {
+                if (kpiEl) kpiEl.innerHTML = "";
+                tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted); font-style:italic; padding:20px;">No Running Order data available for this stage.</td></tr>`;
+                if (roChartJsInstance) { roChartJsInstance.destroy(); roChartJsInstance = null; }
                 return;
             }
 
-            sortedROs.forEach(ro => {
-                let d = roData[ro];
-                let avgPlace = (d.sumPlace / d.uses).toFixed(1);
-                let avgPts = (d.sumPts / d.uses).toFixed(1);
-                
-                let cStrArr = [];
-                for(let cId in d.countries) {
-                    let count = d.countries[cId];
-                    let flag = getFlag(db.countries[cId].code);
-                    cStrArr.push(`<div class="ro-flag-item">${flag} ${count > 1 ? 'x'+count : ''}</div>`);
-                }
-                
+            const metrics = sortedROs.map(ro => {
+                const d = roData[ro];
+                return {
+                    ro,
+                    uses: d.uses,
+                    wins: d.wins,
+                    lasts: d.lasts,
+                    avgPlaceNum: d.sumPlace / d.uses,
+                    avgPtsNum: d.sumPts / d.uses,
+                    avgPlace: (d.sumPlace / d.uses).toFixed(1),
+                    avgPts: (d.sumPts / d.uses).toFixed(1),
+                    winRate: ((d.wins / d.uses) * 100).toFixed(1),
+                    lastRate: ((d.lasts / d.uses) * 100).toFixed(1),
+                    countries: d.countries
+                };
+            });
+
+            // KPI Summary Cards (min 3 uses for avg highlights)
+            const eligibleForAvg = metrics.filter(m => m.uses >= 3);
+            const poolAvg = eligibleForAvg.length > 0 ? eligibleForAvg : metrics;
+            const bestPlaceRO = [...poolAvg].sort((a, b) => a.avgPlaceNum - b.avgPlaceNum)[0];
+            const bestPtsRO = [...poolAvg].sort((a, b) => b.avgPtsNum - a.avgPtsNum)[0];
+            const mostWinsRO = [...metrics].sort((a, b) => b.wins - a.wins || a.avgPlaceNum - b.avgPlaceNum)[0];
+            const mostLastsRO = [...metrics].sort((a, b) => b.lasts - a.lasts || b.avgPlaceNum - a.avgPlaceNum)[0];
+
+            if (kpiEl) {
+                kpiEl.innerHTML = `
+                    <div class="ro-kpi-card" style="border-top: 3px solid #10b981;">
+                        <div class="ro-kpi-label">Best Avg. Placement</div>
+                        <div class="ro-kpi-main"><span>RO ${bestPlaceRO.ro}</span><span style="font-size:15px; color:#10b981;">${bestPlaceRO.avgPlace}</span></div>
+                        <div class="ro-kpi-sub">${bestPlaceRO.uses} uses · ${bestPlaceRO.wins} wins</div>
+                    </div>
+                    <div class="ro-kpi-card" style="border-top: 3px solid var(--primary-color);">
+                        <div class="ro-kpi-label">Highest Avg. Points</div>
+                        <div class="ro-kpi-main"><span>RO ${bestPtsRO.ro}</span><span style="font-size:15px; color:var(--primary-color);">${bestPtsRO.avgPts} pts</span></div>
+                        <div class="ro-kpi-sub">${bestPtsRO.uses} uses · avg #${bestPtsRO.avgPlace}</div>
+                    </div>
+                    <div class="ro-kpi-card" style="border-top: 3px solid var(--text-1st);">
+                        <div class="ro-kpi-label">Most Victories</div>
+                        <div class="ro-kpi-main"><span>RO ${mostWinsRO.ro}</span><span style="font-size:15px; color:var(--text-1st);">${mostWinsRO.wins} wins</span></div>
+                        <div class="ro-kpi-sub">${mostWinsRO.winRate}% win rate (${mostWinsRO.uses} uses)</div>
+                    </div>
+                    <div class="ro-kpi-card" style="border-top: 3px solid #ef4444;">
+                        <div class="ro-kpi-label">Most Last Places</div>
+                        <div class="ro-kpi-main"><span>RO ${mostLastsRO.ro}</span><span style="font-size:15px; color:#f87171;">${mostLastsRO.lasts} lasts</span></div>
+                        <div class="ro-kpi-sub">${mostLastsRO.lastRate}% last-place rate</div>
+                    </div>
+                `;
+            }
+
+            const maxAvgPts = Math.max(...metrics.map(m => m.avgPtsNum), 1);
+
+            metrics.forEach(m => {
+                const ptsBarPct = Math.min(100, (m.avgPtsNum / maxAvgPts) * 100).toFixed(0);
+                const sortedCountries = Object.entries(m.countries).sort((a, b) => b[1] - a[1]);
+
+                const cBadges = sortedCountries.map(([cId, count]) => {
+                    const c = db.countries[cId];
+                    return `<div class="ro-flag-item" title="${c.name} (${count}x)">${getFlag(c.code)}${count > 1 ? `<b>x${count}</b>` : ""}</div>`;
+                }).join("");
+
+                const toggleBtn = sortedCountries.length > 8
+                    ? `<button class="ro-more-btn" onclick="toggleRoCountries('${m.ro}', this)">More</button>`
+                    : "";
+
                 tbody.innerHTML += `
                     <tr>
-                        <td style="font-weight:bold; color:var(--primary-color);">${ro}</td>
-                        <td>${d.uses}</td>
-                        <td class="${d.wins > 0 ? 'txt-1st' : ''}">${d.wins}</td>
-                        <td class="${d.lasts > 0 ? 'txt-highlight' : ''}">${d.lasts}</td>
-                        <td>${avgPlace}</td>
-                        <td>${avgPts}</td>
-                        <td><div class="ro-flag-list">${cStrArr.join('')}</div></td>
+                        <td style="font-weight:900; color:var(--primary-color); font-size:14px;">${m.ro}</td>
+                        <td>${m.uses}</td>
+                        <td class="${m.wins > 0 ? 'txt-1st' : ''}">${m.wins} <span style="font-size:10px; color:var(--text-muted);">(${m.winRate}%)</span></td>
+                        <td class="${m.lasts > 0 ? 'txt-highlight' : ''}">${m.lasts} <span style="font-size:10px; color:var(--text-muted);">(${m.lastRate}%)</span></td>
+                        <td style="font-weight:bold;">${m.avgPlace}</td>
+                        <td class="points-total">
+                            ${m.avgPts}
+                            <div class="ro-bar-wrap"><div class="ro-bar-fill" style="width:${ptsBarPct}%;"></div></div>
+                        </td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <div class="ro-flag-list collapsed-ro" id="ro-countries-${m.ro}">${cBadges}</div>
+                                ${toggleBtn}
+                            </div>
+                        </td>
                     </tr>
                 `;
+            });
+
+            drawROChart(metrics);
+        }
+
+        function drawROChart(metrics) {
+            const canvas = document.getElementById("roChartCanvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+
+            if (roChartJsInstance) {
+                roChartJsInstance.destroy();
+            }
+
+            const labels = metrics.map(m => "RO " + m.ro);
+            const avgPts = metrics.map(m => parseFloat(m.avgPts));
+            const avgPlace = metrics.map(m => parseFloat(m.avgPlace));
+
+            roChartJsInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Avg Points',
+                            data: avgPts,
+                            backgroundColor: 'rgba(255, 42, 95, 0.55)',
+                            borderColor: '#ff2a5f',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            yAxisID: 'yPts'
+                        },
+                        {
+                            type: 'line',
+                            label: 'Avg Place',
+                            data: avgPlace,
+                            borderColor: '#60a5fa',
+                            backgroundColor: '#60a5fa',
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            tension: 0.25,
+                            yAxisID: 'yPlace'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: { color: '#a0a5bc', font: { size: 10 }, maxRotation: 0, autoSkip: false },
+                            grid: { color: 'rgba(255,255,255,0.03)' }
+                        },
+                        yPts: {
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: { color: '#ff5e85', font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        yPlace: {
+                            position: 'right',
+                            reverse: true,
+                            min: 1,
+                            ticks: { color: '#60a5fa', font: { size: 10 } },
+                            grid: { drawOnChartArea: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
             });
         }
 
@@ -4676,6 +4947,7 @@ function filterCountriesList() {
             document.getElementById(tabName).style.display = "block";
             btn.classList.add("active");
             if(tabName === 'countries' && countryChartJsInstance) countryChartJsInstance.resize();
+            if(tabName === 'ro-stats' && roChartJsInstance) roChartJsInstance.resize();
         }
 
         let sortDirections = {};
