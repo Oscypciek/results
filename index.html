@@ -896,21 +896,24 @@
                         </div>
                     </div>
 
-                    <div class="table-wrapper" style="margin-top: 10px;">
-                        <table id="edition-table">
-                            <thead>
-                                <tr>
-                                    <th onclick="sortTable('edition-table', 0, true)">Place</th>
-                                    <th onclick="sortTable('edition-table', 1, true)">RO</th>
-                                    <th onclick="sortTable('edition-table', 2, false)">Country</th>
-                                    <th onclick="sortTable('edition-table', 3, true)">Total Points</th>
-                                    <th onclick="sortTable('edition-table', 4, true)">Jury</th>
-                                    <th onclick="sortTable('edition-table', 5, true)">Televote</th>
-                                </tr>
-                            </thead>
-                            <tbody id="edition-body"></tbody>
-                        </table>
-                    </div>
+                    <div class="table-wrapper">
+                <table id="country-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('country-table', 0, true)">Edition</th>
+                            <th onclick="sortTable('country-table', 1, true)">Final Place</th>
+                            <th onclick="sortTable('country-table', 2, true)">Final Pts</th>
+                            <th onclick="sortTable('country-table', 3, true)">Final Jury</th>
+                            <th onclick="sortTable('country-table', 4, true)">Final Tele</th>
+                            <th onclick="sortTable('country-table', 5, true)">Semi Place</th>
+                            <th onclick="sortTable('country-table', 6, true)">Semi Pts</th>
+                            <th onclick="sortTable('country-table', 7, true)">Semi Jury</th>
+                            <th onclick="sortTable('country-table', 8, true)">Semi Tele</th>
+                        </tr>
+                    </thead>
+                    <tbody id="country-body"></tbody>
+                </table>
+            </div>
                 </div>
             </div>
         </div>
@@ -3464,8 +3467,7 @@ function filterCountriesList() {
                     tbody.innerHTML += `
                         <tr style="opacity: 0.6;">
                             <td><span class="edition-cell" style="color:var(--text-muted); font-size:11px;">Ed ${dnpStart === dnpEnd ? dnpStart : dnpStart + '-' + dnpEnd}</span></td>
-                            <td><span style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">DNP</span></td>
-                            <td colspan="5" style="text-align:left; color:var(--text-muted); font-style:italic;">${text}</td>
+                            <td colspan="8" style="text-align:center; color:var(--text-muted); font-style:italic; letter-spacing:1px;">${text}</td>
                         </tr>
                     `;
                     dnpStart = null;
@@ -3491,46 +3493,70 @@ function filterCountriesList() {
                     gfPoints.push(qualified ? result.place : null);
                     sfPoints.push(result.semiPlace !== undefined ? result.semiPlace : null);
 
-                    let statusBadge = "";
-                    if (isHost) statusBadge = `<span class="badge-stage-host">HOST</span>`;
-                    else if (qualified) statusBadge = `<span class="badge-stage-gf">GF</span>`;
-                    else statusBadge = `<span class="badge-stage-nq">NQ</span>`;
-
-                    let gfBadge = "—";
+                    // Final Placement Class
+                    let gfClass = "";
                     if (qualified) {
-                        let colorStyle = "background: rgba(255,255,255,0.06); color: var(--text-main);";
-                        if (result.place === 1) colorStyle = "background: var(--color-1st); color: var(--text-1st);";
-                        else if (result.place === 2) colorStyle = "background: var(--color-2nd); color: var(--text-2nd);";
-                        else if (result.place === 3) colorStyle = "background: var(--color-3rd); color: var(--text-3rd);";
-                        gfBadge = `<span class="badge-place-pill" style="${colorStyle}">#${result.place}</span>`;
+                        const gfResults = db.results.filter(r => r.edition === ed && isQualifier(r));
+                        const maxPlace = Math.max(...gfResults.map(r => r.place));
+
+                        if (result.place === 1) gfClass = "bg-1st";
+                        else if (result.place === 2) gfClass = "bg-2nd";
+                        else if (result.place === 3) gfClass = "bg-3rd";
+                        else if (result.place === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) gfClass = "bg-last";
                     }
 
-                    let sfBadge = "—";
-                    if (result.semiPlace !== undefined) {
-                        sfBadge = `<span style="font-weight:bold;">SF${result.semi} · #${result.semiPlace}</span>`;
-                    } else if (isHost) {
-                        sfBadge = `<span style="color:var(--text-muted); font-size:11px;">Direct Finalist</span>`;
+                    // Semi Placement Class
+                    let sfClass = "";
+                    if (result.semiPlace !== undefined && result.semiPoints !== undefined) {
+                        const sfResults = db.results.filter(r => r.edition === ed && r.semi === result.semi);
+                        const maxSfPlace = Math.max(...sfResults.map(r => r.semiPlace).filter(p => p !== undefined));
+
+                        if (result.semiPlace === 1) sfClass = "bg-1st";
+                        else if (result.semiPlace === 2) sfClass = "bg-2nd";
+                        else if (result.semiPlace === 3) sfClass = "bg-3rd";
+                        else if (result.semiPlace === maxSfPlace && maxSfPlace !== 999 && maxSfPlace !== -Infinity) sfClass = "bg-last";
                     }
 
-                    const gfPts = qualified ? `<b>${result.points}</b>` : `<span style="color:var(--text-muted);">—</span>`;
-                    const sfPts = result.semiPoints !== undefined ? result.semiPoints : `<span style="color:var(--text-muted);">—</span>`;
+                    // Final Cells
+                    let gfCells = "";
+                    if (qualified) {
+                        const pts = result.points !== undefined ? result.points : "-";
+                        const jury = result.jury !== undefined ? result.jury : "-";
+                        const tele = result.tele !== undefined ? result.tele : "-";
+                        gfCells = `
+                            <td class="${gfClass}" style="font-weight:bold;">${result.place}</td>
+                            <td class="${gfClass} points-total">${pts}</td>
+                            <td class="${gfClass}">${jury}</td>
+                            <td class="${gfClass}">${tele}</td>
+                        `;
+                    } else {
+                        gfCells = `
+                            <td colspan="4" style="color:var(--text-muted); font-style:italic;">NQ</td>
+                        `;
+                    }
 
-                    let splitText = "—";
-                    if (qualified && (result.jury !== undefined || result.tele !== undefined)) {
-                        splitText = `<span style="font-size:11px; color:var(--text-muted);">J: <b style="color:#60a5fa">${result.jury ?? 0}</b> | T: <b style="color:#f472b6">${result.tele ?? 0}</b></span>`;
-                    } else if (!qualified && (result.semiJury !== undefined || result.semiTele !== undefined)) {
-                        splitText = `<span style="font-size:11px; color:var(--text-muted);">SF J: <b style="color:#60a5fa">${result.semiJury ?? 0}</b> | T: <b style="color:#f472b6">${result.semiTele ?? 0}</b></span>`;
+                    // Semi Cells
+                    let sfCells = "";
+                    if (isHost) {
+                        sfCells = `<td colspan="4" style="color: var(--text-1st); font-weight: bold; font-style: italic;">Host Qualifier</td>`;
+                    } else if (result.semiPlace !== undefined && result.semiPoints !== undefined) {
+                        const sfJury = result.semiJury !== undefined ? result.semiJury : "-";
+                        const sfTele = result.semiTele !== undefined ? result.semiTele : "-";
+                        sfCells = `
+                            <td class="${sfClass}" style="font-weight:bold;">${result.semiPlace}</td>
+                            <td class="${sfClass} points-total">${result.semiPoints}</td>
+                            <td class="${sfClass}">${sfJury}</td>
+                            <td class="${sfClass}">${sfTele}</td>
+                        `;
+                    } else {
+                        sfCells = `<td colspan="4" class="no-semi-final">No semi-final</td>`;
                     }
 
                     tbody.innerHTML += `
                         <tr>
                             <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
-                            <td>${statusBadge}</td>
-                            <td>${gfBadge}</td>
-                            <td>${gfPts}</td>
-                            <td>${sfBadge}</td>
-                            <td>${sfPts}</td>
-                            <td>${splitText}</td>
+                            ${gfCells}
+                            ${sfCells}
                         </tr>
                     `;
                 } else {
@@ -3540,10 +3566,6 @@ function filterCountriesList() {
                     dnpEnd = ed;
                 }
             });
-
-            flushDNP();
-            drawCountryChart(chartLabels, gfPoints, sfPoints);
-        }
 
         function drawCountryChart(labels, gfData, sfData) {
             const canvas = document.getElementById("countryChartCanvas");
