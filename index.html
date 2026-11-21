@@ -897,23 +897,20 @@
                     </div>
 
                     <div class="table-wrapper">
-                <table id="country-table">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable('country-table', 0, true)">Edition</th>
-                            <th onclick="sortTable('country-table', 1, true)">Final Place</th>
-                            <th onclick="sortTable('country-table', 2, true)">Final Pts</th>
-                            <th onclick="sortTable('country-table', 3, true)">Final Jury</th>
-                            <th onclick="sortTable('country-table', 4, true)">Final Tele</th>
-                            <th onclick="sortTable('country-table', 5, true)">Semi Place</th>
-                            <th onclick="sortTable('country-table', 6, true)">Semi Pts</th>
-                            <th onclick="sortTable('country-table', 7, true)">Semi Jury</th>
-                            <th onclick="sortTable('country-table', 8, true)">Semi Tele</th>
-                        </tr>
-                    </thead>
-                    <tbody id="country-body"></tbody>
-                </table>
-            </div>
+                        <table id="edition-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable('edition-table', 0, true)">Place</th>
+                                    <th onclick="sortTable('edition-table', 1, true)">RO</th>
+                                    <th onclick="sortTable('edition-table', 2, false)">Country</th>
+                                    <th onclick="sortTable('edition-table', 3, true)">Total Points</th>
+                                    <th onclick="sortTable('edition-table', 4, true)">Jury</th>
+                                    <th onclick="sortTable('edition-table', 5, true)">Televote</th>
+                                </tr>
+                            </thead>
+                            <tbody id="edition-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3565,6 +3562,13 @@ function filterCountriesList() {
                     if (dnpStart === null) dnpStart = ed;
                     dnpEnd = ed;
                 }
+            });
+
+            flushDNP();
+            drawCountryChart(chartLabels, gfPoints, sfPoints);
+        }
+
+        function drawCountryChart(labels, gfData, sfData) {
             });
 
         function drawCountryChart(labels, gfData, sfData) {
