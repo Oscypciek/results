@@ -931,9 +931,10 @@
                     <span style="font-size:11px; text-transform:uppercase; font-weight:800; color:var(--text-muted); letter-spacing:0.8px;">
                         Placement Trajectory Across Editions
                     </span>
-                    <span style="font-size:11px; color:var(--text-muted); display:flex; gap:12px; align-items:center;">
+                    <span style="font-size:11px; color:var(--text-muted); display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                         <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#ff2a5f;"></span> Grand Final</span>
                         <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#818cf8;"></span> Semi-Final</span>
+                        <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:rgba(239, 68, 68, 0.35); border:1px solid #ef4444;"></span> NQ (Semi)</span>
                     </span>
                 </div>
                 <div style="height: calc(100% - 25px); position: relative;">
@@ -3452,6 +3453,7 @@ function filterCountriesList() {
             let chartLabels = [];
             let gfPoints = [];
             let sfPoints = [];
+            let nqFlags = [];
 
             let dnpStart = null;
             let dnpEnd = null;
@@ -3487,8 +3489,10 @@ function filterCountriesList() {
                     flushDNP();
 
                     const qualified = isQualifier(result);
+                    const isNQ = !qualified && result.semiPlace !== undefined;
                     gfPoints.push(qualified ? result.place : null);
                     sfPoints.push(result.semiPlace !== undefined ? result.semiPlace : null);
+                    nqFlags.push(isNQ);
 
                     // Final Placement Class
                     let gfClass = "";
@@ -3559,16 +3563,17 @@ function filterCountriesList() {
                 } else {
                     gfPoints.push(null);
                     sfPoints.push(null);
+                    nqFlags.push(false);
                     if (dnpStart === null) dnpStart = ed;
                     dnpEnd = ed;
                 }
             });
 
             flushDNP();
-            drawCountryChart(chartLabels, gfPoints, sfPoints);
+            drawCountryChart(chartLabels, gfPoints, sfPoints, nqFlags);
         }
 
-        function drawCountryChart(labels, gfData, sfData) {
+        function drawCountryChart(labels, gfData, sfData, nqFlags = []) {
             const canvas = document.getElementById("countryChartCanvas");
             if (!canvas) return;
             const ctx = canvas.getContext("2d");
@@ -3577,8 +3582,39 @@ function filterCountriesList() {
                 countryChartJsInstance.destroy();
             }
 
+            const nqBandPlugin = {
+                id: 'nqBandPlugin',
+                beforeDatasetsDraw(chart) {
+                    const { ctx: c, chartArea, scales } = chart;
+                    if (!chartArea || !scales.x) return;
+
+                    c.save();
+                    const step = labels.length > 1
+                        ? Math.abs(scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0))
+                        : 24;
+                    const bandWidth = Math.max(8, step * 0.72);
+
+                    nqFlags.forEach((isNQ, idx) => {
+                        if (!isNQ) return;
+                        const xCenter = scales.x.getPixelForValue(idx);
+                        c.fillStyle = 'rgba(239, 68, 68, 0.14)';
+                        c.fillRect(
+                            xCenter - bandWidth / 2,
+                            chartArea.top,
+                            bandWidth,
+                            chartArea.bottom - chartArea.top
+                        );
+                    });
+                    c.restore();
+                }
+            };
+
+            const sfPointColors = sfData.map((_, idx) => nqFlags[idx] ? '#ef4444' : '#818cf8');
+            const sfPointRadii = sfData.map((_, idx) => nqFlags[idx] ? 5 : 3);
+
             countryChartJsInstance = new Chart(ctx, {
                 type: 'line',
+                plugins: [nqBandPlugin],
                 data: {
                     labels: labels,
                     datasets: [
@@ -3599,11 +3635,12 @@ function filterCountriesList() {
                             data: sfData,
                             borderColor: '#818cf8',
                             backgroundColor: '#818cf8',
+                            pointBackgroundColor: sfPointColors,
+                            pointBorderColor: sfPointColors,
+                            pointRadius: sfPointRadii,
+                            pointHoverRadius: 6,
                             borderWidth: 2,
                             borderDash: [4, 4],
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            pointBackgroundColor: '#818cf8',
                             tension: 0.2,
                             spanGaps: false
                         }
@@ -3630,7 +3667,10 @@ function filterCountriesList() {
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': Place #' + context.parsed.y;
+                                    const idx = context.dataIndex;
+                                    const isSemi = context.datasetIndex === 1;
+                                    const nqSuffix = (isSemi && nqFlags[idx]) ? ' (NQ)' : '';
+                                    return context.dataset.label + ': Place #' + context.parsed.y + nqSuffix;
                                 }
                             }
                         }
