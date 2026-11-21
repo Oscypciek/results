@@ -338,7 +338,102 @@
         .edition-cell { display: inline-flex; align-items: center; justify-content: center; }
 
         /* Chart Container */
-        .chart-container { background-color: var(--table-row-odd); padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; height: 300px; width: 100%; box-sizing: border-box; }
+        .chart-container { 
+            background: linear-gradient(145deg, var(--table-row-odd), var(--table-row-even));
+            padding: 16px 20px; 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative; 
+            height: 360px; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
+
+        /* Country Picker Enhancement */
+        .country-search-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .country-input-search {
+            flex: 1;
+            min-width: 200px;
+            background: var(--table-header);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 8px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .country-input-search:focus {
+            border-color: var(--primary-color);
+        }
+        .country-filter-chips {
+            max-height: 120px;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-right: 4px;
+        }
+        .country-filter-chips::-webkit-scrollbar { width: 5px; }
+        .country-filter-chips::-webkit-scrollbar-thumb { background: var(--table-header); border-radius: 3px; }
+
+        /* Country Profile Header Card */
+        .country-profile-card {
+            background: linear-gradient(145deg, var(--table-row-odd), var(--table-row-even));
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .country-profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .country-profile-name {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .country-quick-metrics {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .c-metric-pill {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 6px 12px;
+            text-align: center;
+            min-width: 65px;
+        }
+        .c-metric-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+        .c-metric-val { font-size: 15px; font-weight: 800; }
+
+        /* Modern Country History Table */
+        .badge-stage-gf { background: rgba(255, 42, 95, 0.2); color: #ff5e85; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .badge-stage-nq { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .badge-stage-host { background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .badge-place-pill {
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
 
         /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
@@ -821,26 +916,42 @@
         </div>
 
         <div id="countries" class="tab-content">
-            <div class="picker-container">
-                <h3 class="picker-title">Select Country</h3>
-                <div class="picker-grid" id="country-picker-grid"></div>
+            <div class="picker-container" style="margin-bottom: 18px;">
+                <div class="country-search-bar">
+                    <span class="picker-title" style="margin:0;">Select Country</span>
+                    <input type="text" id="country-search-input" class="country-input-search" placeholder="Type country name..." oninput="filterCountriesList()">
+                </div>
+                <div class="country-filter-chips" id="country-picker-grid"></div>
             </div>
 
-            <div class="stats-grid stats-grid-mini" id="country-stats-top" style="margin-bottom:25px;"></div>
-           
-            <div class="chart-container" style="height: 350px;">
-                <div id="countryChartDiv" style="width: 100%; height: 100%;"></div>
+            <div id="country-header-profile" class="country-profile-card"></div>
+
+            <div class="chart-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span style="font-size:11px; text-transform:uppercase; font-weight:800; color:var(--text-muted); letter-spacing:0.8px;">
+                        Placement Trajectory Across Editions
+                    </span>
+                    <span style="font-size:11px; color:var(--text-muted); display:flex; gap:12px; align-items:center;">
+                        <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#ff2a5f;"></span> Grand Final</span>
+                        <span style="display:inline-flex; align-items:center; gap:4px;"><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#818cf8;"></span> Semi-Final</span>
+                    </span>
+                </div>
+                <div style="height: calc(100% - 25px); position: relative;">
+                    <canvas id="countryChartCanvas"></canvas>
+                </div>
             </div>
-            
+
             <div class="table-wrapper">
                 <table id="country-table">
                     <thead>
                         <tr>
                             <th onclick="sortTable('country-table', 0, true)">Edition</th>
-                            <th onclick="sortTable('country-table', 1, true)">Final Place</th>
-                            <th onclick="sortTable('country-table', 2, true)">Final Points</th>
-                            <th onclick="sortTable('country-table', 3, true)">Semi Place</th>
-                            <th onclick="sortTable('country-table', 4, true)">Semi Points</th>
+                            <th>Status</th>
+                            <th onclick="sortTable('country-table', 2, true)">Final Place</th>
+                            <th onclick="sortTable('country-table', 3, true)">Final Pts</th>
+                            <th onclick="sortTable('country-table', 4, true)">Semi Place</th>
+                            <th onclick="sortTable('country-table', 5, true)">Semi Pts</th>
+                            <th>Split Details (Jury / Tele)</th>
                         </tr>
                     </thead>
                     <tbody id="country-body"></tbody>
@@ -2870,7 +2981,7 @@
 		let h2hActiveA = null; 
         let h2hActiveB = null;
         let trendChartInstance = null; 
-        let countryChartRoot, countryChartSeries, countryChartXAxis, countryChartYAxis;
+        let countryChartJsInstance = null;
         let matrixChartRoot, matrixSeries, matrixXAxis, matrixYAxis;
 
         function getFlag(code, lg = false, extraStyle = "") {
@@ -2918,7 +3029,6 @@
             renderPickers();
             renderH2HPickers();
             initMap();
-        initCountryChart();   
             initMatrixHeatmap();
             renderEditionTable();
             renderCountryTable();
@@ -2986,23 +3096,34 @@
 
     updateStageSelectors();
 
-    // 2. Render Countries (Keep as a standard grid, since there are many and no sequential order)
+    renderCountryChips();
+}
+
+function renderCountryChips(query = "") {
     const countryGrid = document.getElementById("country-picker-grid");
+    if (!countryGrid) return;
     countryGrid.innerHTML = "";
     const sortedCountryIds = Object.keys(db.countries).sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
 
-    sortedCountryIds.forEach(cId => {
-        const cData = db.countries[cId];
-        const btn = document.createElement("div");
-        btn.className = `picker-btn ${cId === activeCountryId ? "active" : ""}`;
-        btn.innerHTML = `${getFlag(cData.code)} ${cData.name}`; 
-        btn.onclick = () => {
-            activeCountryId = cId;
-            renderPickers();
-            renderCountryTable();
-        };
-        countryGrid.appendChild(btn);
-    });
+    sortedCountryIds
+        .filter(cId => db.countries[cId].name.toLowerCase().includes(query.toLowerCase()))
+        .forEach(cId => {
+            const cData = db.countries[cId];
+            const btn = document.createElement("div");
+            btn.className = `picker-btn ${cId === activeCountryId ? "active" : ""}`;
+            btn.innerHTML = `${getFlag(cData.code)} ${cData.name}`;
+            btn.onclick = () => {
+                activeCountryId = cId;
+                renderCountryChips(query);
+                renderCountryTable();
+            };
+            countryGrid.appendChild(btn);
+        });
+}
+
+function filterCountriesList() {
+    const input = document.getElementById("country-search-input");
+    renderCountryChips(input ? input.value : "");
 }
 
         function setStage(stage, btn) {
@@ -3287,154 +3408,212 @@
         // ==========================================
         function renderCountryTable() {
             const tbody = document.getElementById("country-body");
+            if (!tbody) return;
             tbody.innerHTML = "";
-            
-            let amChartData = [];
-            let chartLabels = []; // Prevents ReferenceError further down
-            let chartData = [];   // Prevents ReferenceError further down
 
-            db.editions.forEach(ed => {
-                let dataPoint = { edition: "Ed " + ed };
-                let result = db.results.find(r => r.edition === ed && r.countryId === activeCountryId);
-                
-                // Only plot a point if they qualified for the final
-                if (result && isQualifier(result)) {
-                    dataPoint.place = result.place;
-                }
-                amChartData.push(dataPoint);
-            });
+            const cData = db.countries[activeCountryId];
+            const countryResults = db.results.filter(r => r.countryId === activeCountryId);
 
-            // Set categories for X Axis and data for series
-            countryChartXAxis.data.setAll(amChartData);
-            countryChartSeries.data.setAll(amChartData);
+            // Compute Quick Metrics
+            let totalApps = countryResults.length;
+            let finals = countryResults.filter(r => isQualifier(r));
+            let wins = finals.filter(r => r.place === 1).length;
+            let top3 = finals.filter(r => r.place <= 3).length;
+            let top10 = finals.filter(r => r.place <= 10).length;
+            let sfApps = countryResults.filter(r => r.semi !== undefined).length;
+            let sfQuals = countryResults.filter(r => r.semi !== undefined && isQualifier(r)).length;
+            let qRate = sfApps > 0 ? ((sfQuals / sfApps) * 100).toFixed(0) + "%" : "—";
 
-            // Display Top 10 Ranking Point Info
-            let top10Data = getTop10Rankings();
-            let myTop10 = top10Data.find(x => x.cId === activeCountryId);
-            
-            if (myTop10) {
-                document.getElementById("country-stats-top").innerHTML = `
-                    <div class="stat-card">
-                        <h3>All-Time Top 10 Points</h3>
-                        <div class="number">${myTop10.score}</div>
+            const top10Data = getTop10Rankings();
+            const myTop10 = top10Data.find(x => x.cId === activeCountryId);
+
+            // Render Profile Header
+            const headerEl = document.getElementById("country-header-profile");
+            if (headerEl) {
+                headerEl.innerHTML = `
+                    <div class="country-profile-info">
+                        ${getFlag(cData.code, true, "width: 42px; height: 28px; border-radius: 4px;")}
+                        <div>
+                            <div class="country-profile-name">${cData.name}</div>
+                            <div style="font-size:12px; color:var(--text-muted);">All-Time Rank: <b style="color:var(--text-1st)">#${myTop10 ? myTop10.rank : '—'}</b> (${myTop10 ? myTop10.score : 0} Top 10 pts)</div>
+                        </div>
                     </div>
-                    <div class="stat-card border-gold">
-                        <h3>Top 10 Points Ranking</h3>
-                        <div class="number">#${myTop10.rank}</div>
+                    <div class="country-quick-metrics">
+                        <div class="c-metric-pill"><div class="c-metric-label">Apps</div><div class="c-metric-val">${totalApps}</div></div>
+                        <div class="c-metric-pill"><div class="c-metric-label">Wins</div><div class="c-metric-val" style="color:var(--text-1st);">${wins}</div></div>
+                        <div class="c-metric-pill"><div class="c-metric-label">Top 3</div><div class="c-metric-val" style="color:var(--text-2nd);">${top3}</div></div>
+                        <div class="c-metric-pill"><div class="c-metric-label">Top 10</div><div class="c-metric-val" style="color:#10b981;">${top10}</div></div>
+                        <div class="c-metric-pill"><div class="c-metric-label">Q-Rate</div><div class="c-metric-val" style="color:var(--primary-color);">${qRate}</div></div>
                     </div>
                 `;
-            } else {
-                document.getElementById("country-stats-top").innerHTML = "";
             }
 
-                        let dnpStart = null;
-            let dnpEnd = null;
-            let dnpFlagCode = null;
+            // Chart Data Prep
+            let chartLabels = [];
+            let gfPoints = [];
+            let sfPoints = [];
 
-            // Helper function to draw the "Did not participate" rows
+            let dnpStart = null;
+            let dnpEnd = null;
+
             function flushDNP() {
                 if (dnpStart !== null) {
-                    if (dnpStart === dnpEnd) {
-                        // Only missed 1 edition - draw it normally
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><span class="edition-cell">${getFlag(dnpFlagCode)} ${dnpStart}</span></td>
-                                <td colspan="4" class="did-not-participate">Did not participate</td>
-                            </tr>
-                        `;
-                    } else {
-                        // Missed multiple editions - group them into one row
-                        tbody.innerHTML += `
-                            <tr>
-                                <td colspan="5" class="did-not-participate" style="letter-spacing: 2px;">
-                                    Did not participate in editions ${dnpStart} - ${dnpEnd}
-                                </td>
-                            </tr>
-                        `;
-                    }
-                    // Reset the streak memory
+                    const text = dnpStart === dnpEnd 
+                        ? `Did not participate in Edition ${dnpStart}` 
+                        : `Did not participate in Editions ${dnpStart} – ${dnpEnd}`;
+                    tbody.innerHTML += `
+                        <tr style="opacity: 0.6;">
+                            <td><span class="edition-cell" style="color:var(--text-muted); font-size:11px;">Ed ${dnpStart === dnpEnd ? dnpStart : dnpStart + '-' + dnpEnd}</span></td>
+                            <td><span style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">DNP</span></td>
+                            <td colspan="5" style="text-align:left; color:var(--text-muted); font-style:italic;">${text}</td>
+                        </tr>
+                    `;
                     dnpStart = null;
                     dnpEnd = null;
-                    dnpFlagCode = null;
                 }
             }
 
             db.editions.forEach(ed => {
                 const status = getParticipationStatus(activeCountryId, ed);
-                if (status === 'pre-debut') return; 
+                if (status === 'pre-debut') return;
 
-                chartLabels.push("Ed " + ed);
                 const result = db.results.find(r => r.edition === ed && r.countryId === activeCountryId);
-                const hostCountryId = db.hosts[ed]; 
+                const hostCountryId = db.hosts[ed];
                 const isHost = (hostCountryId === activeCountryId);
-                let hostFlagCode = db.countries[hostCountryId].code;
-                
+                const hostFlagCode = db.countries[hostCountryId].code;
+
+                chartLabels.push("E" + ed);
+
                 if (result) {
-                    // Country participated! Flush any active DNP streaks first
                     flushDNP();
 
-                    let gfClass = "";
-                    if (isQualifier(result)) {
-                        const gfResults = db.results.filter(r => r.edition === ed && isQualifier(r));
-                        const maxPlace = Math.max(...gfResults.map(r => r.place));
-                        
-                        if (result.place === 1) gfClass = "bg-1st";
-                        else if (result.place === 2) gfClass = "bg-2nd";
-                        else if (result.place === 3) gfClass = "bg-3rd";
-                        else if (result.place === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) gfClass = "bg-last";
+                    const qualified = isQualifier(result);
+                    gfPoints.push(qualified ? result.place : null);
+                    sfPoints.push(result.semiPlace !== undefined ? result.semiPlace : null);
+
+                    let statusBadge = "";
+                    if (isHost) statusBadge = `<span class="badge-stage-host">HOST</span>`;
+                    else if (qualified) statusBadge = `<span class="badge-stage-gf">GF</span>`;
+                    else statusBadge = `<span class="badge-stage-nq">NQ</span>`;
+
+                    let gfBadge = "—";
+                    if (qualified) {
+                        let colorStyle = "background: rgba(255,255,255,0.06); color: var(--text-main);";
+                        if (result.place === 1) colorStyle = "background: var(--color-1st); color: var(--text-1st);";
+                        else if (result.place === 2) colorStyle = "background: var(--color-2nd); color: var(--text-2nd);";
+                        else if (result.place === 3) colorStyle = "background: var(--color-3rd); color: var(--text-3rd);";
+                        gfBadge = `<span class="badge-place-pill" style="${colorStyle}">#${result.place}</span>`;
                     }
 
-                    let sfClass = "";
-                    let semiHtml = `<td colspan="2" class="no-semi-final">No semi-final</td>`;
-                    
-                    if (isHost) {
-                        semiHtml = `<td colspan="2" style="color: var(--text-1st); font-weight: bold; font-style: italic;">Host Qualifier</td>`;
-                    } else if (result.semiPlace !== undefined && result.semiPoints !== undefined) {
-                        const sfResults = db.results.filter(r => r.edition === ed && r.semi === result.semi);
-                        const maxSfPlace = Math.max(...sfResults.map(r => r.semiPlace).filter(p => p !== undefined));
-                        
-                        if (result.semiPlace === 1) sfClass = "bg-1st";
-                        else if (result.semiPlace === 2) sfClass = "bg-2nd";
-                        else if (result.semiPlace === 3) sfClass = "bg-3rd";
-                        else if (result.semiPlace === maxSfPlace && maxSfPlace !== 999 && maxSfPlace !== -Infinity) sfClass = "bg-last";
-
-                        semiHtml = `<td class="${sfClass}">${result.semiPlace}</td><td class="${sfClass}">${result.semiPoints}</td>`;
+                    let sfBadge = "—";
+                    if (result.semiPlace !== undefined) {
+                        sfBadge = `<span style="font-weight:bold;">SF${result.semi} · #${result.semiPlace}</span>`;
+                    } else if (isHost) {
+                        sfBadge = `<span style="color:var(--text-muted); font-size:11px;">Direct Finalist</span>`;
                     }
 
-                    if (isQualifier(result)) {
-                        chartData.push(result.place);
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
-                                <td class="${gfClass}">${result.place}</td>
-                                <td class="${gfClass} points-total">${result.points}</td>
-                                ${semiHtml}
-                            </tr>
-                        `;
-                    } else {
-                        chartData.push(null); 
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
-                                <td colspan="2" style="color: var(--text-muted); font-style: italic;">NQ</td>
-                                ${semiHtml}
-                            </tr>
-                        `;
+                    const gfPts = qualified ? `<b>${result.points}</b>` : `<span style="color:var(--text-muted);">—</span>`;
+                    const sfPts = result.semiPoints !== undefined ? result.semiPoints : `<span style="color:var(--text-muted);">—</span>`;
+
+                    let splitText = "—";
+                    if (qualified && (result.jury !== undefined || result.tele !== undefined)) {
+                        splitText = `<span style="font-size:11px; color:var(--text-muted);">J: <b style="color:#60a5fa">${result.jury ?? 0}</b> | T: <b style="color:#f472b6">${result.tele ?? 0}</b></span>`;
+                    } else if (!qualified && (result.semiJury !== undefined || result.semiTele !== undefined)) {
+                        splitText = `<span style="font-size:11px; color:var(--text-muted);">SF J: <b style="color:#60a5fa">${result.semiJury ?? 0}</b> | T: <b style="color:#f472b6">${result.semiTele ?? 0}</b></span>`;
                     }
 
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><span class="edition-cell">${getFlag(hostFlagCode)} ${ed}</span></td>
+                            <td>${statusBadge}</td>
+                            <td>${gfBadge}</td>
+                            <td>${gfPts}</td>
+                            <td>${sfBadge}</td>
+                            <td>${sfPts}</td>
+                            <td>${splitText}</td>
+                        </tr>
+                    `;
                 } else {
-                    // Country did not participate! Add gap to chart, then update streak memory
-                    chartData.push(null);
-                    if (dnpStart === null) {
-                        dnpStart = ed;
-                        dnpFlagCode = hostFlagCode; // Save flag just in case it's only a 1-edition gap
-                    }
+                    gfPoints.push(null);
+                    sfPoints.push(null);
+                    if (dnpStart === null) dnpStart = ed;
                     dnpEnd = ed;
                 }
             });
 
-            // Loop is over, flush any remaining DNP streaks
             flushDNP();
+            drawCountryChart(chartLabels, gfPoints, sfPoints);
+        }
+
+        function drawCountryChart(labels, gfData, sfData) {
+            const canvas = document.getElementById("countryChartCanvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+
+            if (countryChartJsInstance) {
+                countryChartJsInstance.destroy();
+            }
+
+            countryChartJsInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Grand Final',
+                            data: gfData,
+                            borderColor: '#ff2a5f',
+                            backgroundColor: '#ff2a5f',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#fff',
+                            tension: 0.25,
+                            spanGaps: false
+                        },
+                        {
+                            label: 'Semi-Final',
+                            data: sfData,
+                            borderColor: '#818cf8',
+                            backgroundColor: '#818cf8',
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: '#818cf8',
+                            tension: 0.2,
+                            spanGaps: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            reverse: true,
+                            min: 1,
+                            suggestedMax: 26,
+                            ticks: { stepSize: 5, color: '#a0a5bc', font: { size: 11 } },
+                            grid: { color: 'rgba(255,255,255,0.06)' }
+                        },
+                        x: {
+                            ticks: { color: '#a0a5bc', font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 28 },
+                            grid: { color: 'rgba(255,255,255,0.03)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': Place #' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
 
@@ -4465,7 +4644,7 @@
             document.querySelectorAll(".nav-btn").forEach(nav => nav.classList.remove("active"));
             document.getElementById(tabName).style.display = "block";
             btn.classList.add("active");
-            if(tabName === 'countries' && trendChartInstance) trendChartInstance.resize();
+            if(tabName === 'countries' && countryChartJsInstance) countryChartJsInstance.resize();
         }
 
         let sortDirections = {};
