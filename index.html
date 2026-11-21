@@ -3573,8 +3573,6 @@ function filterCountriesList() {
             drawCountryChart(chartLabels, gfPoints, sfPoints, nqFlags);
         }
 
-        function drawTrendChart(labels, data) {}
-
         function drawCountryChart(labels, gfData, sfData, nqFlags = []) {
             const canvas = document.getElementById("countryChartCanvas");
             if (!canvas) return;
@@ -3645,38 +3643,39 @@ function filterCountriesList() {
                         }
                     ]
                 },
-
-
-        function drawTrendChart(labels, data) {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            if (trendChartInstance) trendChartInstance.destroy();
-
-            trendChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Final Placement',
-                        data: data,
-                        borderColor: '#ff2a5f',
-                        backgroundColor: '#ff2a5f',
-                        borderWidth: 3,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#ffffff',
-                        tension: 0.3,
-                        spanGaps: true
-                    }]
-                },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
-                        y: { reverse: true, min: 1, ticks: { stepSize: 1, color: '#a0a5bc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        x: { ticks: { color: '#a0a5bc' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        y: {
+                            reverse: true,
+                            min: 1,
+                            suggestedMax: 26,
+                            ticks: { stepSize: 5, color: '#a0a5bc', font: { size: 11 } },
+                            grid: { color: 'rgba(255,255,255,0.06)' }
+                        },
+                        x: {
+                            ticks: { color: '#a0a5bc', font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 28 },
+                            grid: { color: 'rgba(255,255,255,0.03)' }
+                        }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const isSemi = context.datasetIndex === 1;
+                                    const nqSuffix = (isSemi && nqFlags[idx]) ? ' (NQ)' : '';
+                                    return context.dataset.label + ': Place #' + context.parsed.y + nqSuffix;
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
+
 
         // ==========================================
         // TAB 3: RO STATS 
