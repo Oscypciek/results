@@ -3520,7 +3520,7 @@ function filterCountriesList() {
                         else if (result.semiPlace === maxSfPlace && maxSfPlace !== 999 && maxSfPlace !== -Infinity) sfClass = "bg-last";
                     }
 
-                    // Final Cells
+                   // Final Cells
                     let gfCells = "";
                     if (qualified) {
                         const pts = result.points !== undefined ? result.points : "-";
@@ -3534,14 +3534,14 @@ function filterCountriesList() {
                         `;
                     } else {
                         gfCells = `
-                            <td colspan="3" style="color:var(--text-muted); font-style:italic;">NQ</td>
+                            <td colspan="4" style="color:var(--text-muted); font-style:italic;">NQ</td>
                         `;
                     }
 
                     // Semi Cells
                     let sfCells = "";
                     if (isHost) {
-                        sfCells = `<td colspan="3" style="color: var(--text-1st); font-weight: bold; font-style: italic;">Host Qualifier</td>`;
+                        sfCells = `<td colspan="4" style="color: var(--text-1st); font-weight: bold; font-style: italic;">Host Qualifier</td>`;
                     } else if (result.semiPlace !== undefined && result.semiPoints !== undefined) {
                         const sfJury = result.semiJury !== undefined ? result.semiJury : "-";
                         const sfTele = result.semiTele !== undefined ? result.semiTele : "-";
@@ -3552,7 +3552,7 @@ function filterCountriesList() {
                             <td class="${sfClass}">${sfTele}</td>
                         `;
                     } else {
-                        sfCells = `<td colspan="3" class="no-semi-final">No semi-final</td>`;
+                        sfCells = `<td colspan="4" class="no-semi-final">No semi-final</td>`;
                     }
 
                     tbody.innerHTML += `
