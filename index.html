@@ -50,27 +50,23 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
 
         /* Editions Sidebar & Main Layout */
-        /* Editions Sidebar & Main Layout */
         .editions-layout {
             display: grid;
             grid-template-columns: 240px 1fr;
-            gap: 24px;
+            gap: 20px;
             align-items: start;
             width: 100%;
-        }
-        @media (max-width: 900px) {
-            .editions-layout { grid-template-columns: 1fr; }
         }
 
         .editions-sidebar {
             background-color: var(--table-row-odd);
             border-radius: 8px;
-            padding: 14px;
+            padding: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             border: 1px solid rgba(255,255,255,0.05);
             position: sticky;
-            top: 70px;
-            max-height: calc(100vh - 100px);
+            top: 65px;
+            max-height: calc(100vh - 90px);
             overflow-y: auto;
         }
         .ed-side-item {
@@ -87,11 +83,11 @@
             cursor: pointer;
             transition: all 0.2s ease;
             border: 1px solid transparent;
+            user-select: none;
         }
         .ed-side-item:hover {
             background-color: var(--table-hover);
             color: var(--text-main);
-            border-color: rgba(255,255,255,0.12);
         }
         .ed-side-item.active {
             background-color: var(--primary-color);
@@ -100,11 +96,42 @@
         }
         .ed-side-left { display: flex; align-items: center; gap: 8px; }
 
+        /* Responsive Mobile Behavior */
+        @media (max-width: 860px) {
+            .container { padding: 12px 10px !important; }
+            .editions-layout {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .editions-sidebar {
+                position: static;
+                max-height: none;
+                padding: 10px;
+            }
+            #edition-sidebar-list {
+                display: flex;
+                overflow-x: auto;
+                gap: 8px;
+                padding-bottom: 6px;
+                scroll-behavior: smooth;
+            }
+            .ed-side-item {
+                flex: 0 0 auto;
+                min-width: 90px;
+                margin-bottom: 0;
+                flex-direction: column;
+                padding: 6px 10px;
+                gap: 3px;
+            }
+            .map-box { height: 280px; }
+            #mapdiv, #mapqnqdiv { height: 240px !important; }
+        }
+
         /* Stage Segmented Bar */
         .stage-pills {
             display: inline-flex;
             background-color: var(--bg-color);
-            padding: 4px;
+            padding: 3px;
             border-radius: 8px;
             gap: 4px;
             border: 1px solid rgba(255,255,255,0.06);
@@ -114,9 +141,9 @@
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 8px 14px;
+            padding: 7px 12px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -132,28 +159,91 @@
             box-shadow: 0 2px 8px rgba(255, 42, 95, 0.35);
         }
 
-        /* Compact Participation Strip */
-        .participation-tracker.compact-tracker {
-            padding: 10px 14px;
-            margin-bottom: 16px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px 16px;
+        /* Redesigned Modern Participation Tracker */
+        .modern-tracker {
+            background: linear-gradient(145deg, var(--table-row-odd), var(--table-row-even));
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        .compact-tracker .part-group { margin-bottom: 0; }
-        .compact-tracker .part-label { font-size: 10px; margin-bottom: 5px; }
-        .compact-tracker .part-badge { font-size: 11px; padding: 2px 6px; }
-        .compact-tracker .flag-icon { width: 16px; height: 11px; margin-right: 5px; }
+        .tracker-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .tracker-row:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .tracker-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            min-width: 120px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+        }
+        .tracker-pill.debut { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+        .tracker-pill.active { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .tracker-pill.return { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .tracker-pill.withdraw { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .tracker-pill.absent { background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.35); }
+        .tracker-dot { width: 7px; height: 7px; border-radius: 50%; }
+        .tracker-pill.debut .tracker-dot { background: #c084fc; }
+        .tracker-pill.active .tracker-dot { background: #34d399; }
+        .tracker-pill.return .tracker-dot { background: #fbbf24; }
+        .tracker-pill.withdraw .tracker-dot { background: #f87171; }
+        .tracker-pill.absent .tracker-dot { background: #9ca3af; }
+
+        .tracker-tags-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            flex: 1;
+        }
+        .country-mini-badge {
+            background-color: var(--table-header);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-size: 11px;
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.15s ease;
+        }
+        .country-mini-badge:hover {
+            background-color: var(--table-hover);
+            border-color: rgba(255,255,255,0.18);
+        }
+        .country-mini-badge .flag-icon {
+            width: 16px;
+            height: 11px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
 
         /* Dual Maps Grid */
         .maps-dual-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 24px;
+            gap: 16px;
+            margin-bottom: 22px;
             width: 100%;
         }
-        @media (max-width: 1100px) {
+        @media (max-width: 1050px) {
             .maps-dual-grid { grid-template-columns: 1fr; }
         }
 
@@ -166,7 +256,7 @@
             width: 100%;
         }
         .map-box-header {
-            padding: 10px 14px;
+            padding: 9px 12px;
             background-color: var(--table-header);
             font-size: 11px;
             font-weight: bold;
@@ -179,46 +269,8 @@
         }
         #mapdiv, #mapqnqdiv {
             width: 100%;
-            height: 380px;
+            height: 340px;
         }
-
-        /* Split Results Grid (Dynamic 2-4 columns based on screen width) */
-        .results-split-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-            width: 100%;
-        }
-        .res-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--table-row-even);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 7px;
-            padding: 10px 12px;
-            font-size: 12px;
-            transition: transform 0.15s ease, background-color 0.15s ease;
-        }
-        .res-card:hover { background-color: var(--table-hover); transform: translateY(-1px); }
-        .res-card.row-1st { background: rgba(255, 215, 0, 0.16); border-color: rgba(255, 215, 0, 0.45); }
-        .res-card.row-2nd { background: rgba(192, 192, 192, 0.14); border-color: rgba(192, 192, 192, 0.35); }
-        .res-card.row-3rd { background: rgba(205, 127, 50, 0.16); border-color: rgba(205, 127, 50, 0.4); }
-        .res-card.row-last { background: rgba(255, 60, 60, 0.16); border-color: rgba(255, 60, 60, 0.4); }
-        .res-card-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .res-place-badge {
-            min-width: 26px; height: 26px; border-radius: 6px;
-            background: var(--table-header); color: var(--text-main);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 12px; flex-shrink: 0;
-        }
-        .res-ro-tag { font-size: 10px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
-        .res-country-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .res-card-right { text-align: right; flex-shrink: 0; margin-left: 8px; }
-        .res-pts-main { font-weight: 800; font-size: 13px; }
-        .res-jt-sub { font-size: 10px; color: var(--text-muted); }
-        
         
         /* Navbar */
         .navbar { background-color: var(--nav-bg); display: flex; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
@@ -749,7 +801,21 @@
                         </div>
                     </div>
 
-                    <div id="edition-results-grid" class="results-split-grid"></div>
+                    <div class="table-wrapper" style="margin-top: 10px;">
+                        <table id="edition-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable('edition-table', 0, true)">Place</th>
+                                    <th onclick="sortTable('edition-table', 1, true)">RO</th>
+                                    <th onclick="sortTable('edition-table', 2, false)">Country</th>
+                                    <th onclick="sortTable('edition-table', 3, true)">Total Points</th>
+                                    <th onclick="sortTable('edition-table', 4, true)">Jury</th>
+                                    <th onclick="sortTable('edition-table', 5, true)">Televote</th>
+                                </tr>
+                            </thead>
+                            <tbody id="edition-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2978,33 +3044,44 @@
 
         function renderParticipationTracker() {
             const container = document.getElementById("participation-tracker");
+            if (!container) return;
+
             let groups = { debut: [], return: [], active: [], withdraw: [], absent: [] };
 
             Object.keys(db.countries).forEach(cId => {
                 const status = getParticipationStatus(cId, activeEdition);
-                if (status !== 'pre-debut') { 
+                if (status !== 'pre-debut') {
                     groups[status].push(cId);
                 }
             });
 
-            function buildGroup(title, color, arr) {
-                if(arr.length === 0) return "";
-                arr.sort((a,b) => db.countries[a].name.localeCompare(db.countries[b].name));
-                let badges = arr.map(id => `<div class="part-badge">${getFlag(db.countries[id].code)} ${db.countries[id].name}</div>`).join('');
+            container.className = "modern-tracker";
+
+            function buildRow(title, typeKey, arr) {
+                if (arr.length === 0) return "";
+                arr.sort((a, b) => db.countries[a].name.localeCompare(db.countries[b].name));
+                const badges = arr.map(id => {
+                    const c = db.countries[id];
+                    return `<span class="country-mini-badge">${getFlag(c.code)} ${c.name}</span>`;
+                }).join('');
+
                 return `
-                    <div class="part-group">
-                        <div class="part-label"><div class="part-dot" style="background-color: ${color}"></div> ${title} (${arr.length})</div>
-                        <div class="part-list">${badges}</div>
+                    <div class="tracker-row">
+                        <div class="tracker-pill ${typeKey}">
+                            <span class="tracker-dot"></span>
+                            <span>${title} (${arr.length})</span>
+                        </div>
+                        <div class="tracker-tags-wrap">${badges}</div>
                     </div>
                 `;
             }
 
-            container.innerHTML = 
-                buildGroup("Debuts", "var(--part-debut)", groups.debut) +
-                buildGroup("Returning", "var(--part-return)", groups.return) +
-                buildGroup("Participating", "var(--part-active)", groups.active) +
-                buildGroup("Withdrawing", "var(--part-withdraw)", groups.withdraw) +
-                buildGroup("Absent", "var(--part-absent)", groups.absent);
+            container.innerHTML =
+                buildRow("Debuts", "debut", groups.debut) +
+                buildRow("Returning", "return", groups.return) +
+                buildRow("Participating", "active", groups.active) +
+                buildRow("Withdrawing", "withdraw", groups.withdraw) +
+                buildRow("Absent", "absent", groups.absent);
         }
 
         // ==========================================
@@ -3132,7 +3209,7 @@
             polygonQnqSeries.data.setAll(qnqData);
         }
 
-        function renderEditionTable() {
+       function renderEditionTable() {
             const oldSystemEditions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 19, 20];
             const gfPtsDesc = document.getElementById("gf-pts-desc");
             if (gfPtsDesc) {
@@ -3145,8 +3222,9 @@
             const headingEl = document.getElementById("edition-stage-heading");
             if (headingEl) headingEl.innerText = `Edition ${activeEdition} — ${stageNames[activeStage]}`;
 
-            const gridEl = document.getElementById("edition-results-grid");
-            gridEl.innerHTML = "";
+            const tbody = document.getElementById("edition-body");
+            if (!tbody) return;
+            tbody.innerHTML = "";
 
             renderParticipationTracker();
 
@@ -3159,7 +3237,7 @@
             });
 
             if (editionData.length === 0) {
-                gridEl.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:20px; color:var(--text-muted); font-style:italic; background:var(--table-row-odd); border-radius:8px;">No data available for this stage.</div>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="color:var(--text-muted); font-style:italic; padding:20px;">No data available for this stage.</td></tr>`;
                 updateMap();
                 return;
             }
@@ -3175,12 +3253,13 @@
 
             editionData.forEach(row => {
                 const cData = db.countries[row.countryId];
+                let rowClass = "";
                 const placeVal = row[keyPlace];
-                let cardClass = "";
-                if (placeVal === 1) cardClass = "row-1st";
-                else if (placeVal === 2) cardClass = "row-2nd";
-                else if (placeVal === 3) cardClass = "row-3rd";
-                else if (placeVal === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) cardClass = "row-last";
+
+                if (placeVal === 1) rowClass = "row-1st";
+                else if (placeVal === 2) rowClass = "row-2nd";
+                else if (placeVal === 3) rowClass = "row-3rd";
+                else if (placeVal === maxPlace && maxPlace !== 999 && maxPlace !== -Infinity) rowClass = "row-last";
 
                 const pts = row[keyPoints] !== undefined ? row[keyPoints] : "-";
                 const jury = row[keyJury] !== undefined ? row[keyJury] : "-";
@@ -3188,19 +3267,15 @@
                 const ro = row[keyRo] || "-";
                 const pointsStr = pts === 0 ? `<span style="color:#fca5a5">0</span>` : pts;
 
-                gridEl.innerHTML += `
-                    <div class="res-card ${cardClass}">
-                        <div class="res-card-left">
-                            <span class="res-place-badge">#${placeVal || "-"}</span>
-                            <span class="res-ro-tag">RO ${ro}</span>
-                            ${getFlag(cData.code)}
-                            <span class="res-country-name">${cData.name}</span>
-                        </div>
-                        <div class="res-card-right">
-                            <div class="res-pts-main">${pointsStr} pts</div>
-                            <div class="res-jt-sub">J: ${jury} · T: ${tele}</div>
-                        </div>
-                    </div>
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td style="font-weight:bold;">${placeVal || "-"}</td>
+                        <td>${ro}</td>
+                        <td class="country-cell">${getFlag(cData.code)} ${cData.name}</td>
+                        <td class="points-total">${pointsStr}</td>
+                        <td>${jury}</td>
+                        <td>${tele}</td>
+                    </tr>
                 `;
             });
 
